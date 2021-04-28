@@ -5,7 +5,7 @@ using System.Text;
 using FSFISCATLLib;
 using FSP11CRYPTATLLib;
 
-namespace BeanfunLogin
+namespace MaplestoryLauncher
 {
     public class PlaySafe
     {

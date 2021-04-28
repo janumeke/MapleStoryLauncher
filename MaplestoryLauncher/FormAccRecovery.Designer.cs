@@ -1,4 +1,4 @@
-﻿namespace BeanfunLogin
+﻿namespace MaplestoryLauncher
 {
     partial class FormAccRecovery
     {

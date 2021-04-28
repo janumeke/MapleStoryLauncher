@@ -1,11 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31205.134
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpAnalytics.Net45", "CSharpAnalytics\Source\CSharpAnalytics\CSharpAnalytics.Net45.csproj", "{0334B071-1FB1-4372-B500-4BC58A11EE59}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BeanfunLogin", "BeanfunLogin\BeanfunLogin.csproj", "{AE885E1D-D21F-4810-9F82-EF797DD7845A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MaplestoryLauncher", "MaplestoryLauncher\MaplestoryLauncher.csproj", "{AE885E1D-D21F-4810-9F82-EF797DD7845A}"
 	ProjectSection(ProjectDependencies) = postProject
 		{0334B071-1FB1-4372-B500-4BC58A11EE59} = {0334B071-1FB1-4372-B500-4BC58A11EE59}
 	EndProjectSection
@@ -46,5 +46,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BD85DEB0-576C-4ED2-A4DA-B27DD21571F0}
 	EndGlobalSection
 EndGlobal

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BeanfunLogin
+namespace MaplestoryLauncher
 {
     class GamePathDB
     {
@@ -20,26 +20,24 @@ namespace BeanfunLogin
         Dictionary<string, string> db;
         public GamePathDB()
         {
-            string oldGamePath = Properties.Settings.Default.gamePath;
-            string raw = Properties.Settings.Default.gamePathDB;
-            db = new Dictionary<string, string>();
-
-            if (oldGamePath != "")
-            {
-                db["MapleStory"] = oldGamePath;
-                Properties.Settings.Default.gamePath = "";
-            }
-
             try
             {
-                db = JsonConvert.DeserializeObject<Dictionary<string, string>>(raw);
+                db = JsonConvert.DeserializeObject<Dictionary<string, string>>(Properties.Settings.Default.gamePathDB);
             }
             catch
             {
-                Properties.Settings.Default.gamePathDB = JsonConvert.SerializeObject(db);
+                db = new Dictionary<string, string>();
             }
-
-            Properties.Settings.Default.Save();
+            finally
+            {
+                string gamePath = Properties.Settings.Default.gamePath;
+                if (gamePath != "")
+                {
+                    Set("新楓之谷", gamePath);
+                    Properties.Settings.Default.gamePath = "";
+                    Save();
+                }
+            }
         }
 
         public string GetAlias(string key)

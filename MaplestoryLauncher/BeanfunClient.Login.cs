@@ -13,7 +13,7 @@ using System.Threading;
 using System.Web;
 using Newtonsoft.Json;
 
-namespace BeanfunLogin
+namespace MaplestoryLauncher
 {
     public partial class BeanfunClient : WebClient
     {
@@ -162,7 +162,7 @@ namespace BeanfunLogin
                 {
                     ps = new PlaySafe();
                 }
-                catch (Exception e)
+                catch
                 {
                     this.errmsg = "LoginNoPSDriver";
                     return null;

@@ -19,7 +19,7 @@ using System.Security.Cryptography;
 using System.Windows.Forms;
 using System.Runtime.Serialization.Formatters.Binary;
 
-namespace BeanfunLogin
+namespace MaplestoryLauncher
 {
     [Serializable]
     class AccountRecords

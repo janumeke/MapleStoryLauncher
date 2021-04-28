@@ -1,9 +1,9 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="BeanfunLogin.Properties" GeneratedClassName="Settings">
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="MaplestoryLauncher.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
     <Setting Name="rememberAccount" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
+      <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="rememberPwd" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
@@ -24,7 +24,7 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="gamePath" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
+      <Value Profile="(Default)">C:\Program Files (x86)\Gamania\MapleStory\MapleStory.exe</Value>
     </Setting>
     <Setting Name="loginMethod" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">0</Value>
@@ -45,10 +45,10 @@
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="autoPaste" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
+      <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="GAEnabled" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
+      <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="IgnoreVersion" Type="System.String" Scope="User">
       <Value Profile="(Default)">1.9.7</Value>

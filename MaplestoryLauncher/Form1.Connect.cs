@@ -14,7 +14,7 @@ using System.Runtime.InteropServices;
 using System.Drawing;
 using CSharpAnalytics;
 
-namespace BeanfunLogin
+namespace MaplestoryLauncher
 {
     public partial class main : Form
     {
@@ -23,6 +23,12 @@ namespace BeanfunLogin
         // Login do work.
         private void loginWorker_DoWork(object sender, DoWorkEventArgs e)
         {
+            if (this.rememberAccount.Checked == true)
+            {
+                Properties.Settings.Default.AccountID = this.accountInput.Text;
+                Properties.Settings.Default.Save();
+            }
+
             while (this.pingWorker.IsBusy)
                 Thread.Sleep(137);
             Debug.WriteLine("loginWorker starting");
@@ -52,12 +58,11 @@ namespace BeanfunLogin
                 AutoMeasurement.Client.Track(this.timedActivity);
                 this.timedActivity = null;
             }
-            if (Properties.Settings.Default.keepLogged && !this.pingWorker.IsBusy)
-                this.pingWorker.RunWorkerAsync();
             Debug.WriteLine("loginWorker end");
-            this.panel2.Enabled = true;
-            this.UseWaitCursor = false;
+
             this.loginButton.Text = "登入";
+            this.loginButton.Enabled = true;
+            this.UseWaitCursor = false;
             if (e.Error != null)
             {
                 errexit(e.Error.Message, 1);
@@ -69,42 +74,51 @@ namespace BeanfunLogin
                 return;
             }
 
+            if (Properties.Settings.Default.keepLogged && !this.pingWorker.IsBusy)
+                this.pingWorker.RunWorkerAsync();
+            this.accountInput.Enabled = false;
+            this.passwdInput.Enabled = false;
+            if (this.rememberPwd.Checked == true)
+            {
+                using (BinaryWriter writer = new BinaryWriter(File.Open("UserState.dat", FileMode.Create)))
+                {
+                    // Create random entropy of 8 characters.
+                    var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+                    var random = new Random();
+                    string entropy = new string(Enumerable.Repeat(chars, 8).Select(s => s[random.Next(s.Length)]).ToArray());
+
+                    Properties.Settings.Default.entropy = entropy;
+                    writer.Write(ciphertext(this.passwdInput.Text, entropy));
+                }
+            }
+            Properties.Settings.Default.autoLogin = autoLogin.Checked;
+            Properties.Settings.Default.Save();
+            status = LogInState.LoggedIn;
+            this.loginButton.Text = "登出";
+            if (!GameIsRunning())
+                getOtpButton.Text = "啟動遊戲";
+            else
+                getOtpButton.Text = "取得一次性密碼";
+
             try
             {
                 redrawSAccountList();
 
                 // Handle panel switching.
-                this.ActiveControl = null;
-                this.Size = new System.Drawing.Size(300, this.Size.Height);
-                this.panel2.SendToBack();
-                this.panel1.BringToFront();
+                Size = new Size(Size.Width, 450);
                 this.AcceptButton = this.getOtpButton;
-                if (Properties.Settings.Default.autoSelectIndex < this.listView1.Items.Count)
-                    this.listView1.Items[Properties.Settings.Default.autoSelectIndex].Selected = true;
-                this.listView1.Select();
-                if (Properties.Settings.Default.autoSelect == true && Properties.Settings.Default.autoSelectIndex < this.bfClient.accountList.Count())
-                {
-                    if (this.pingWorker.IsBusy)
-                    {
-                        this.pingWorker.CancelAsync();
-                    }
-                    this.textBox3.Text = "獲取密碼中...";
-                    this.listView1.Enabled = false;
-                    this.getOtpButton.Enabled = false;
-                    timedActivity = new CSharpAnalytics.Activities.AutoTimedEventActivity("GetOTP", Properties.Settings.Default.loginMethod.ToString());
-                    if (Properties.Settings.Default.GAEnabled)
-                    {
-                        AutoMeasurement.Client.TrackEvent("GetOTP" + Properties.Settings.Default.loginMethod.ToString(), "GetOTP");
-                    }
-                    this.getOtpWorker.RunWorkerAsync(Properties.Settings.Default.autoSelectIndex);
-                }
+                if (Properties.Settings.Default.autoSelect && Properties.Settings.Default.autoSelectIndex < this.accounts.Items.Count)
+                    this.accounts.Items[Properties.Settings.Default.autoSelectIndex].Selected = true;
+                //this.accounts.Select();
+                if (Properties.Settings.Default.opengame && Properties.Settings.Default.autoSelectIndex < this.bfClient.accountList.Count())
+                    getOtpButton_Click(null, null);
                 if (Properties.Settings.Default.keepLogged && !this.pingWorker.IsBusy)
                     this.pingWorker.RunWorkerAsync();
-                ShowToolTip(listView1, "步驟1", "選擇欲開啟的遊戲帳號，雙擊以複製帳號。");
-                ShowToolTip(getOtpButton, "步驟2", "按下以在右側產生並自動複製密碼，至遊戲中貼上帳密登入。");
-                Tip.SetToolTip(getOtpButton, "點擊獲取密碼");
-                Tip.SetToolTip(listView1, "雙擊即自動複製");
-                Tip.SetToolTip(textBox3, "點擊一次即自動複製");
+                ShowToolTip(accounts, "步驟1", "選擇欲開啟的遊戲帳號，雙擊以複製帳號。");
+                ShowToolTip(getOtpButton, "步驟2", "按下以啟動遊戲並登入。或是在右側產生並自動複製密碼，至遊戲中貼上帳密登入。");
+                //Tip.SetToolTip(getOtpButton, "點擊取得密碼");
+                Tip.SetToolTip(accounts, "雙擊即自動複製");
+                Tip.SetToolTip(otpDisplay, "點擊一次即自動複製");
                 Properties.Settings.Default.showTip = false;
                 Properties.Settings.Default.Save();
             }
@@ -117,13 +131,20 @@ namespace BeanfunLogin
 
         private void redrawSAccountList()
         {
-            listView1.Items.Clear();
+            accounts.Items.Clear();
             foreach (var account in this.bfClient.accountList)
             {
                 string[] row = { WebUtility.HtmlDecode(account.sname), account.sacc };
                 var listViewItem = new ListViewItem(row);
-                this.listView1.Items.Add(listViewItem);
+                this.accounts.Items.Add(listViewItem);
             }
+        }
+
+        enum GameState
+        {
+            Running,
+            Run,
+            Failed
         }
 
         // getOTP do work.
@@ -134,10 +155,14 @@ namespace BeanfunLogin
             Debug.WriteLine("getOtpWorker start");
             Thread.CurrentThread.Name = "GetOTP Worker";
             int index = (int)e.Argument;
-            e.Result = index;
+            e.Result = new int[2];
+            ref int resultIndex = ref ((int[])e.Result)[0];
+            ref int resultGameRun = ref ((int[])e.Result)[1];
+            resultIndex = index;
             Debug.WriteLine("Count = " + this.bfClient.accountList.Count + " | index = " + index);
             if (this.bfClient.accountList.Count <= index)
             {
+                resultIndex = -1;
                 return;
             }
             Debug.WriteLine("call GetOTP");
@@ -145,69 +170,63 @@ namespace BeanfunLogin
             Debug.WriteLine("call GetOTP done");
             if (this.otp == null)
             {
-                e.Result = -1;
+                resultIndex = -1;
                 return;
             }
-
-            if (false == Properties.Settings.Default.opengame)
-            {
-                Debug.WriteLine("no open game");
-                return;
-            }
-
-            string procPath = gamePaths.Get(service_name);
-            string sacc = this.bfClient.accountList[index].sacc;
-            string otp = new string(this.otp.Where(c => char.IsLetter(c) || char.IsDigit(c)).ToArray());
-
-            if (!File.Exists(procPath))
-                return;
 
             if (Properties.Settings.Default.GAEnabled)
             {
                 try
                 {
-                    AutoMeasurement.Client.TrackEvent(Path.GetFileName(procPath), "processName");
+                    AutoMeasurement.Client.TrackEvent(Path.GetFileName(gamePaths.Get(service_name)), "processName");
                 }
                 catch
                 {
-                    Debug.WriteLine("invalid path:" + procPath);
+                    Debug.WriteLine("invalid path:" + gamePaths.Get(service_name));
                 }
             }
 
-            if (procPath.Contains("elsword.exe"))
+            bool? gameStarted = null;
+            if (GameIsRunning(
+                true,
+                bfClient.accountList[index].sacc,
+                new string(this.otp.Where(c => char.IsLetter(c) || char.IsDigit(c)).ToArray()),
+                ref gameStarted
+            ))
             {
-                processStart(procPath, sacc + " " + otp + " TW");
+                resultGameRun = (int)GameState.Running;
             }
-            else if (procPath.Contains("KartRider.exe"))
-            {
-                processStart(procPath, "-id:" + sacc + " -password:" + otp + " -region:1");
-            }
-            else if (procPath.Contains("mabinogi.exe"))
-            {
-                processStart(procPath, "/N:" + sacc + " /V:" + otp + " /T:gamania");
-            }
-            else // fallback to default strategy
-            {
-                if (procPath.Contains("MapleStory.exe"))
-                {
-                    foreach (Process process in Process.GetProcesses())
-                    {
-                        if (process.ProcessName == "MapleStory")
-                        {
-                            Debug.WriteLine("find game");
-                            return;
-                        }
-                    }
-                }
-
-                processStart(procPath, "tw.login.maplestory.gamania.com 8484 BeanFun " + sacc + " " + otp);
-            }
-
-
-            return;
+            else if (gameStarted == true)
+                resultGameRun = (int)GameState.Run;
+            else
+                resultGameRun = (int)GameState.Failed;
         }
 
-        private void processStart(string prog, string arg)
+        private bool GameIsRunning()
+        {
+            bool? tmp = null;
+            return GameIsRunning(false, "", "", ref tmp);
+        }
+
+        private bool GameIsRunning(bool runIfNot, string sacc, string otp, ref bool? started)
+        {
+            switch (service_name)
+            {
+                case "新楓之谷":
+                    if (Process.GetProcessesByName("Maplestory").Length != 0)
+                    {
+                        Debug.WriteLine("find game");
+                        started = null;
+                        return true;
+                    }
+                    else if(runIfNot)
+                        started = processStart(gamePaths.Get(service_name), "tw.login.maplestory.gamania.com 8484 BeanFun " + sacc + " " + otp);
+                    break;
+            }
+            return false;
+        }
+
+        private bool processStart(string prog, string arg)
         {
             try
             {
@@ -218,10 +237,12 @@ namespace BeanfunLogin
                 psInfo.WorkingDirectory = Path.GetDirectoryName(prog);
                 Process.Start(psInfo);
                 Debug.WriteLine("try open game done");
+                return true;
             }
             catch
             {
                 errexit("啟動失敗，請嘗試手動以系統管理員身分啟動遊戲。", 2);
+                return false;
             }
         }
 
@@ -233,35 +254,39 @@ namespace BeanfunLogin
                 AutoMeasurement.Client.Track(this.timedActivity);
                 this.timedActivity = null;
             }
+            Debug.WriteLine("getOtpWorker end");
 
-            const int VK_TAB = 0x09;
+            /*const int VK_TAB = 0x09;
             const byte VK_CONTROL = 0x11;
             const int VK_V = 0x56;
             const int VK_ENTER = 0x0d;
             const byte KEYEVENTF_EXTENDEDKEY = 0x1;
-            const byte KEYEVENTF_KEYUP = 0x2;
+            const byte KEYEVENTF_KEYUP = 0x2;*/
 
-            Debug.WriteLine("getOtpWorker end");
-            this.getOtpButton.Text = "獲取密碼";
-            this.listView1.Enabled = true;
+            int resultIndex = ((int[])e.Result)[0];
+            GameState resultGameRun = (GameState)((int[])e.Result)[1];
+            if (resultGameRun == GameState.Failed)
+                getOtpButton.Text = "啟動遊戲";
+            else
+                getOtpButton.Text = "取得一次性密碼";
+            this.accounts.Enabled = true;
             this.getOtpButton.Enabled = true;
-            this.comboBox2.Enabled = true;
+            //this.comboBox2.Enabled = true;
             if (e.Error != null)
             {
-                this.textBox3.Text = "獲取失敗";
+                this.otpDisplay.Text = "取得失敗";
                 errexit(e.Error.Message, 2);
                 return;
             }
-            int index = (int)e.Result;
 
-            if (index == -1)
+            if (resultIndex == -1)
             {
-                this.textBox3.Text = "獲取失敗";
+                this.otpDisplay.Text = "取得失敗";
                 errexit(this.bfClient.errmsg, 2);
             }
             else
             {
-                int accIndex = listView1.SelectedItems[0].Index;
+                /*int accIndex = accounts.SelectedItems[0].Index;
                 string acc = this.bfClient.accountList[index].sacc;
                 this.Text = "進行遊戲 - " + WebUtility.HtmlDecode(this.bfClient.accountList[index].sname);
 
@@ -288,19 +313,24 @@ namespace BeanfunLogin
 
                     WindowsAPI.keybd_event(VK_TAB, 0, KEYEVENTF_EXTENDEDKEY, 0);
                     WindowsAPI.keybd_event(VK_TAB, 0, KEYEVENTF_KEYUP, 0);
-                }
+                }*/
 
-                this.textBox3.Text = this.otp;
-                try
+                if (resultGameRun == GameState.Running)
                 {
-                    Clipboard.SetText(textBox3.Text);
-                }
-                catch
-                {
-                    return;
-                }
+                    otpDisplay.Text = otp;
+                    try
+                    {
+                        Clipboard.SetText(otpDisplay.Text);
+                    }
+                    catch
+                    {
 
-                Thread.Sleep(250);
+                    }
+                }
+                else
+                    otpDisplay.Text = "";
+
+                /*Thread.Sleep(250);
 
                 if (autoPaste.Checked == true && (hWnd = WindowsAPI.FindWindow(null, "MapleStory")) != IntPtr.Zero)
                 {
@@ -314,9 +344,9 @@ namespace BeanfunLogin
                     WindowsAPI.keybd_event(VK_ENTER, 0, 0, 0);
                     WindowsAPI.keybd_event(VK_ENTER, 0, KEYEVENTF_KEYUP, 0);
 
-                    listView1.Items[accIndex].BackColor = Color.Green;
-                    listView1.Items[accIndex].Selected = false;
-                }
+                    accounts.Items[accIndex].BackColor = Color.Green;
+                    accounts.Items[accIndex].Selected = false;
+                }*/
 
 
             }
@@ -336,7 +366,7 @@ namespace BeanfunLogin
             {
                 if (this.pingWorker.CancellationPending)
                 {
-                    Debug.WriteLine("break duo to cancel");
+                    Debug.WriteLine("break due to cancel");
                     break;
                 }
 
@@ -364,7 +394,7 @@ namespace BeanfunLogin
             Debug.WriteLine("ping.done");
         }
 
-        private void qrWorker_DoWork(object sender, DoWorkEventArgs e)
+        /*private void qrWorker_DoWork(object sender, DoWorkEventArgs e)
         {
             this.bfClient = new BeanfunClient();
             string skey = this.bfClient.GetSessionkey();
@@ -402,6 +432,6 @@ namespace BeanfunLogin
             {
                 comboBox1_SelectedIndexChanged(null, null);
             }
-        }
+        }*/
     }
 }
