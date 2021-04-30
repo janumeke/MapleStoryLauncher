@@ -26,8 +26,8 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.0.1.0</ApplicationVersion>
+    <ApplicationRevision>1</ApplicationRevision>
+    <ApplicationVersion>1.0.1.1</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -122,7 +122,9 @@
     <Compile Include="BeanfunClient\BeanfunClient.OTP.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="UI.cs">
+    <Compile Include="HelperFunctions\Password.cs" />
+    <Compile Include="HelperFunctions\ExtentionMethods.cs" />
+    <Compile Include="HelperFunctions\UI\UI_MainWindow.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="MainWindow.Connect.cs">

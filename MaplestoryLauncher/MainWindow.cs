@@ -24,6 +24,8 @@ using System.Reflection;
 
 namespace MaplestoryLauncher
 {
+    using ExtentionMethods;
+
     enum LoginMethod : int {
         Regular = 0,
         Keypasco = 1,
@@ -47,6 +49,14 @@ namespace MaplestoryLauncher
 
         private GamePathDB gamePaths = new GamePathDB();
 
+        enum LogInState
+        {
+            LoggedOut,
+            LoggedIn
+        }
+
+        private LogInState status = LogInState.LoggedOut;
+
         readonly HelperFunctions.UI UI;
 
         public MainWindow()
@@ -69,11 +79,8 @@ namespace MaplestoryLauncher
                 }
             }
 
-            this.FormClosing += new FormClosingEventHandler((sender, e) => {
-                if (this.bfClient != null) this.bfClient.Logout();
-            });
-
             timedActivity = new CSharpAnalytics.Activities.AutoTimedEventActivity("FormLoad", Properties.Settings.Default.loginMethod.ToString());
+
             InitializeComponent();
             UI.FormLoaded();
 
@@ -84,51 +91,7 @@ namespace MaplestoryLauncher
             }
         }
 
-        private void SavePassword(string password)
-        {
-            using (BinaryWriter writer = new BinaryWriter(File.Open("UserState.dat", FileMode.Create)))
-            {
-                // Create random entropy of 8 characters.
-                var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-                var random = new Random();
-                string entropy = new string(Enumerable.Repeat(chars, 8).Select(s => s[random.Next(s.Length)]).ToArray());
-                Properties.Settings.Default.entropy = entropy;
-                Properties.Settings.Default.Save();
-
-                // Building ciphertext by 3DES.
-                byte[] ciphertext = ProtectedData.Protect(Encoding.UTF8.GetBytes(password), Encoding.UTF8.GetBytes(entropy), DataProtectionScope.CurrentUser);
-                writer.Write(ciphertext);
-            }
-        }
-
-        private string LoadPassword()
-        {
-            if (File.Exists("UserState.dat"))
-            {
-                try
-                {
-                    Byte[] cipher = File.ReadAllBytes("UserState.dat");
-                    string entropy = Properties.Settings.Default.entropy;
-                    byte[] plaintext = ProtectedData.Unprotect(cipher, Encoding.UTF8.GetBytes(entropy), DataProtectionScope.CurrentUser);
-                    return Encoding.UTF8.GetString(plaintext);
-                }
-                catch
-                {
-                    File.Delete("UserState.dat");
-                }
-            }
-            return String.Empty;
-        }
-
         #region ButtonEvents
-        enum LogInState
-        {
-            LoggedOut,
-            LoggedIn
-        }
-
-        private LogInState status = LogInState.LoggedOut;
-
         // The login/logout botton.
         private void loginButton_Click(object sender, EventArgs e)
         {
@@ -158,7 +121,8 @@ namespace MaplestoryLauncher
         // The start game/get OTP button.
         private void getOtpButton_Click(object sender, EventArgs e)
         {
-            if (accounts.SelectedItems.Count <= 0 || this.loginWorker.IsBusy) return;
+            if (accounts.SelectedItems.Count <= 0)
+                return;
 
             UI.GettingOtp();
             if (Properties.Settings.Default.GAEnabled)
@@ -320,19 +284,6 @@ namespace MaplestoryLauncher
         }
         #endregion
 
-        private void otpDisplay_OnClick(object sender, EventArgs e)
-        {
-            if (otpDisplay.Text == "" || otpDisplay.Text == "取得失敗") return;
-            try
-            {
-                Clipboard.SetText(otpDisplay.Text);
-            }
-            catch
-            {
-
-            }
-        }
-
         private void accounts_DoubleClick(object sender, EventArgs e)
         {
             if (accounts.SelectedItems.Count == 1)
@@ -348,15 +299,51 @@ namespace MaplestoryLauncher
             }
         }
 
-        private void MainWindow_Activated(object sender, EventArgs e)
+        private void otpDisplay_OnClick(object sender, EventArgs e)
         {
-            if (!GameIsRunning())
-                getOtpButton.Text = "啟動遊戲";
-            else
-                getOtpButton.Text = "取得一次性密碼";
+            
+            if (otpDisplay.Text == "" || !otpDisplay.Text.IsAllDigits()) return;
+            try
+            {
+                Clipboard.SetText(otpDisplay.Text);
+            }
+            catch
+            {
+
+            }
         }
 
-        private void main_FormClosed(object sender, FormClosedEventArgs e)
+        private void accounts_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
+        {
+            if (accounts.SelectedItems.Count == 0)
+                getOtpButton.Enabled = false;
+            else
+                getOtpButton.Enabled = true;
+        }
+
+        private void MainWindow_Activated(object sender, EventArgs e)
+        {
+            UI.Refresh();
+        }
+
+        private void MainWindow_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (status == LogInState.LoggedIn)
+            {
+                bool autoLogin = Properties.Settings.Default.autoLogin;
+                if (loginButton.Enabled)
+                    loginButton_Click(null, null);
+                else
+                {
+                    e.Cancel = true;
+                    UI.ShowError("請先登出再關閉程式。");
+                }
+                Properties.Settings.Default.autoLogin = autoLogin;
+                Properties.Settings.Default.Save();
+            }
+        }
+
+        private void MainWindow_FormClosed(object sender, FormClosedEventArgs e)
         {
             if (!rememberAccount.Checked)
                 Properties.Settings.Default.AccountID = "";

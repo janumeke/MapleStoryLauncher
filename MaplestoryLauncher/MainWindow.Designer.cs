@@ -273,6 +273,7 @@
             this.accounts.TabIndex = 6;
             this.accounts.UseCompatibleStateImageBehavior = false;
             this.accounts.View = System.Windows.Forms.View.Details;
+            this.accounts.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.accounts_ItemSelectionChanged);
             this.accounts.DoubleClick += new System.EventHandler(this.accounts_DoubleClick);
             // 
             // CharName
@@ -346,7 +347,8 @@
             this.Name = "MainWindow";
             this.Text = "BeanfunLogin - By Kai";
             this.Activated += new System.EventHandler(this.MainWindow_Activated);
-            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.main_FormClosed);
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainWindow_FormClosing);
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.MainWindow_FormClosed);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             this.ResumeLayout(false);
