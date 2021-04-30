@@ -1,6 +1,6 @@
 ﻿namespace MaplestoryLauncher
 {
-    partial class main
+    partial class MainWindow
     {
         /// <summary>
         /// 設計工具所需的變數。
@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(main));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
             this.panel1 = new System.Windows.Forms.Panel();
             this.autoSelect = new System.Windows.Forms.CheckBox();
             this.gamaotp_challenge_code_output = new System.Windows.Forms.Label();
@@ -40,7 +40,7 @@
             this.keepLogged = new System.Windows.Forms.CheckBox();
             this.rememberPwd = new System.Windows.Forms.CheckBox();
             this.getOtpButton = new System.Windows.Forms.Button();
-            this.passwdInput = new System.Windows.Forms.TextBox();
+            this.pwdInput = new System.Windows.Forms.TextBox();
             this.passLabel = new System.Windows.Forms.Label();
             this.otpDisplay = new System.Windows.Forms.TextBox();
             this.accountLabel = new System.Windows.Forms.Label();
@@ -68,7 +68,7 @@
             this.panel1.Controls.Add(this.keepLogged);
             this.panel1.Controls.Add(this.rememberPwd);
             this.panel1.Controls.Add(this.getOtpButton);
-            this.panel1.Controls.Add(this.passwdInput);
+            this.panel1.Controls.Add(this.pwdInput);
             this.panel1.Controls.Add(this.passLabel);
             this.panel1.Controls.Add(this.otpDisplay);
             this.panel1.Controls.Add(this.accountLabel);
@@ -201,15 +201,15 @@
             this.getOtpButton.UseVisualStyleBackColor = true;
             this.getOtpButton.Click += new System.EventHandler(this.getOtpButton_Click);
             // 
-            // passwdInput
+            // pwdInput
             // 
-            this.passwdInput.ImeMode = System.Windows.Forms.ImeMode.Disable;
-            this.passwdInput.Location = new System.Drawing.Point(73, 64);
-            this.passwdInput.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.passwdInput.Name = "passwdInput";
-            this.passwdInput.PasswordChar = '*';
-            this.passwdInput.Size = new System.Drawing.Size(145, 23);
-            this.passwdInput.TabIndex = 1;
+            this.pwdInput.ImeMode = System.Windows.Forms.ImeMode.Disable;
+            this.pwdInput.Location = new System.Drawing.Point(73, 64);
+            this.pwdInput.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.pwdInput.Name = "pwdInput";
+            this.pwdInput.PasswordChar = '*';
+            this.pwdInput.Size = new System.Drawing.Size(145, 23);
+            this.pwdInput.TabIndex = 1;
             // 
             // passLabel
             // 
@@ -273,7 +273,6 @@
             this.accounts.TabIndex = 6;
             this.accounts.UseCompatibleStateImageBehavior = false;
             this.accounts.View = System.Windows.Forms.View.Details;
-            this.accounts.SelectedIndexChanged += new System.EventHandler(this.accounts_SelectedIndexChanged);
             this.accounts.DoubleClick += new System.EventHandler(this.accounts_DoubleClick);
             // 
             // CharName
@@ -333,7 +332,7 @@
             this.Notification.InitialDelay = 0;
             this.Notification.ReshowDelay = 100;
             // 
-            // main
+            // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -344,8 +343,9 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.MaximizeBox = false;
-            this.Name = "main";
+            this.Name = "MainWindow";
             this.Text = "BeanfunLogin - By Kai";
+            this.Activated += new System.EventHandler(this.MainWindow_Activated);
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.main_FormClosed);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
@@ -362,7 +362,7 @@
         private System.Windows.Forms.CheckBox autoLogin;
         private System.Windows.Forms.CheckBox rememberPwd;
         private System.Windows.Forms.CheckBox rememberAccount;
-        private System.Windows.Forms.TextBox passwdInput;
+        private System.Windows.Forms.TextBox pwdInput;
         private System.Windows.Forms.Label passLabel;
         private System.Windows.Forms.Label accountLabel;
         private System.Windows.Forms.TextBox accountInput;

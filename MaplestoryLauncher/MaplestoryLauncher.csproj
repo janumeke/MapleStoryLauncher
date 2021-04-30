@@ -27,7 +27,7 @@
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.0.0.0</ApplicationVersion>
+    <ApplicationVersion>1.0.1.0</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -110,19 +110,22 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AccountManager.cs" />
-    <Compile Include="BeanfunClient.Account.cs">
+    <Compile Include="BeanfunClient\BeanfunClient.Account.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="BeanfunClient.cs">
+    <Compile Include="BeanfunClient\BeanfunClient.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="BeanfunClient.Login.cs">
+    <Compile Include="BeanfunClient\BeanfunClient.Login.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="BeanfunClient.OTP.cs">
+    <Compile Include="BeanfunClient\BeanfunClient.OTP.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Form1.Connect.cs">
+    <Compile Include="UI.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MainWindow.Connect.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="FormAccRecovery.cs">
@@ -135,17 +138,17 @@
     <Compile Include="ModifyRegistry.cs" />
     <Compile Include="PlaySafe.cs" />
     <Compile Include="Settings.cs" />
-    <Compile Include="Form1.cs">
+    <Compile Include="MainWindow.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Form1.Designer.cs">
-      <DependentUpon>Form1.cs</DependentUpon>
+    <Compile Include="MainWindow.Designer.cs">
+      <DependentUpon>MainWindow.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WindowsAPI.cs" />
-    <EmbeddedResource Include="Form1.resx">
-      <DependentUpon>Form1.cs</DependentUpon>
+    <EmbeddedResource Include="MainWindow.resx">
+      <DependentUpon>MainWindow.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FormAccRecovery.resx">
       <DependentUpon>FormAccRecovery.cs</DependentUpon>
@@ -182,7 +185,6 @@
   <ItemGroup>
     <Content Include="ILMergeOrder.txt" />
     <Content Include="maplestory.ico" />
-    <Content Include="ms2.ico" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">
@@ -256,16 +258,6 @@
       <PublishState>Include</PublishState>
       <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
-    </PublishFile>
-    <PublishFile Include="ms2.ico">
-      <Visible>False</Visible>
-      <Group>
-      </Group>
-      <TargetPath>
-      </TargetPath>
-      <PublishState>Include</PublishState>
-      <IncludeHash>True</IncludeHash>
-      <FileType>File</FileType>
     </PublishFile>
     <PublishFile Include="Newtonsoft.Json">
       <Visible>False</Visible>

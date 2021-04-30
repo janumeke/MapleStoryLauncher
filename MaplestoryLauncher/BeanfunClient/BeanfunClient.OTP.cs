@@ -95,7 +95,7 @@ namespace MaplestoryLauncher
             }
             catch (Exception e)
             {
-                this.errmsg = "獲取密碼失敗，請嘗試重新登入。\n\n" + e.Message + "\n" + e.StackTrace;
+                this.errmsg = "取得密碼失敗，請嘗試重新登入。\n\n" + e.Message + "\n" + e.StackTrace;
                 return null;
             }
         }
