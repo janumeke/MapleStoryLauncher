@@ -109,7 +109,7 @@ namespace MaplestoryLauncher.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("C:\\Program Files (x86)\\Gamania\\MapleStory\\MapleStory.exe")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Gamania\\MapleStory\\MapleStory.exe")]
         public string gamePath {
             get {
                 return ((string)(this["gamePath"]));

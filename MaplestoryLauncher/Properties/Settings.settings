@@ -24,7 +24,7 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="gamePath" Type="System.String" Scope="User">
-      <Value Profile="(Default)">C:\Program Files (x86)\Gamania\MapleStory\MapleStory.exe</Value>
+      <Value Profile="(Default)">Gamania\MapleStory\MapleStory.exe</Value>
     </Setting>
     <Setting Name="loginMethod" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">0</Value>

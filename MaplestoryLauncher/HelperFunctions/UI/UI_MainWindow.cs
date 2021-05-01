@@ -16,11 +16,12 @@ namespace MaplestoryLauncher
             public sealed class UI
             {
                 readonly MainWindow MainWindow;
-                readonly int initialWindowHeight;
-                public UI(MainWindow handle, int initialWindowHeight)
+                const int initialWindowHeight = 200;
+                const int loggedInHeight = 450;
+
+                public UI(MainWindow handle)
                 {
                     MainWindow = handle;
-                    this.initialWindowHeight = initialWindowHeight;
                 }
 
                 #region Events
@@ -62,6 +63,7 @@ namespace MaplestoryLauncher
 
                     MainWindow.accountInput.Enabled = true;
                     MainWindow.pwdInput.Enabled = true;
+                    MainWindow.loginButton.Enabled = true;
                     MainWindow.loginButton.Text = "登入";
                 }
 
@@ -90,7 +92,6 @@ namespace MaplestoryLauncher
                         Properties.Settings.Default.autoLogin = MainWindow.autoLogin.Checked;
                         Properties.Settings.Default.Save();
                         MainWindow.loginButton.Text = "登出";
-                        MainWindow.loginButton.Enabled = true;
 
                         try
                         {
@@ -112,7 +113,7 @@ namespace MaplestoryLauncher
                         else
                             MainWindow.getOtpButton.Text = "取得一次性密碼";
                         MainWindow.AcceptButton = MainWindow.getOtpButton;
-                        MainWindow.Size = new Size(MainWindow.Size.Width, 450);
+                        MainWindow.Size = new Size(MainWindow.Size.Width, loggedInHeight);
                     }
                     else
                     {
@@ -120,6 +121,7 @@ namespace MaplestoryLauncher
                         MainWindow.pwdInput.Enabled = true;
                         MainWindow.loginButton.Text = "登入";
                     }
+                    MainWindow.loginButton.Enabled = true;
                     MainWindow.UseWaitCursor = false;
                 }
 
@@ -132,18 +134,23 @@ namespace MaplestoryLauncher
                     if (!MainWindow.GameIsRunning())
                     {
                         bool pathOK;
-                        if (!File.Exists(MainWindow.gamePaths.Get(MainWindow.service_name)))
+                        if (!File.Exists(MainWindow.gamePaths.Get(MainWindow.service_name)) ||
+                            !MainWindow.gamePaths.Get(MainWindow.service_name).EndsWith(MainWindow.gamePaths.GetAlias(MainWindow.service_name)))
+                        {
                             do
                             {
                                 if (!RequestGamePath())
                                     return;
-                                pathOK = false;
-                                if (!MainWindow.gamePaths.Get(MainWindow.service_name).EndsWith("MapleStory.exe"))
-                                    MessageBox.Show($"請選擇新楓之谷遊戲執行檔。", "錯誤檔案");
+                                if (!MainWindow.gamePaths.Get(MainWindow.service_name).EndsWith(MainWindow.gamePaths.GetAlias(MainWindow.service_name)))
+                                {
+                                    MessageBox.Show($"請選擇{MainWindow.service_name}遊戲執行檔。", "錯誤檔案");
+                                    pathOK = false;
+                                }
                                 else
                                     pathOK = true;
                             }
                             while (!pathOK);
+                        }
                     }
                     else
                         MainWindow.otpDisplay.Text = "取得密碼中...";
@@ -282,7 +289,6 @@ namespace MaplestoryLauncher
                     if (openFileDialog.ShowDialog() == DialogResult.OK)
                     {
                         string file = openFileDialog.FileName;
-                        Debug.WriteLine($"service_name={MainWindow.service_name}, gamePaths.Get={MainWindow.gamePaths.Get(MainWindow.service_name)}, file={file}");
                         MainWindow.gamePaths.Set(identName, file);
                         MainWindow.gamePaths.Save();
 

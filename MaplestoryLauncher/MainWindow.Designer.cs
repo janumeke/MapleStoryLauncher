@@ -157,7 +157,7 @@
             this.autoLogin.TabIndex = 4;
             this.autoLogin.Text = "啟動時自動登入";
             this.autoLogin.UseVisualStyleBackColor = true;
-            this.autoLogin.CheckedChanged += new System.EventHandler(this.AutoLogin_CheckedChanged);
+            this.autoLogin.CheckedChanged += new System.EventHandler(this.autoLogin_CheckedChanged);
             // 
             // keepLogged
             // 

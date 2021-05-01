@@ -33,6 +33,11 @@ namespace MaplestoryLauncher
                 string gamePath = Properties.Settings.Default.gamePath;
                 if (gamePath != "")
                 {
+                    string programFilesPath = Environment.GetEnvironmentVariable("ProgramFiles(x86)");
+                    if (programFilesPath == null)
+                        programFilesPath = Environment.GetEnvironmentVariable("ProgramFiles");
+                    if (!gamePath.StartsWith(programFilesPath))
+                        gamePath = programFilesPath + "\\" + gamePath;
                     Set("新楓之谷", gamePath);
                     Properties.Settings.Default.gamePath = "";
                     Save();

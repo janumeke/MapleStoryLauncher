@@ -61,7 +61,7 @@ namespace MaplestoryLauncher
 
         public MainWindow()
         {
-            UI = new HelperFunctions.UI(this, 200);
+            UI = new HelperFunctions.UI(this);
 
             if (Properties.Settings.Default.GAEnabled)
             {
@@ -213,12 +213,18 @@ namespace MaplestoryLauncher
             }
         }
 
-        private void AutoLogin_CheckedChanged(object sender, EventArgs e)
+        private void autoLogin_CheckedChanged(object sender, EventArgs e)
         {
-            if (autoLogin.Checked)
+            bool check = autoLogin.Checked;
+            if (check)
             {
                 rememberAccount.Checked = true;
                 rememberPwd.Checked = true;
+            }
+            if (status == LogInState.LoggedIn)
+            {
+                Properties.Settings.Default.autoLogin = check;
+                Properties.Settings.Default.Save();
             }
 
             if (Properties.Settings.Default.GAEnabled)
@@ -350,11 +356,11 @@ namespace MaplestoryLauncher
             if (!rememberPwd.Checked)
             {
                 Properties.Settings.Default.entropy = "";
-                File.Delete("UserState.dat");
+                string localAppDataPath = Environment.GetEnvironmentVariable("LocalAppData");
+                File.Delete(localAppDataPath + "\\MaplestoryLauncher\\UserState.dat");
             }
             if (!autoLogin.Checked)
                 Properties.Settings.Default.autoLogin = false;
-            //gamePaths.Save();
             Properties.Settings.Default.Save();
         }
     }

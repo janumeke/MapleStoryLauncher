@@ -11,7 +11,8 @@ namespace MaplestoryLauncher
     {
         public static void Save(string password)
         {
-            using (BinaryWriter writer = new BinaryWriter(File.Open("UserState.dat", FileMode.Create)))
+            string localAppDataPath = Environment.GetEnvironmentVariable("LocalAppData");
+            using (BinaryWriter writer = new BinaryWriter(File.Open(localAppDataPath + "\\MaplestoryLauncher\\UserState.dat", FileMode.Create)))
             {
                 // Create random entropy of 8 characters.
                 var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -28,18 +29,19 @@ namespace MaplestoryLauncher
 
         public static string Load()
         {
-            if (File.Exists("UserState.dat"))
+            string localAppDataPath = Environment.GetEnvironmentVariable("LocalAppData");
+            if (File.Exists(localAppDataPath + "\\MaplestoryLauncher\\UserState.dat"))
             {
                 try
                 {
-                    Byte[] cipher = File.ReadAllBytes("UserState.dat");
+                    Byte[] cipher = File.ReadAllBytes(localAppDataPath + "\\MaplestoryLauncher\\UserState.dat");
                     string entropy = Properties.Settings.Default.entropy;
                     byte[] plaintext = ProtectedData.Unprotect(cipher, Encoding.UTF8.GetBytes(entropy), DataProtectionScope.CurrentUser);
                     return Encoding.UTF8.GetString(plaintext);
                 }
                 catch
                 {
-                    File.Delete("UserState.dat");
+                    File.Delete(localAppDataPath + "\\MaplestoryLauncher\\UserState.dat");
                 }
             }
             return String.Empty;
