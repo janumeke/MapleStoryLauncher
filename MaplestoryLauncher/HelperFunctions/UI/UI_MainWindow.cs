@@ -33,10 +33,11 @@ namespace MaplestoryLauncher
                     MainWindow.Tip.SetToolTip(MainWindow.otpDisplay, "點擊一次即自動複製");
                     MainWindow.Size = new Size(MainWindow.Size.Width, initialWindowHeight);
 
-                    if (Properties.Settings.Default.rememberAccount == true)
+                    if (Properties.Settings.Default.rememberAccount)
                         MainWindow.accountInput.Text = Properties.Settings.Default.AccountID;
-                    if (Properties.Settings.Default.rememberPwd == true)
+                    if (Properties.Settings.Default.rememberPwd)
                         MainWindow.pwdInput.Text = Password.Load();
+                    InputChanged();
                     MainWindow.autoLogin.Checked = Properties.Settings.Default.autoLogin;
 
                     if (MainWindow.accountInput.Text == "")
@@ -45,26 +46,27 @@ namespace MaplestoryLauncher
                         MainWindow.ActiveControl = MainWindow.pwdInput;
                     else
                         MainWindow.ActiveControl = MainWindow.loginButton;
+                    MainWindow.AcceptButton = MainWindow.loginButton;
 
                     if (Properties.Settings.Default.autoLogin == true)
                         if (MainWindow.loginButton.Enabled)
                             MainWindow.loginButton_Click(null, null);
                 }
 
-                public void LoggedOut()
+                public void FormFocused()
                 {
-                    MainWindow.otpDisplay.Text = "";
-                    MainWindow.Size = new Size(MainWindow.Size.Width, initialWindowHeight);
+                    if (!MainWindow.GameIsRunning())
+                        MainWindow.getOtpButton.Text = "啟動遊戲";
+                    else
+                        MainWindow.getOtpButton.Text = "取得一次性密碼";
+                }
 
-                    bool autoLogin = MainWindow.autoLogin.Checked;
-                    Properties.Settings.Default.autoLogin = false;
-                    Properties.Settings.Default.Save();
-                    MainWindow.autoLogin.Checked = autoLogin;
-
-                    MainWindow.accountInput.Enabled = true;
-                    MainWindow.pwdInput.Enabled = true;
-                    MainWindow.loginButton.Enabled = true;
-                    MainWindow.loginButton.Text = "登入";
+                public void InputChanged()
+                {
+                    if (MainWindow.accountInput.Text == "" && MainWindow.pwdInput.Text == "")
+                        MainWindow.loginButton.Text = "顯示QRCode";
+                    else
+                        MainWindow.loginButton.Text = "登入";
                 }
 
                 public void LoggingIn()
@@ -79,49 +81,77 @@ namespace MaplestoryLauncher
                         Properties.Settings.Default.AccountID = MainWindow.accountInput.Text;
                         Properties.Settings.Default.Save();
                     }
-                    foreach (ListViewItem item in MainWindow.accounts.Items)
-                        item.BackColor = DefaultBackColor;
+                    /*foreach (ListViewItem item in MainWindow.accounts.Items)
+                        item.BackColor = DefaultBackColor;*/
                 }
 
-                public void LoggedIn(bool successful = true)
+                public void LoginFailed()
                 {
-                    if (successful)
-                    {
-                        if (MainWindow.rememberPwd.Checked == true)
-                            Password.Save(MainWindow.pwdInput.Text);
-                        Properties.Settings.Default.autoLogin = MainWindow.autoLogin.Checked;
-                        Properties.Settings.Default.Save();
-                        MainWindow.loginButton.Text = "登出";
-
-                        try
-                        {
-                            RedrawSAccountList();
-                            if (Properties.Settings.Default.autoSelect && Properties.Settings.Default.autoSelectIndex < MainWindow.accounts.Items.Count)
-                                if(MainWindow.accounts.Enabled)
-                                    MainWindow.accounts.Items[Properties.Settings.Default.autoSelectIndex].Selected = true;
-                            if (Properties.Settings.Default.opengame && Properties.Settings.Default.autoSelectIndex < MainWindow.bfClient.accountList.Count())
-                                if(MainWindow.getOtpButton.Enabled)
-                                    MainWindow.getOtpButton_Click(null, null);
-                        }
-                        catch
-                        {
-                            ShowError("登入失敗，無法取得帳號列表。", HelperFunctions.UI.ErrorType.LoginFailed);
-                        }
-
-                        if (!MainWindow.GameIsRunning())
-                            MainWindow.getOtpButton.Text = "啟動遊戲";
-                        else
-                            MainWindow.getOtpButton.Text = "取得一次性密碼";
-                        MainWindow.AcceptButton = MainWindow.getOtpButton;
-                        MainWindow.Size = new Size(MainWindow.Size.Width, loggedInHeight);
-                    }
-                    else
-                    {
-                        MainWindow.accountInput.Enabled = true;
-                        MainWindow.pwdInput.Enabled = true;
-                        MainWindow.loginButton.Text = "登入";
-                    }
+                    MainWindow.Size = new Size(MainWindow.Size.Width, initialWindowHeight);
+                    MainWindow.accountInput.Enabled = true;
+                    MainWindow.pwdInput.Enabled = true;
+                    InputChanged();
                     MainWindow.loginButton.Enabled = true;
+                    MainWindow.AcceptButton = MainWindow.loginButton;
+                    MainWindow.UseWaitCursor = false;
+                }
+
+                public void LoggedIn()
+                {
+                    if (MainWindow.rememberPwd.Checked == true)
+                        Password.Save(MainWindow.pwdInput.Text);
+                    Properties.Settings.Default.autoLogin = MainWindow.autoLogin.Checked;
+                    Properties.Settings.Default.Save();
+
+                    MainWindow.accountInput.Enabled = false;
+                    MainWindow.pwdInput.Enabled = false;
+                    MainWindow.loginButton.Text = "登出";
+                    MainWindow.loginButton.Enabled = true;
+                    if (!MainWindow.GameIsRunning())
+                        MainWindow.getOtpButton.Text = "啟動遊戲";
+                    else
+                        MainWindow.getOtpButton.Text = "取得一次性密碼";
+                    MainWindow.otpDisplay.Text = "";
+                    
+
+                    try
+                    {
+                        RedrawSAccountList();
+                        MainWindow.Size = new Size(MainWindow.Size.Width, loggedInHeight);
+                        MainWindow.AcceptButton = MainWindow.getOtpButton;
+                        if (Properties.Settings.Default.autoSelect && Properties.Settings.Default.autoSelectIndex < MainWindow.accounts.Items.Count)
+                            if(MainWindow.accounts.Enabled)
+                                MainWindow.accounts.Items[Properties.Settings.Default.autoSelectIndex].Selected = true;
+                        MainWindow.UseWaitCursor = false;
+                        if (Properties.Settings.Default.opengame && Properties.Settings.Default.autoSelectIndex < MainWindow.bfClient.accountList.Count())
+                            if(MainWindow.getOtpButton.Enabled)
+                                MainWindow.getOtpButton_Click(null, null);
+                    }
+                    catch
+                    {
+                        ShowError("登入失敗，無法取得帳號列表。", HelperFunctions.UI.ErrorType.LoginFailed);
+                        LoginFailed();
+                    }
+                }
+
+                public void LoggedOut()
+                {
+                    if (Properties.Settings.Default.autoSelect)
+                        if (MainWindow.accounts.SelectedItems.Count == 0)
+                            Properties.Settings.Default.autoSelectIndex = 0;
+                        else
+                            Properties.Settings.Default.autoSelectIndex = MainWindow.accounts.SelectedItems[0].Index;
+                    bool autoLogin = MainWindow.autoLogin.Checked;
+                    Properties.Settings.Default.autoLogin = false;
+                    Properties.Settings.Default.Save();
+                    MainWindow.autoLogin.Checked = autoLogin;
+
+                    MainWindow.Size = new Size(MainWindow.Size.Width, initialWindowHeight);
+                    MainWindow.accountInput.Enabled = true;
+                    MainWindow.pwdInput.Enabled = true;
+                    InputChanged();
+                    MainWindow.loginButton.Enabled = true;
+                    MainWindow.AcceptButton = MainWindow.loginButton;
                     MainWindow.UseWaitCursor = false;
                 }
 
@@ -174,14 +204,6 @@ namespace MaplestoryLauncher
                 #endregion
 
                 #region Operations
-                public void Refresh()
-                {
-                    if (!MainWindow.GameIsRunning())
-                        MainWindow.getOtpButton.Text = "啟動遊戲";
-                    else
-                        MainWindow.getOtpButton.Text = "取得一次性密碼";
-                }
-
                 public enum ErrorType
                 {
                     Unspecified,
@@ -220,13 +242,13 @@ namespace MaplestoryLauncher
                             type = ErrorType.Fatal;
                             break;
                         case "OTPNoLongPollingKey":
-                            if (Properties.Settings.Default.loginMethod == (int)LoginMethod.PlaySafe)
-                                msg = "密碼獲取失敗，請檢查晶片卡是否插入讀卡機，且讀卡機運作正常。\n若仍出現此訊息，請嘗試重新登入。";
-                            else
-                            {
+                            //if (Properties.Settings.Default.loginMethod == (int)BeanfunClient.LoginMethod.PlaySafe)
+                            //    msg = "密碼獲取失敗，請檢查晶片卡是否插入讀卡機，且讀卡機運作正常。\n若仍出現此訊息，請嘗試重新登入。";
+                            //else
+                            //{
                                 msg = "已從伺服器斷線，請重新登入。";
                                 type = ErrorType.LoginFailed;
-                            }
+                            //}
                             break;
                         case "LoginNoReaderName":
                             msg = "登入失敗，找不到晶片卡或讀卡機，請檢查晶片卡是否插入讀卡機，且讀卡機運作正常。\n若還是發生此情形，請嘗試重新登入。";
@@ -257,7 +279,7 @@ namespace MaplestoryLauncher
                     if (type == ErrorType.Fatal)
                         Application.Exit();
                     else if (type == ErrorType.LoginFailed)
-                        LoggedIn(false);
+                        LoginFailed();
 
                     return false;
                 }

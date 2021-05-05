@@ -26,29 +26,18 @@ namespace MaplestoryLauncher
 {
     using ExtentionMethods;
 
-    enum LoginMethod : int {
-        Regular = 0,
-        Keypasco = 1,
-        PlaySafe = 2,
-        QRCode = 3
-    };
-
     public partial class MainWindow : Form
     {
         public BeanfunClient bfClient;
 
-        public BeanfunClient.QRCodeClass qrcodeClass;
+        private string service_name = "新楓之谷";
 
-        private string service_code = "610074" , service_region = "T9" , service_name = "新楓之谷";
+        private GamePathDB gamePaths = new GamePathDB();
 
         //public List<GameService> gameList = new List<GameService>();
 
         private CSharpAnalytics.Activities.AutoTimedEventActivity timedActivity = null;
-
-        private Version currentVersion = Assembly.GetExecutingAssembly().GetName().Version;
-
-        private GamePathDB gamePaths = new GamePathDB();
-
+        
         enum LogInState
         {
             LoggedOut,
@@ -69,7 +58,7 @@ namespace MaplestoryLauncher
                 {
                     AutoMeasurement.Instance = new WinFormAutoMeasurement();
                     AutoMeasurement.DebugWriter = d => Debug.WriteLine(d);
-                    AutoMeasurement.Start(new MeasurementConfiguration("UA-75983216-4", Assembly.GetExecutingAssembly().GetName().Name, currentVersion.ToString()));
+                    AutoMeasurement.Start(new MeasurementConfiguration("UA-75983216-4", Assembly.GetExecutingAssembly().GetName().Name, Assembly.GetExecutingAssembly().GetName().Version.ToString()));
                 }
                 catch
                 {
@@ -105,7 +94,7 @@ namespace MaplestoryLauncher
                         timedActivity = new CSharpAnalytics.Activities.AutoTimedEventActivity("Login", Properties.Settings.Default.loginMethod.ToString());
                         AutoMeasurement.Client.TrackEvent("Login" + Properties.Settings.Default.loginMethod.ToString(), "Login");
                     }
-                    this.loginWorker.RunWorkerAsync(Properties.Settings.Default.loginMethod);
+                    loginWorker.RunWorkerAsync();
                     break;
                 case LogInState.LoggedIn:
                     //log out
@@ -239,11 +228,6 @@ namespace MaplestoryLauncher
             if (!check)
                 autoLaunch.Checked = false;
             Properties.Settings.Default.autoSelect = check;
-            if (Properties.Settings.Default.autoSelect)
-                if (accounts.SelectedItems.Count == 0)
-                    Properties.Settings.Default.autoSelectIndex = 0;
-                else
-                    Properties.Settings.Default.autoSelectIndex = accounts.SelectedItems[0].Index;
             Properties.Settings.Default.Save();
 
             if (Properties.Settings.Default.GAEnabled)
@@ -319,6 +303,11 @@ namespace MaplestoryLauncher
             }
         }
 
+        private void Input_TextChanged(object sender, EventArgs e)
+        {
+            UI.InputChanged();
+        }
+
         private void accounts_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
         {
             if (accounts.SelectedItems.Count == 0)
@@ -329,7 +318,7 @@ namespace MaplestoryLauncher
 
         private void MainWindow_Activated(object sender, EventArgs e)
         {
-            UI.Refresh();
+            UI.FormFocused();
         }
 
         private void MainWindow_FormClosing(object sender, FormClosingEventArgs e)
@@ -363,5 +352,6 @@ namespace MaplestoryLauncher
                 Properties.Settings.Default.autoLogin = false;
             Properties.Settings.Default.Save();
         }
+
     }
 }

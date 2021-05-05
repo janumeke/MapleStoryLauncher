@@ -12,42 +12,28 @@ namespace MaplestoryLauncher
 {
     public partial class BeanfunClient : WebClient
     {
-        private System.Net.CookieContainer CookieContainer;
-        private Uri ResponseUri;
-        public string errmsg;
-        private string webtoken;
-        private string cardid;
-        public List<AccountList> accountList;
-        bool redirect;
+        bool redirect = true;
         private const string userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36";
+        private System.Net.CookieContainer CookieContainer = new System.Net.CookieContainer();
+        private Uri ResponseUri = null;
+        public string errmsg = null;
+        private string webtoken = null;
+        
+        string service_code = "610074";
+        string service_region = "T9";
 
-        public class AccountList
+        public void Ping()
         {
-            public string sacc;
-            public string sotp;
-            public string sname;
-            public string screatetime;
+            byte[] raw = null;
 
-            public AccountList()
-            { this.sacc = null; this.sotp = null; this.sname = null; this.screatetime = null; }
-            public AccountList(string sacc, string sotp, string sname, string screatetime = null)
-            { this.sacc = sacc; this.sotp = sotp; this.sname = sname; this.screatetime = screatetime; }
-        }
-
-        public BeanfunClient()
-        {
-            this.redirect = true;
-            this.CookieContainer = new System.Net.CookieContainer();
-            this.Headers.Set("User-Agent", userAgent);
-            this.ResponseUri = null;
-            this.errmsg = null;
-            this.webtoken = null;
-            this.accountList = new List<AccountList>();
+            raw = this.DownloadData("http://tw.beanfun.com/beanfun_block/generic_handlers/echo_token.ashx?webtoken=1");
+            string ret = Encoding.GetString(raw);
+            Debug.WriteLine(GetCurrentTime() + " @ " + ret);
         }
 
         public string DownloadString(string Uri, Encoding Encoding)
         {
-            var ret = (Encoding.GetString(base.DownloadData(Uri)));
+            var ret = Encoding.GetString(base.DownloadData(Uri));
             return ret;
         }
 
@@ -79,7 +65,7 @@ namespace MaplestoryLauncher
 
         protected override WebResponse GetWebResponse(WebRequest request)
         {
-          WebResponse webResponse = base.GetWebResponse(request);
+            WebResponse webResponse = base.GetWebResponse(request);
             this.ResponseUri = webResponse.ResponseUri;
             return webResponse;
         }
@@ -108,15 +94,6 @@ namespace MaplestoryLauncher
                 default:
                     return date.ToString("yyyyMMddHHmmss.fff");
             }
-        }
-
-        public void Ping()
-        {
-            byte[] raw = null;
-
-            raw = this.DownloadData("http://tw.beanfun.com/beanfun_block/generic_handlers/echo_token.ashx?webtoken=1");
-            string ret = Encoding.GetString(raw);
-            Debug.WriteLine(GetCurrentTime() + " @ " +ret);
         }
 
     }

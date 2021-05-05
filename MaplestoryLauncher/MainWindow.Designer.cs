@@ -210,6 +210,7 @@
             this.pwdInput.PasswordChar = '*';
             this.pwdInput.Size = new System.Drawing.Size(145, 23);
             this.pwdInput.TabIndex = 1;
+            this.pwdInput.TextChanged += new System.EventHandler(this.Input_TextChanged);
             // 
             // passLabel
             // 
@@ -252,6 +253,7 @@
             this.accountInput.Name = "accountInput";
             this.accountInput.Size = new System.Drawing.Size(145, 23);
             this.accountInput.TabIndex = 0;
+            this.accountInput.TextChanged += new System.EventHandler(this.Input_TextChanged);
             // 
             // accounts
             // 

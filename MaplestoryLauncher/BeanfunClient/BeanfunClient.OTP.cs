@@ -40,7 +40,7 @@ namespace MaplestoryLauncher
             }
         }
 
-        public string GetOTP(int loginMethod, AccountList acc, string service_code="610074", string service_region="T9")
+        public string GetOTP(int loginMethod, Account acc)
         {
             try
             {

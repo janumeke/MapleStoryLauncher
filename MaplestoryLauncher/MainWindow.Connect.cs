@@ -27,14 +27,26 @@ namespace MaplestoryLauncher
 
             Debug.WriteLine("loginWorker starting");
             Thread.CurrentThread.Name = "Login Worker";
-            e.Result = "";
             try
             {
-                if (Properties.Settings.Default.loginMethod != (int)LoginMethod.QRCode)
-                    this.bfClient = new BeanfunClient();
-                this.bfClient.Login(this.accountInput.Text, this.pwdInput.Text, Properties.Settings.Default.loginMethod, this.qrcodeClass, this.service_code, this.service_region);
-                if (this.bfClient.errmsg != null)
-                    e.Result = this.bfClient.errmsg;
+                if (accountInput.Text == "" && pwdInput.Text == "")
+                {
+                    QRCodeWindow qrcodeWindow = new QRCodeWindow(this);
+                    qrcodeWindow.ShowDialog();
+                    if (qrcodeWindow.result == BeanfunClient.QRCodeLoginState.Successful)
+                        bfClient.Login("", "", BeanfunClient.LoginMethod.QRCode);
+                    else if (qrcodeWindow.result == BeanfunClient.QRCodeLoginState.Pending)
+                        e.Cancel = true;
+                        
+                }
+                else
+                {
+                    bfClient = new BeanfunClient();
+                    bfClient.Login(accountInput.Text, pwdInput.Text, BeanfunClient.LoginMethod.Regular);
+                }
+                    
+                if (bfClient.errmsg != null)
+                    e.Result = bfClient.errmsg;
                 else
                     e.Result = null;
             }
@@ -53,9 +65,9 @@ namespace MaplestoryLauncher
             }
             Debug.WriteLine("loginWorker end");
 
-            if (e.Error != null)
+            if (e.Cancelled)
             {
-                UI.ShowError(e.Error.Message, HelperFunctions.UI.ErrorType.LoginFailed);
+                UI.LoginFailed();
                 return;
             }
             if ((string)e.Result != null)
@@ -63,7 +75,7 @@ namespace MaplestoryLauncher
                 UI.ShowError((string)e.Result, HelperFunctions.UI.ErrorType.LoginFailed);
                 return;
             }
-            
+
             if (Properties.Settings.Default.keepLogged && !this.pingWorker.IsBusy)
                 this.pingWorker.RunWorkerAsync();
             status = LogInState.LoggedIn;
@@ -102,7 +114,7 @@ namespace MaplestoryLauncher
                 return;
             }
             Debug.WriteLine("call GetOTP");
-            resultOtp = bfClient.GetOTP(Properties.Settings.Default.loginMethod, this.bfClient.accountList[index], this.service_code, this.service_region);
+            resultOtp = bfClient.GetOTP(Properties.Settings.Default.loginMethod, this.bfClient.accountList[index]);
             Debug.WriteLine("call GetOTP done");
             if (resultOtp == null)
             {
@@ -233,45 +245,5 @@ namespace MaplestoryLauncher
             Debug.WriteLine("ping.done");
         }
         #endregion
-
-        /*private void qrWorker_DoWork(object sender, DoWorkEventArgs e)
-        {
-            this.bfClient = new BeanfunClient();
-            string skey = this.bfClient.GetSessionkey();
-            this.qrcodeClass = this.bfClient.GetQRCodeValue(skey, (bool)e.Argument);
-        }
-
-        private void qrWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            this.loginMethodInput.Enabled = true;
-            wait_qrWorker_notify.Visible = false;
-            if (this.qrcodeClass == null)
-                wait_qrWorker_notify.Text = "QRCode取得失敗";
-            else
-            {
-                qrcodeImg.Image = qrcodeClass.bitmap;
-                qrCheckLogin.Enabled = true;
-            }
-        }
-
-        private void qrCheckLogin_Tick(object sender, EventArgs e)
-        {
-            if (this.qrcodeClass == null)
-            {
-                MessageBox.Show("QRCode not get yet");
-                return;
-            }
-            int res = this.bfClient.QRCodeCheckLoginStatus(this.qrcodeClass);
-            if (res != 0)
-                this.qrCheckLogin.Enabled = false;
-            if (res == 1)
-            {
-                loginButton_Click(null, null);
-            }
-            if (res == -2)
-            {
-                comboBox1_SelectedIndexChanged(null, null);
-            }
-        }*/
     }
 }
