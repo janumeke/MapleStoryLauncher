@@ -29,9 +29,14 @@ namespace MaplestoryLauncher
                 {
                     MainWindow.Text = $"新楓之谷啟動器";
                     MainWindow.Tip.SetToolTip(MainWindow.accounts, "雙擊即自動複製");
-                    MainWindow.Tip.SetToolTip(MainWindow.getOtpButton, "點擊啟動遊戲並登入或取得密碼");
+                    MainWindow.Tip.SetToolTip(MainWindow.getOtpButton, "點擊以登入遊戲或取得密碼");
                     MainWindow.Tip.SetToolTip(MainWindow.otpDisplay, "點擊一次即自動複製");
                     MainWindow.Size = new Size(MainWindow.Size.Width, initialWindowHeight);
+
+                    MainWindow.accounts.TabStop = false;
+                    MainWindow.autoSelect.TabStop = false;
+                    MainWindow.autoLaunch.TabStop = false;
+                    MainWindow.getOtpButton.TabStop = false;
 
                     if (Properties.Settings.Default.rememberAccount)
                         MainWindow.accountInput.Text = Properties.Settings.Default.AccountID;
@@ -88,6 +93,12 @@ namespace MaplestoryLauncher
                 public void LoginFailed()
                 {
                     MainWindow.Size = new Size(MainWindow.Size.Width, initialWindowHeight);
+
+                    MainWindow.accounts.TabStop = false;
+                    MainWindow.autoSelect.TabStop = false;
+                    MainWindow.autoLaunch.TabStop = false;
+                    MainWindow.getOtpButton.TabStop = false;
+
                     MainWindow.accountInput.Enabled = true;
                     MainWindow.pwdInput.Enabled = true;
                     InputChanged();
@@ -118,6 +129,12 @@ namespace MaplestoryLauncher
                     {
                         RedrawSAccountList();
                         MainWindow.Size = new Size(MainWindow.Size.Width, loggedInHeight);
+
+                        MainWindow.accounts.TabStop = true;
+                        MainWindow.autoSelect.TabStop = true;
+                        MainWindow.autoLaunch.TabStop = true;
+                        MainWindow.getOtpButton.TabStop = true;
+
                         MainWindow.AcceptButton = MainWindow.getOtpButton;
                         if (Properties.Settings.Default.autoSelect && Properties.Settings.Default.autoSelectIndex < MainWindow.accounts.Items.Count)
                             if(MainWindow.accounts.Enabled)
@@ -147,6 +164,12 @@ namespace MaplestoryLauncher
                     MainWindow.autoLogin.Checked = autoLogin;
 
                     MainWindow.Size = new Size(MainWindow.Size.Width, initialWindowHeight);
+
+                    MainWindow.accounts.TabStop = false;
+                    MainWindow.autoSelect.TabStop = false;
+                    MainWindow.autoLaunch.TabStop = false;
+                    MainWindow.getOtpButton.TabStop = false;
+
                     MainWindow.accountInput.Enabled = true;
                     MainWindow.pwdInput.Enabled = true;
                     InputChanged();

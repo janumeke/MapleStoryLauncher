@@ -1,22 +1,37 @@
-﻿# BeanfunLogin
+﻿# MaplestoryLauncher
 
-New Beanfun MapleStory OTP login.
+A program that launches and logs in MapleStory by Beanfun accounts.
 
-[Website](https://kevin940726.github.io/BeanfunLogin)
+> **Modified from BeanfunLogin:**
+> 
+> Login to Beanfun and MapleStory without browsers, using 3DES to encrypt the stored password and DES to decrypt and get the OTP.
+> 
+> [Website](https://kevin940726.github.io/BeanfunLogin)
+
+### License
+
+This project uses an [MIT license](LICENSE.md).
 
 
-========================
+## Version Log
 
-Login to Beanfun and MapleStory without browsers, using 3DES to encrypt the storing password. Use DES to decrypt and get the OTP.
+v1.1
+1. Brought back QRCode login method.
+2. Adjusted UI behaviours and fixed UI-related bugs.
+3. Minor fixes.
 
-========================
+v1.0.1
+1. Adjusted UI behaviours and fixed UI-related bugs.
+2. Moved save file to %LocalAppData%\MaplestoryLauncher\.
+3. Minor fixes.
 
-### Collaborators
-- [@xnum](https://github.com/xnum)
+v1.0
+1. Adjusted UI and its behaviours.
+2. Removed functions(login methods now only traditional, stored accounts, game choices now only Maplestory, auto update checking).
+3. Disabled Google Analytics to avoid contaminating the statistics.
 
----
 
-### Version Log
+### Beanfun Login
 
 Version 1.9.7
 - Support KartRider/elsword
@@ -158,13 +173,3 @@ Version 1.1
 
 Version 1.0
 - First deployment.
-
-==============================
-### TODO
-
-- Add tooltip.
-
-==============================
-### License
-
-This project use a [MIT license](LICENSE.md).

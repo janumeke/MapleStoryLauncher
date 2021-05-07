@@ -93,10 +93,6 @@ namespace MaplestoryLauncher
 
         private void getOtpWorker_DoWork(object sender, DoWorkEventArgs e)
         {
-            pingWorker.CancelAsync();
-            while (pingWorker.IsBusy)
-                Thread.Sleep(133);
-
             Debug.WriteLine("getOtpWorker start");
             Thread.CurrentThread.Name = "GetOTP Worker";
             int index = (int)e.Argument;
@@ -111,6 +107,10 @@ namespace MaplestoryLauncher
             if (this.bfClient.accountList.Count <= index)
             {
                 resultIndex = -1;
+                if (GameIsRunning())
+                    resultGameRun = GameState.Running;
+                else
+                    resultGameRun = GameState.Failed;
                 return;
             }
             Debug.WriteLine("call GetOTP");
@@ -119,6 +119,10 @@ namespace MaplestoryLauncher
             if (resultOtp == null)
             {
                 resultIndex = -1;
+                if (GameIsRunning())
+                    resultGameRun = GameState.Running;
+                else
+                    resultGameRun = GameState.Failed;
                 return;
             }
 
@@ -203,6 +207,50 @@ namespace MaplestoryLauncher
 
             if (Properties.Settings.Default.keepLogged && !this.pingWorker.IsBusy)
                 this.pingWorker.RunWorkerAsync();
+        }
+
+        private bool GameIsRunning()
+        {
+            bool? tmp = null;
+            return GameIsRunning(false, "", "", ref tmp);
+        }
+
+        private bool GameIsRunning(bool runIfNot, string sacc, string otp, ref bool? started)
+        {
+            switch (service_name)
+            {
+                case "新楓之谷":
+                    if (Process.GetProcessesByName("Maplestory").Length != 0)
+                    {
+                        Debug.WriteLine("find game");
+                        started = null;
+                        return true;
+                    }
+                    else if (runIfNot)
+                        started = processStart(gamePaths.Get(service_name), "tw.login.maplestory.gamania.com 8484 BeanFun " + sacc + " " + otp);
+                    break;
+            }
+            return false;
+        }
+
+        private bool processStart(string prog, string arg)
+        {
+            try
+            {
+                Debug.WriteLine("try open game");
+                ProcessStartInfo psInfo = new ProcessStartInfo();
+                psInfo.FileName = prog;
+                psInfo.Arguments = arg;
+                psInfo.WorkingDirectory = Path.GetDirectoryName(prog);
+                Process.Start(psInfo);
+                Debug.WriteLine("try open game done");
+                return true;
+            }
+            catch
+            {
+                UI.ShowError("啟動失敗，請嘗試手動以系統管理員身分啟動遊戲。");
+                return false;
+            }
         }
         #endregion
 

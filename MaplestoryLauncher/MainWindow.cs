@@ -121,50 +121,6 @@ namespace MaplestoryLauncher
             }
             this.getOtpWorker.RunWorkerAsync(accounts.SelectedItems[0].Index);
         }
-
-        private bool GameIsRunning()
-        {
-            bool? tmp = null;
-            return GameIsRunning(false, "", "", ref tmp);
-        }
-
-        private bool GameIsRunning(bool runIfNot, string sacc, string otp, ref bool? started)
-        {
-            switch (service_name)
-            {
-                case "新楓之谷":
-                    if (Process.GetProcessesByName("Maplestory").Length != 0)
-                    {
-                        Debug.WriteLine("find game");
-                        started = null;
-                        return true;
-                    }
-                    else if (runIfNot)
-                        started = processStart(gamePaths.Get(service_name), "tw.login.maplestory.gamania.com 8484 BeanFun " + sacc + " " + otp);
-                    break;
-            }
-            return false;
-        }
-
-        private bool processStart(string prog, string arg)
-        {
-            try
-            {
-                Debug.WriteLine("try open game");
-                ProcessStartInfo psInfo = new ProcessStartInfo();
-                psInfo.FileName = prog;
-                psInfo.Arguments = arg;
-                psInfo.WorkingDirectory = Path.GetDirectoryName(prog);
-                Process.Start(psInfo);
-                Debug.WriteLine("try open game done");
-                return true;
-            }
-            catch
-            {
-                UI.ShowError("啟動失敗，請嘗試手動以系統管理員身分啟動遊戲。");
-                return false;
-            }
-        }
         #endregion
 
         #region CheckBoxEvents
@@ -274,6 +230,7 @@ namespace MaplestoryLauncher
         }
         #endregion
 
+        //Copy on click
         private void accounts_DoubleClick(object sender, EventArgs e)
         {
             if (accounts.SelectedItems.Count == 1)
@@ -303,6 +260,7 @@ namespace MaplestoryLauncher
             }
         }
 
+        //Refresh UI when changed
         private void Input_TextChanged(object sender, EventArgs e)
         {
             UI.InputChanged();
@@ -321,6 +279,7 @@ namespace MaplestoryLauncher
             UI.FormFocused();
         }
 
+        //Cleanup before closing
         private void MainWindow_FormClosing(object sender, FormClosingEventArgs e)
         {
             if (status == LogInState.LoggedIn)

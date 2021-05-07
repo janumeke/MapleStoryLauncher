@@ -35,6 +35,7 @@ namespace MaplestoryLauncher
                 progressReport.Visible = false;
                 qrcodeDisplay.Image = MainWindow.bfClient.qrcode.bitmap;
                 qrcodeDisplay.Visible = true;
+                FormBorderStyle = FormBorderStyle.Sizable;
                 CheckQRCodeStatusTimer.Enabled = true;
             }
         }
@@ -74,6 +75,7 @@ namespace MaplestoryLauncher
         private void Waiting()
         {
             qrcodeDisplay.Visible = false;
+            FormBorderStyle = FormBorderStyle.FixedSingle;
             progressReport.Text = "取得中...";
             CenterAlignLabel(progressReport);
             progressReport.Visible = true;
@@ -82,6 +84,7 @@ namespace MaplestoryLauncher
         private void Error()
         {
             qrcodeDisplay.Visible = false;
+            FormBorderStyle = FormBorderStyle.FixedSingle;
             progressReport.Text = "取得失敗！\n請關閉視窗後再試一次。";
             CenterAlignLabel(progressReport);
             progressReport.Visible = true;
