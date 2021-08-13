@@ -13,7 +13,6 @@ using System.Collections.Specialized;
 using System.Security;
 using System.Security.Cryptography;
 using System.IO;
-using Utility.ModifyRegistry;
 using Microsoft.Win32;
 using System.Diagnostics;
 using Newtonsoft.Json;

@@ -114,7 +114,7 @@ namespace MaplestoryLauncher
                 return;
             }
             Debug.WriteLine("call GetOTP");
-            resultOtp = bfClient.GetOTP(Properties.Settings.Default.loginMethod, this.bfClient.accountList[index]);
+            resultOtp = bfClient.GetOTP(this.bfClient.accountList[index]);
             Debug.WriteLine("call GetOTP done");
             if (resultOtp == null)
             {

@@ -26,7 +26,7 @@ namespace MaplestoryLauncher
         {
             byte[] raw = null;
 
-            raw = this.DownloadData("http://tw.beanfun.com/beanfun_block/generic_handlers/echo_token.ashx?webtoken=1");
+            raw = this.DownloadData("https://tw.beanfun.com/beanfun_block/generic_handlers/echo_token.ashx?webtoken=1");
             string ret = Encoding.GetString(raw);
             Debug.WriteLine(GetCurrentTime() + " @ " + ret);
         }

@@ -115,7 +115,6 @@
     <Compile Include="QRCodeWindow.Designer.cs">
       <DependentUpon>QRCodeWindow.cs</DependentUpon>
     </Compile>
-    <Compile Include="Unused\AccountManager.cs" />
     <Compile Include="BeanfunClient\BeanfunClient.Account.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -136,15 +135,7 @@
     <Compile Include="MainWindow.Connect.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Unused\FormAccRecovery.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Unused\FormAccRecovery.Designer.cs">
-      <DependentUpon>FormAccRecovery.cs</DependentUpon>
-    </Compile>
     <Compile Include="GamePathDB.cs" />
-    <Compile Include="Unused\ModifyRegistry.cs" />
-    <Compile Include="Unused\PlaySafe.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="MainWindow.cs">
       <SubType>Form</SubType>
@@ -154,15 +145,11 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Unused\WindowsAPI.cs" />
     <EmbeddedResource Include="MainWindow.resx">
       <DependentUpon>MainWindow.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="QRCodeWindow.resx">
       <DependentUpon>QRCodeWindow.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Unused\FormAccRecovery.resx">
-      <DependentUpon>FormAccRecovery.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

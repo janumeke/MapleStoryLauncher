@@ -257,42 +257,16 @@ namespace MaplestoryLauncher
                         case "LoginNoAccount":
                             msg = "找不到遊戲帳號。";
                             break;
-                        case "LoginNoResponseVakten":
-                            msg = "登入失敗，與伺服器驗證失敗，請檢查是否安裝且已執行vakten程式。";
-                            break;
                         case "LoginUnknown":
                             msg = "登入失敗，請稍後再試";
                             type = ErrorType.Fatal;
                             break;
                         case "OTPNoLongPollingKey":
-                            //if (Properties.Settings.Default.loginMethod == (int)BeanfunClient.LoginMethod.PlaySafe)
-                            //    msg = "密碼獲取失敗，請檢查晶片卡是否插入讀卡機，且讀卡機運作正常。\n若仍出現此訊息，請嘗試重新登入。";
-                            //else
-                            //{
-                                msg = "已從伺服器斷線，請重新登入。";
-                                type = ErrorType.LoginFailed;
-                            //}
-                            break;
-                        case "LoginNoReaderName":
-                            msg = "登入失敗，找不到晶片卡或讀卡機，請檢查晶片卡是否插入讀卡機，且讀卡機運作正常。\n若還是發生此情形，請嘗試重新登入。";
-                            break;
-                        case "LoginNoCardType":
-                            msg = "登入失敗，晶片卡讀取失敗。";
-                            break;
-                        case "LoginNoCardId":
-                            msg = "登入失敗，找不到讀卡機。";
-                            break;
-                        case "LoginNoOpInfo":
-                            msg = "登入失敗，讀卡機讀取失敗。";
-                            break;
-                        case "LoginNoEncryptedData":
-                            msg = "登入失敗，晶片卡讀取失敗。";
+                            msg = "已從伺服器斷線，請重新登入。";
+                            type = ErrorType.LoginFailed;
                             break;
                         case "OTPUnknown":
                             msg = "取得密碼失敗，請嘗試重新登入。";
-                            break;
-                        case "LoginNoPSDriver":
-                            msg = "PlaySafe驅動初始化失敗，請檢查PlaySafe元件是否已正確安裝。";
                             break;
                         default:
                             break;
