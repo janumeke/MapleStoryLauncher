@@ -6,6 +6,7 @@ using System.Net;
 using System.IO;
 using System.Diagnostics;
 using CSharpAnalytics;
+using System.Reflection;
 
 namespace MaplestoryLauncher
 {
@@ -28,6 +29,17 @@ namespace MaplestoryLauncher
                 public void FormLoaded()
                 {
                     MainWindow.Text = $"新楓之谷啟動器";
+                    Version version = Assembly.GetExecutingAssembly().GetName().Version;
+                    if(version.Major != 0)
+                    {
+                        MainWindow.Text += $" v{version.Major}";
+                        if (version.Minor != 0)
+                        {
+                            MainWindow.Text += $".{version.Minor}";
+                            if (version.Build != 0)
+                                MainWindow.Text += $".{version.Build}";
+                        }
+                    }
                     MainWindow.Tip.SetToolTip(MainWindow.accounts, "雙擊即自動複製");
                     MainWindow.Tip.SetToolTip(MainWindow.getOtpButton, "點擊以登入遊戲或取得密碼");
                     MainWindow.Tip.SetToolTip(MainWindow.otpDisplay, "點擊一次即自動複製");

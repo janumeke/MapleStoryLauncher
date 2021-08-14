@@ -7,11 +7,11 @@ using System.Resources;
 // 變更這些屬性的值即可修改組件的相關
 // 資訊。
 [assembly: AssemblyTitle("MaplestoryLauncher")]
-[assembly: AssemblyDescription("New Beanfun MapleStory Login.")]
+[assembly: AssemblyDescription("MapleStory launcher via Beanfun.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("MaplestoryLauncher")]
-[assembly: AssemblyCopyright("Copyright Kai 2018")]
+[assembly: AssemblyCopyright("")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -35,6 +35,6 @@ using System.Resources;
 // [assembly: AssemblyVersion("1.0.*")]
 
 // 要更新程式版本號的話，這邊才是真正會抓取值的地方
-[assembly: AssemblyVersion("1.1.0.1")]
+[assembly: AssemblyVersion("1.1.1.*")]
 //[assembly: AssemblyFileVersion("0.0.0.0")]
 [assembly: NeutralResourcesLanguageAttribute("zh-Hant")]

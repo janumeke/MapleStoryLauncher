@@ -2,7 +2,7 @@
 
 A program that launches and logs in MapleStory by Beanfun accounts.
 
-> **Modified from BeanfunLogin:**
+**Modified from BeanfunLogin:**
 > 
 > Login to Beanfun and MapleStory without browsers, using 3DES to encrypt the stored password and DES to decrypt and get the OTP.
 > 
@@ -14,6 +14,9 @@ This project uses an [MIT license](LICENSE.md).
 
 
 ## Version Log
+
+v1.1.1
+1. Merge upstream and fix a protocol issue.
 
 v1.1
 1. Brought back QRCode login method.
