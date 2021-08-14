@@ -167,10 +167,7 @@ namespace MaplestoryLauncher
             string resultOtp = Convert.ToString(((object[])e.Result)[1]);
             GameState resultGameRun = (GameState)((object[])e.Result)[2];
 
-            if (resultGameRun == GameState.Failed)
-                UI.GameRun(false);
-            else
-                UI.GameRun();
+            UI.GameRun();
             
             if (e.Error != null)
             {
@@ -190,17 +187,7 @@ namespace MaplestoryLauncher
                 this.Text = "進行遊戲 - " + WebUtility.HtmlDecode(this.bfClient.accountList[index].sname);*/
 
                 if (resultGameRun == GameState.Running)
-                {
                     UI.OtpGot(resultOtp);
-                    try
-                    {
-                        Clipboard.SetText(resultOtp);
-                    }
-                    catch
-                    {
-
-                    }
-                }
                 else
                     UI.OtpGot("");
             }
@@ -220,14 +207,19 @@ namespace MaplestoryLauncher
             switch (service_name)
             {
                 case "新楓之谷":
-                    if (Process.GetProcessesByName("Maplestory").Length != 0)
+                    string fileName = gamePaths.GetAlias(service_name);
+                    string processName = fileName.Substring(0, fileName.Length - 4); //Remove '.exe'
+                    if (Process.GetProcessesByName(processName).Length != 0)
                     {
                         Debug.WriteLine("find game");
                         started = null;
                         return true;
                     }
                     else if (runIfNot)
-                        started = processStart(gamePaths.Get(service_name), "tw.login.maplestory.gamania.com 8484 BeanFun " + sacc + " " + otp);
+                        if(otp == "")
+                            started = processStart(gamePaths.Get(service_name), "");
+                        else
+                            started = processStart(gamePaths.Get(service_name), "tw.login.maplestory.gamania.com 8484 BeanFun " + sacc + " " + otp);
                     break;
             }
             return false;

@@ -15,6 +15,9 @@ This project uses an [MIT license](LICENSE.md).
 
 ## Version Log
 
+v1.2
+1. Adjusted UI behaviours and appearance.
+
 v1.1.1
 1. Merge upstream and fix a protocol issue.
 

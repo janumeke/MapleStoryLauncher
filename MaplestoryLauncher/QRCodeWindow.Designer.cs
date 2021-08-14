@@ -43,7 +43,8 @@ namespace MaplestoryLauncher
             this.qrcodeDisplay.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.qrcodeDisplay.Location = new System.Drawing.Point(12, 12);
+            this.qrcodeDisplay.Location = new System.Drawing.Point(12, 13);
+            this.qrcodeDisplay.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.qrcodeDisplay.Name = "qrcodeDisplay";
             this.qrcodeDisplay.Size = new System.Drawing.Size(256, 256);
             this.qrcodeDisplay.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
@@ -64,10 +65,10 @@ namespace MaplestoryLauncher
             // progressReport
             // 
             this.progressReport.AutoSize = true;
-            this.progressReport.Font = new System.Drawing.Font("微軟正黑體", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.progressReport.Location = new System.Drawing.Point(12, 9);
+            this.progressReport.Font = new System.Drawing.Font("Microsoft YaHei UI", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.progressReport.Location = new System.Drawing.Point(14, 13);
             this.progressReport.Name = "progressReport";
-            this.progressReport.Size = new System.Drawing.Size(79, 24);
+            this.progressReport.Size = new System.Drawing.Size(84, 25);
             this.progressReport.TabIndex = 1;
             this.progressReport.Text = "取得中...";
             this.progressReport.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -75,12 +76,14 @@ namespace MaplestoryLauncher
             // 
             // QRCodeWindow
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(280, 279);
+            this.ClientSize = new System.Drawing.Size(280, 281);
             this.Controls.Add(this.progressReport);
             this.Controls.Add(this.qrcodeDisplay);
+            this.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "QRCodeWindow";

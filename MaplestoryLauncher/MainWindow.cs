@@ -109,16 +109,28 @@ namespace MaplestoryLauncher
         // The start game/get OTP button.
         private void getOtpButton_Click(object sender, EventArgs e)
         {
-            if (accounts.SelectedItems.Count <= 0)
+            if (GameIsRunning() && accounts.SelectedItems.Count == 0)
                 return;
 
-            UI.GettingOtp();
-            if (Properties.Settings.Default.GAEnabled)
+            if (!GameIsRunning())
+                if (!UI.LaunchingGame())
+                    return;
+            if (accounts.SelectedItems.Count == 0)
             {
-                timedActivity = new CSharpAnalytics.Activities.AutoTimedEventActivity("GetOTP", Properties.Settings.Default.loginMethod.ToString());
-                AutoMeasurement.Client.TrackEvent("GetOTP" + Properties.Settings.Default.loginMethod.ToString(), "GetOTP");
+                bool? gameStarted = null;
+                GameIsRunning(true, "", "", ref gameStarted);
+                UI.GameRun();
             }
-            this.getOtpWorker.RunWorkerAsync(accounts.SelectedItems[0].Index);
+            else
+            {
+                UI.GettingOtp();
+                if (Properties.Settings.Default.GAEnabled)
+                {
+                    timedActivity = new CSharpAnalytics.Activities.AutoTimedEventActivity("GetOTP", Properties.Settings.Default.loginMethod.ToString());
+                    AutoMeasurement.Client.TrackEvent("GetOTP" + Properties.Settings.Default.loginMethod.ToString(), "GetOTP");
+                }
+                getOtpWorker.RunWorkerAsync(accounts.SelectedItems[0].Index);
+            }
         }
         #endregion
 
@@ -180,23 +192,34 @@ namespace MaplestoryLauncher
         private void autoSelect_CheckedChanged(object sender, EventArgs e)
         {
             bool check = autoSelect.Checked;
-            if (!check)
-                autoLaunch.Checked = false;
-            Properties.Settings.Default.autoSelect = check;
-            Properties.Settings.Default.Save();
-
-            if (Properties.Settings.Default.GAEnabled)
+            if (check && accounts.SelectedItems.Count == 0)
             {
-                AutoMeasurement.Client.TrackEvent(this.autoSelect.Checked ? "autoSelectOn" : "autoSelectOff", "autoSelectCheckbox");
+                autoSelect.Checked = false;
+                Notification.Hide(accounts);
+                Notification.Show("必須先選擇一個遊戲帳號！", accounts, (int)(0.4 * accounts.Width), -15, 1500);
+            }
+            else
+            {
+                Properties.Settings.Default.autoSelect = check;
+                Properties.Settings.Default.Save();
+                if (autoSelect.Checked)
+                    autoLaunch.Text = "自動啟動遊戲並登入";
+                else
+                {
+                    accounts.SelectedItems.Clear();
+                    autoLaunch.Text = "自動啟動遊戲";
+                }
+
+                if (Properties.Settings.Default.GAEnabled)
+                {
+                    AutoMeasurement.Client.TrackEvent(this.autoSelect.Checked ? "autoSelectOn" : "autoSelectOff", "autoSelectCheckbox");
+                }
             }
         }
 
         private void autoLaunch_CheckedChanged(object sender, EventArgs e)
         {
-            bool check = autoLaunch.Checked;
-            if (check)
-                autoSelect.Checked = true;
-            Properties.Settings.Default.opengame = check;
+            Properties.Settings.Default.opengame = autoLaunch.Checked;
             Properties.Settings.Default.Save();
 
             if (Properties.Settings.Default.GAEnabled)
@@ -247,16 +270,28 @@ namespace MaplestoryLauncher
 
         private void otpDisplay_OnClick(object sender, EventArgs e)
         {
-            
-            if (otpDisplay.Text == "" || !otpDisplay.Text.IsAllDigits()) return;
             try
             {
-                Clipboard.SetText(otpDisplay.Text);
+                if (otpDisplay.Text != "")
+                {
+                    Clipboard.SetText(otpDisplay.Text);
+                    Notification.Hide(otpDisplay);
+                    Notification.Show("已複製密碼！", otpDisplay, (int)(0.25 * otpDisplay.Width), (int)(-1.5 * otpDisplay.Height), 1000);
+                }
             }
             catch
             {
 
             }
+        }
+
+        private void otpDisplay_DoubleClick(object sender, EventArgs e)
+        {
+            if (otpDisplay.Text == "") return;
+            if (otpDisplay.PasswordChar == '*')
+                otpDisplay.PasswordChar = default;
+            else if (otpDisplay.PasswordChar == default)
+                otpDisplay.PasswordChar = '*';
         }
 
         //Refresh UI when changed
@@ -267,10 +302,7 @@ namespace MaplestoryLauncher
 
         private void accounts_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
         {
-            if (accounts.SelectedItems.Count == 0)
-                getOtpButton.Enabled = false;
-            else
-                getOtpButton.Enabled = true;
+            UI.UpdateGetOtpButton();
         }
 
         private void MainWindow_Activated(object sender, EventArgs e)
@@ -310,6 +342,5 @@ namespace MaplestoryLauncher
                 Properties.Settings.Default.autoLogin = false;
             Properties.Settings.Default.Save();
         }
-
     }
 }

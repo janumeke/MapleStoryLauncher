@@ -17,8 +17,8 @@ namespace MaplestoryLauncher
             public sealed class UI
             {
                 readonly MainWindow MainWindow;
-                const int initialWindowHeight = 200;
-                const int loggedInHeight = 450;
+                const int initialWindowHeight = 228;
+                const int loggedInHeight = 470;
 
                 public UI(MainWindow handle)
                 {
@@ -40,15 +40,9 @@ namespace MaplestoryLauncher
                                 MainWindow.Text += $".{version.Build}";
                         }
                     }
-                    MainWindow.Tip.SetToolTip(MainWindow.accounts, "雙擊即自動複製");
-                    MainWindow.Tip.SetToolTip(MainWindow.getOtpButton, "點擊以登入遊戲或取得密碼");
-                    MainWindow.Tip.SetToolTip(MainWindow.otpDisplay, "點擊一次即自動複製");
+                    MainWindow.Tip.SetToolTip(MainWindow.accounts, "雙擊複製");
+                    MainWindow.Tip.SetToolTip(MainWindow.otpDisplay, "點擊複製\n雙擊顯示/隱藏密碼");
                     MainWindow.Size = new Size(MainWindow.Size.Width, initialWindowHeight);
-
-                    MainWindow.accounts.TabStop = false;
-                    MainWindow.autoSelect.TabStop = false;
-                    MainWindow.autoLaunch.TabStop = false;
-                    MainWindow.getOtpButton.TabStop = false;
 
                     if (Properties.Settings.Default.rememberAccount)
                         MainWindow.accountInput.Text = Properties.Settings.Default.AccountID;
@@ -72,10 +66,7 @@ namespace MaplestoryLauncher
 
                 public void FormFocused()
                 {
-                    if (!MainWindow.GameIsRunning())
-                        MainWindow.getOtpButton.Text = "啟動遊戲";
-                    else
-                        MainWindow.getOtpButton.Text = "取得一次性密碼";
+                    UpdateGetOtpButton();
                 }
 
                 public void InputChanged()
@@ -91,7 +82,7 @@ namespace MaplestoryLauncher
                     MainWindow.accountInput.Enabled = false;
                     MainWindow.pwdInput.Enabled = false;
                     MainWindow.loginButton.Enabled = false;
-                    MainWindow.loginButton.Text = "請稍後...";
+                    MainWindow.loginButton.Text = "請稍候...";
                     MainWindow.UseWaitCursor = true;
                     if (MainWindow.rememberAccount.Checked)
                     {
@@ -130,10 +121,7 @@ namespace MaplestoryLauncher
                     MainWindow.pwdInput.Enabled = false;
                     MainWindow.loginButton.Text = "登出";
                     MainWindow.loginButton.Enabled = true;
-                    if (!MainWindow.GameIsRunning())
-                        MainWindow.getOtpButton.Text = "啟動遊戲";
-                    else
-                        MainWindow.getOtpButton.Text = "取得一次性密碼";
+                    UpdateGetOtpButton();
                     MainWindow.otpDisplay.Text = "";
                     
 
@@ -146,13 +134,16 @@ namespace MaplestoryLauncher
                         MainWindow.autoSelect.TabStop = true;
                         MainWindow.autoLaunch.TabStop = true;
                         MainWindow.getOtpButton.TabStop = true;
-
+                        
                         MainWindow.AcceptButton = MainWindow.getOtpButton;
+                        //Auto-select
                         if (Properties.Settings.Default.autoSelect && Properties.Settings.Default.autoSelectIndex < MainWindow.accounts.Items.Count)
                             if(MainWindow.accounts.Enabled)
                                 MainWindow.accounts.Items[Properties.Settings.Default.autoSelectIndex].Selected = true;
+                        MainWindow.autoSelect_CheckedChanged(null, null);
                         MainWindow.UseWaitCursor = false;
-                        if (Properties.Settings.Default.opengame && Properties.Settings.Default.autoSelectIndex < MainWindow.bfClient.accountList.Count())
+                        //Auto-launch
+                        if (!MainWindow.GameIsRunning() && Properties.Settings.Default.opengame)
                             if(MainWindow.getOtpButton.Enabled)
                                 MainWindow.getOtpButton_Click(null, null);
                     }
@@ -190,43 +181,45 @@ namespace MaplestoryLauncher
                     MainWindow.UseWaitCursor = false;
                 }
 
+                public bool LaunchingGame()
+                {
+                    //Check executable path
+                    bool pathOK;
+                    if (!File.Exists(MainWindow.gamePaths.Get(MainWindow.service_name)) ||
+                        !MainWindow.gamePaths.Get(MainWindow.service_name).EndsWith("\\" + MainWindow.gamePaths.GetAlias(MainWindow.service_name)))
+                    {
+                        do
+                        {
+                            if (!RequestGamePath())
+                                return false;
+                            if (!MainWindow.gamePaths.Get(MainWindow.service_name).EndsWith(MainWindow.gamePaths.GetAlias(MainWindow.service_name)))
+                            {
+                                MessageBox.Show($"請選擇{MainWindow.service_name}遊戲執行檔。", "錯誤檔案");
+                                pathOK = false;
+                            }
+                            else
+                                pathOK = true;
+                        }
+                        while (!pathOK);
+                    }
+                    return true;
+                }
+
                 public void GettingOtp()
                 {
                     MainWindow.loginButton.Enabled = false;
                     MainWindow.accounts.Enabled = false;
                     MainWindow.getOtpButton.Enabled = false;
 
-                    if (!MainWindow.GameIsRunning())
+                    if (MainWindow.GameIsRunning())
                     {
-                        bool pathOK;
-                        if (!File.Exists(MainWindow.gamePaths.Get(MainWindow.service_name)) ||
-                            !MainWindow.gamePaths.Get(MainWindow.service_name).EndsWith(MainWindow.gamePaths.GetAlias(MainWindow.service_name)))
-                        {
-                            do
-                            {
-                                if (!RequestGamePath())
-                                    return;
-                                if (!MainWindow.gamePaths.Get(MainWindow.service_name).EndsWith(MainWindow.gamePaths.GetAlias(MainWindow.service_name)))
-                                {
-                                    MessageBox.Show($"請選擇{MainWindow.service_name}遊戲執行檔。", "錯誤檔案");
-                                    pathOK = false;
-                                }
-                                else
-                                    pathOK = true;
-                            }
-                            while (!pathOK);
-                        }
-                    }
-                    else
+                        MainWindow.otpDisplay.PasswordChar = default;
                         MainWindow.otpDisplay.Text = "取得密碼中...";
+                    }
                 }
 
-                public void GameRun(bool successful = true)
+                public void GameRun()
                 {
-                    if (successful)
-                        MainWindow.getOtpButton.Text = "取得一次性密碼";
-                    else
-                        MainWindow.getOtpButton.Text = "啟動遊戲";
                     MainWindow.loginButton.Enabled = true;
                     MainWindow.accounts.Enabled = true;
                     MainWindow.accounts_ItemSelectionChanged(null, null);
@@ -234,11 +227,41 @@ namespace MaplestoryLauncher
 
                 public void OtpGot(string otp)
                 {
+                    MainWindow.otpDisplay.PasswordChar = '*';
                     MainWindow.otpDisplay.Text = otp;
+                    try
+                    {
+                        if(otp != "")
+                        {
+                            Clipboard.SetText(otp);
+                            MainWindow.Notification.Hide(MainWindow.otpDisplay);
+                            MainWindow.Notification.Show("已複製密碼！", MainWindow.otpDisplay, (int)(0.25 * MainWindow.otpDisplay.Width), (int)(-1.5 * MainWindow.otpDisplay.Height), 1000);
+                        }
+                    }
+                    catch
+                    {
+
+                    }
                 }
                 #endregion
 
                 #region Operations
+                public void UpdateGetOtpButton()
+                {
+                    if (!MainWindow.GameIsRunning())
+                        if (MainWindow.accounts.SelectedItems.Count == 0)
+                            MainWindow.getOtpButton.Text = "啟動遊戲";
+                        else
+                            MainWindow.getOtpButton.Text = "啟動遊戲並登入";
+                    else
+                        MainWindow.getOtpButton.Text = "取得一次性密碼";
+
+                    if (MainWindow.GameIsRunning() && MainWindow.accounts.SelectedItems.Count == 0)
+                        MainWindow.getOtpButton.Enabled = false;
+                    else
+                        MainWindow.getOtpButton.Enabled = true;
+                }
+
                 public enum ErrorType
                 {
                     Unspecified,
