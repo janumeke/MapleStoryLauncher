@@ -86,7 +86,7 @@ namespace MaplestoryLauncher
             switch(status)
             {
                 case LogInState.LoggedOut:
-                    //log in
+                    //Log in
                     UI.LoggingIn();
                     if (Properties.Settings.Default.GAEnabled)
                     {
@@ -96,11 +96,20 @@ namespace MaplestoryLauncher
                     loginWorker.RunWorkerAsync();
                     break;
                 case LogInState.LoggedIn:
-                    //log out
+                    //Log out or close window
                     if (pingWorker.IsBusy)
                         pingWorker.CancelAsync();
                     bfClient.Logout();
-                    status = LogInState.LoggedOut;
+                    if (!(e is FormClosingEventArgs)) //Log out only
+                    {
+                        status = LogInState.LoggedOut; //Closing does't change the state
+                        Password.Delete();
+                    }
+                    if (!autoSelect.Checked)
+                    {
+                        Properties.Settings.Default.autoSelectIndex = -1;
+                        Properties.Settings.Default.Save();
+                    }
                     UI.LoggedOut();
                     break;
             }
@@ -111,15 +120,13 @@ namespace MaplestoryLauncher
         {
             if (GameIsRunning() && accounts.SelectedItems.Count == 0)
                 return;
+            if (!GameIsRunning() && !UI.CheckGamePath())
+                return;
 
-            if (!GameIsRunning())
-                if (!UI.LaunchingGame())
-                    return;
             if (accounts.SelectedItems.Count == 0)
             {
                 bool? gameStarted = null;
                 GameIsRunning(true, "", "", ref gameStarted);
-                UI.GameRun();
             }
             else
             {
@@ -137,14 +144,11 @@ namespace MaplestoryLauncher
         #region CheckBoxEvents
         private void rememberAccount_CheckedChanged(object sender, EventArgs e)
         {
-            bool check = rememberAccount.Checked;
-            if (!check)
+            if (!rememberAccount.Checked)
             {
                 rememberPwd.Checked = false;
                 autoLogin.Checked = false;
             }
-            Properties.Settings.Default.rememberAccount = check;
-            Properties.Settings.Default.Save();
 
             if (Properties.Settings.Default.GAEnabled)
             {
@@ -155,14 +159,11 @@ namespace MaplestoryLauncher
 
         private void rememberPwd_CheckedChanged(object sender, EventArgs e)
         {
-            bool check = rememberPwd.Checked;
-            if (check)
+            if (rememberPwd.Checked)
                 rememberAccount.Checked = true;
             else
                 autoLogin.Checked = false;
-            Properties.Settings.Default.rememberPwd = check;
-            Properties.Settings.Default.Save();
-
+            
             if (Properties.Settings.Default.GAEnabled)
             {
                 AutoMeasurement.Client.TrackEvent(this.rememberPwd.Checked ? "rememberPwdOn" : "rememberPwdOff", "rememberPwdCheckbox");
@@ -171,16 +172,10 @@ namespace MaplestoryLauncher
 
         private void autoLogin_CheckedChanged(object sender, EventArgs e)
         {
-            bool check = autoLogin.Checked;
-            if (check)
+            if (autoLogin.Checked)
             {
                 rememberAccount.Checked = true;
                 rememberPwd.Checked = true;
-            }
-            if (status == LogInState.LoggedIn)
-            {
-                Properties.Settings.Default.autoLogin = check;
-                Properties.Settings.Default.Save();
             }
 
             if (Properties.Settings.Default.GAEnabled)
@@ -191,37 +186,17 @@ namespace MaplestoryLauncher
 
         private void autoSelect_CheckedChanged(object sender, EventArgs e)
         {
-            bool check = autoSelect.Checked;
-            if (check && accounts.SelectedItems.Count == 0)
-            {
-                autoSelect.Checked = false;
-                Notification.Hide(accounts);
-                Notification.Show("必須先選擇一個遊戲帳號！", accounts, (int)(0.4 * accounts.Width), -15, 1500);
-            }
-            else
-            {
-                Properties.Settings.Default.autoSelect = check;
-                Properties.Settings.Default.Save();
-                if (autoSelect.Checked)
-                    autoLaunch.Text = "自動啟動遊戲並登入";
-                else
-                {
-                    accounts.SelectedItems.Clear();
-                    autoLaunch.Text = "自動啟動遊戲";
-                }
+            UI.BoldAutoSelection(autoSelect.Checked);
+            UI.UpdateAutoLaunchCheckBoxText();
 
-                if (Properties.Settings.Default.GAEnabled)
-                {
-                    AutoMeasurement.Client.TrackEvent(this.autoSelect.Checked ? "autoSelectOn" : "autoSelectOff", "autoSelectCheckbox");
-                }
+            if (Properties.Settings.Default.GAEnabled)
+            {
+                AutoMeasurement.Client.TrackEvent(this.autoSelect.Checked ? "autoSelectOn" : "autoSelectOff", "autoSelectCheckbox");
             }
         }
 
         private void autoLaunch_CheckedChanged(object sender, EventArgs e)
         {
-            Properties.Settings.Default.opengame = autoLaunch.Checked;
-            Properties.Settings.Default.Save();
-
             if (Properties.Settings.Default.GAEnabled)
             {
                 AutoMeasurement.Client.TrackEvent(this.autoLaunch.Checked ? "autoLaunchOn" : "autoLaunchOff", "autoLaunchCheckbox");
@@ -231,13 +206,13 @@ namespace MaplestoryLauncher
         private void keepLogged_CheckedChanged(object sender, EventArgs e)
         {
             if (keepLogged.Checked)
+            {
                 if (!this.pingWorker.IsBusy)
                     this.pingWorker.RunWorkerAsync();
-                else
-                    if (this.pingWorker.IsBusy)
-                {
+            }
+            else
+                if (this.pingWorker.IsBusy)
                     this.pingWorker.CancelAsync();
-                }
             Properties.Settings.Default.Save();
         }
 
@@ -270,14 +245,12 @@ namespace MaplestoryLauncher
 
         private void otpDisplay_OnClick(object sender, EventArgs e)
         {
+            if (otpDisplay.Text == "" || !otpDisplay.Text.IsAllDigits()) return;
             try
             {
-                if (otpDisplay.Text != "")
-                {
-                    Clipboard.SetText(otpDisplay.Text);
-                    Notification.Hide(otpDisplay);
-                    Notification.Show("已複製密碼！", otpDisplay, (int)(0.25 * otpDisplay.Width), (int)(-1.5 * otpDisplay.Height), 1000);
-                }
+                Clipboard.SetText(otpDisplay.Text);
+                Notification.Hide(otpDisplay);
+                Notification.Show("已複製密碼！", otpDisplay, (int)(0.25 * otpDisplay.Width), (int)(-1.5 * otpDisplay.Height), 1000);
             }
             catch
             {
@@ -287,17 +260,17 @@ namespace MaplestoryLauncher
 
         private void otpDisplay_DoubleClick(object sender, EventArgs e)
         {
-            if (otpDisplay.Text == "") return;
-            if (otpDisplay.PasswordChar == '*')
-                otpDisplay.PasswordChar = default;
-            else if (otpDisplay.PasswordChar == default)
+            if (otpDisplay.Text == "" || !otpDisplay.Text.IsAllDigits()) return;
+            if (otpDisplay.PasswordChar == default)
                 otpDisplay.PasswordChar = '*';
+            else
+                otpDisplay.PasswordChar = default;
         }
 
         //Refresh UI when changed
         private void Input_TextChanged(object sender, EventArgs e)
         {
-            UI.InputChanged();
+            UI.UpdateLoginButtonText();
         }
 
         private void accounts_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
@@ -314,32 +287,46 @@ namespace MaplestoryLauncher
         private void MainWindow_FormClosing(object sender, FormClosingEventArgs e)
         {
             if (status == LogInState.LoggedIn)
-            {
-                bool autoLogin = Properties.Settings.Default.autoLogin;
                 if (loginButton.Enabled)
-                    loginButton_Click(null, null);
+                    loginButton_Click(null, e);
                 else
                 {
                     e.Cancel = true;
                     UI.ShowError("請先登出再關閉程式。");
                 }
-                Properties.Settings.Default.autoLogin = autoLogin;
-                Properties.Settings.Default.Save();
-            }
         }
 
         private void MainWindow_FormClosed(object sender, FormClosedEventArgs e)
         {
-            if (!rememberAccount.Checked)
-                Properties.Settings.Default.AccountID = "";
-            if (!rememberPwd.Checked)
+
+            Properties.Settings.Default.rememberAccount = rememberAccount.Checked;
+            Properties.Settings.Default.autoSelect = autoSelect.Checked;
+            Properties.Settings.Default.autoLaunch = autoLaunch.Checked;
+
+            switch (status)
             {
-                Properties.Settings.Default.entropy = "";
-                string localAppDataPath = Environment.GetEnvironmentVariable("LocalAppData");
-                File.Delete(localAppDataPath + "\\MaplestoryLauncher\\UserState.dat");
+                case LogInState.LoggedIn:
+                    if (rememberAccount.Checked)
+                        Properties.Settings.Default.accountID = accountInput.Text;
+                    else
+                        Properties.Settings.Default.accountID = "";
+                    if (rememberPwd.Checked)
+                        Password.Save(pwdInput.Text);
+                    else
+                        Password.Delete();
+                    Properties.Settings.Default.rememberPwd = rememberPwd.Checked;
+                    Properties.Settings.Default.autoLogin = autoLogin.Checked;
+                    break;
+                case LogInState.LoggedOut:
+                    if (!rememberAccount.Checked)
+                        Properties.Settings.Default.accountID = "";
+                    if (!rememberPwd.Checked)
+                        Password.Delete();
+                    Properties.Settings.Default.rememberPwd = false;
+                    Properties.Settings.Default.autoLogin = false;
+                    break;
             }
-            if (!autoLogin.Checked)
-                Properties.Settings.Default.autoLogin = false;
+
             Properties.Settings.Default.Save();
         }
     }

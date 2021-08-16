@@ -30,7 +30,7 @@ namespace MaplestoryLauncher
             }
             finally
             {
-                string gamePath = Properties.Settings.Default.gamePath;
+                string gamePath = Properties.Settings.Default.defaultGamePath;
                 if (gamePath != "")
                 {
                     string programFilesPath = Environment.GetEnvironmentVariable("ProgramFiles(x86)");
@@ -39,7 +39,7 @@ namespace MaplestoryLauncher
                     if (!gamePath.StartsWith(programFilesPath))
                         gamePath = programFilesPath + "\\" + gamePath;
                     Set("新楓之谷", gamePath);
-                    Properties.Settings.Default.gamePath = "";
+                    Properties.Settings.Default.defaultGamePath = "";
                     Save();
                 }
             }

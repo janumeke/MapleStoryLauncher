@@ -62,12 +62,12 @@ namespace MaplestoryLauncher.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string AccountID {
+        public string accountID {
             get {
-                return ((string)(this["AccountID"]));
+                return ((string)(this["accountID"]));
             }
             set {
-                this["AccountID"] = value;
+                this["accountID"] = value;
             }
         }
         
@@ -85,7 +85,7 @@ namespace MaplestoryLauncher.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        [global::System.Configuration.DefaultSettingValueAttribute("-1")]
         public int autoSelectIndex {
             get {
                 return ((int)(this["autoSelectIndex"]));
@@ -110,12 +110,12 @@ namespace MaplestoryLauncher.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("Gamania\\MapleStory\\MapleStory.exe")]
-        public string gamePath {
+        public string defaultGamePath {
             get {
-                return ((string)(this["gamePath"]));
+                return ((string)(this["defaultGamePath"]));
             }
             set {
-                this["gamePath"] = value;
+                this["defaultGamePath"] = value;
             }
         }
         
@@ -182,12 +182,12 @@ namespace MaplestoryLauncher.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool opengame {
+        public bool autoLaunch {
             get {
-                return ((bool)(this["opengame"]));
+                return ((bool)(this["autoLaunch"]));
             }
             set {
-                this["opengame"] = value;
+                this["autoLaunch"] = value;
             }
         }
         

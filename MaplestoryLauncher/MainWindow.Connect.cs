@@ -166,8 +166,6 @@ namespace MaplestoryLauncher
             int resultIndex = (int)((object[])e.Result)[0];
             string resultOtp = Convert.ToString(((object[])e.Result)[1]);
             GameState resultGameRun = (GameState)((object[])e.Result)[2];
-
-            UI.GameRun();
             
             if (e.Error != null)
             {
@@ -185,7 +183,7 @@ namespace MaplestoryLauncher
                 /*int accIndex = accounts.SelectedItems[0].Index;
                 string acc = this.bfClient.accountList[index].sacc;
                 this.Text = "進行遊戲 - " + WebUtility.HtmlDecode(this.bfClient.accountList[index].sname);*/
-
+                
                 if (resultGameRun == GameState.Running)
                     UI.OtpGot(resultOtp);
                 else

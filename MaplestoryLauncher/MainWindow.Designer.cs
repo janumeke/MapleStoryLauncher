@@ -87,7 +87,7 @@
             this.groupBoxBeanfun.Controls.Add(this.rememberPwd);
             this.groupBoxBeanfun.Controls.Add(this.autoLogin);
             this.groupBoxBeanfun.Font = new System.Drawing.Font("Microsoft YaHei UI Light", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.groupBoxBeanfun.Location = new System.Drawing.Point(13, 11);
+            this.groupBoxBeanfun.Location = new System.Drawing.Point(13, 10);
             this.groupBoxBeanfun.Name = "groupBoxBeanfun";
             this.groupBoxBeanfun.Size = new System.Drawing.Size(314, 172);
             this.groupBoxBeanfun.TabIndex = 100;
@@ -140,8 +140,6 @@
             // rememberAccount
             // 
             this.rememberAccount.AutoSize = true;
-            this.rememberAccount.Checked = global::MaplestoryLauncher.Properties.Settings.Default.rememberAccount;
-            this.rememberAccount.DataBindings.Add(new System.Windows.Forms.Binding("Checked", global::MaplestoryLauncher.Properties.Settings.Default, "rememberAccount", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
             this.rememberAccount.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.rememberAccount.Location = new System.Drawing.Point(234, 35);
             this.rememberAccount.Name = "rememberAccount";
@@ -165,8 +163,6 @@
             // rememberPwd
             // 
             this.rememberPwd.AutoSize = true;
-            this.rememberPwd.Checked = global::MaplestoryLauncher.Properties.Settings.Default.rememberPwd;
-            this.rememberPwd.DataBindings.Add(new System.Windows.Forms.Binding("Checked", global::MaplestoryLauncher.Properties.Settings.Default, "rememberPwd", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
             this.rememberPwd.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.rememberPwd.Location = new System.Drawing.Point(234, 75);
             this.rememberPwd.Name = "rememberPwd";
@@ -191,10 +187,8 @@
             // autoSelect
             // 
             this.autoSelect.AutoSize = true;
-            this.autoSelect.Checked = global::MaplestoryLauncher.Properties.Settings.Default.autoSelect;
-            this.autoSelect.DataBindings.Add(new System.Windows.Forms.Binding("Checked", global::MaplestoryLauncher.Properties.Settings.Default, "autoSelect", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
             this.autoSelect.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.autoSelect.Location = new System.Drawing.Point(31, 354);
+            this.autoSelect.Location = new System.Drawing.Point(37, 354);
             this.autoSelect.Name = "autoSelect";
             this.autoSelect.Size = new System.Drawing.Size(75, 21);
             this.autoSelect.TabIndex = 7;
@@ -231,10 +225,8 @@
             // autoLaunch
             // 
             this.autoLaunch.AutoSize = true;
-            this.autoLaunch.Checked = global::MaplestoryLauncher.Properties.Settings.Default.opengame;
-            this.autoLaunch.DataBindings.Add(new System.Windows.Forms.Binding("Checked", global::MaplestoryLauncher.Properties.Settings.Default, "opengame", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
             this.autoLaunch.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.autoLaunch.Location = new System.Drawing.Point(123, 354);
+            this.autoLaunch.Location = new System.Drawing.Point(129, 354);
             this.autoLaunch.Name = "autoLaunch";
             this.autoLaunch.Size = new System.Drawing.Size(99, 21);
             this.autoLaunch.TabIndex = 8;

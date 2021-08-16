@@ -9,6 +9,7 @@ namespace ExtentionMethods
             foreach (char ch in str)
                 if (!Char.IsDigit(ch))
                     return false;
+                    
             return true;
         }
     }

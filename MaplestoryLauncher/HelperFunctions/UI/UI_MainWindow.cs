@@ -10,14 +10,16 @@ using System.Reflection;
 
 namespace MaplestoryLauncher
 {
-    public partial class MainWindow
+    using ExtentionMethods;
+
+    public partial class MainWindow : Form
     {
         private sealed partial class HelperFunctions
         {
             public sealed class UI
             {
                 readonly MainWindow MainWindow;
-                const int initialWindowHeight = 228;
+                const int initialWindowHeight = 225;
                 const int loggedInHeight = 470;
 
                 public UI(MainWindow handle)
@@ -40,17 +42,21 @@ namespace MaplestoryLauncher
                                 MainWindow.Text += $".{version.Build}";
                         }
                     }
+
+                    MainWindow.accountInput.Text = Properties.Settings.Default.accountID;
+                    MainWindow.pwdInput.Text =  Password.Load();
+                    UpdateLoginButtonText();
+                    MainWindow.rememberAccount.Checked = Properties.Settings.Default.rememberAccount;
+                    MainWindow.rememberPwd.Checked = Properties.Settings.Default.rememberPwd;
+                    MainWindow.autoLogin.Checked = Properties.Settings.Default.autoLogin;
+                    MainWindow.autoSelect.Checked = Properties.Settings.Default.autoSelect;
+                    MainWindow.autoLaunch.Checked = Properties.Settings.Default.autoLaunch;
+
                     MainWindow.Tip.SetToolTip(MainWindow.accounts, "雙擊複製");
                     MainWindow.Tip.SetToolTip(MainWindow.otpDisplay, "點擊複製\n雙擊顯示/隱藏密碼");
                     MainWindow.Size = new Size(MainWindow.Size.Width, initialWindowHeight);
 
-                    if (Properties.Settings.Default.rememberAccount)
-                        MainWindow.accountInput.Text = Properties.Settings.Default.AccountID;
-                    if (Properties.Settings.Default.rememberPwd)
-                        MainWindow.pwdInput.Text = Password.Load();
-                    InputChanged();
-                    MainWindow.autoLogin.Checked = Properties.Settings.Default.autoLogin;
-
+                    
                     if (MainWindow.accountInput.Text == "")
                         MainWindow.ActiveControl = MainWindow.accountInput;
                     else if (MainWindow.pwdInput.Text == "")
@@ -59,22 +65,13 @@ namespace MaplestoryLauncher
                         MainWindow.ActiveControl = MainWindow.loginButton;
                     MainWindow.AcceptButton = MainWindow.loginButton;
 
-                    if (Properties.Settings.Default.autoLogin == true)
-                        if (MainWindow.loginButton.Enabled)
-                            MainWindow.loginButton_Click(null, null);
+                    if (MainWindow.autoLogin.Checked && MainWindow.loginButton.Enabled)
+                        MainWindow.loginButton_Click(null, null);
                 }
 
                 public void FormFocused()
                 {
                     UpdateGetOtpButton();
-                }
-
-                public void InputChanged()
-                {
-                    if (MainWindow.accountInput.Text == "" && MainWindow.pwdInput.Text == "")
-                        MainWindow.loginButton.Text = "顯示QRCode";
-                    else
-                        MainWindow.loginButton.Text = "登入";
                 }
 
                 public void LoggingIn()
@@ -84,125 +81,84 @@ namespace MaplestoryLauncher
                     MainWindow.loginButton.Enabled = false;
                     MainWindow.loginButton.Text = "請稍候...";
                     MainWindow.UseWaitCursor = true;
+
                     if (MainWindow.rememberAccount.Checked)
-                    {
-                        Properties.Settings.Default.AccountID = MainWindow.accountInput.Text;
-                        Properties.Settings.Default.Save();
-                    }
-                    /*foreach (ListViewItem item in MainWindow.accounts.Items)
-                        item.BackColor = DefaultBackColor;*/
+                        Properties.Settings.Default.accountID = MainWindow.accountInput.Text;
+                    else
+                        Properties.Settings.Default.accountID = "";
+                    Properties.Settings.Default.Save();
                 }
 
                 public void LoginFailed()
                 {
                     MainWindow.Size = new Size(MainWindow.Size.Width, initialWindowHeight);
 
-                    MainWindow.accounts.TabStop = false;
-                    MainWindow.autoSelect.TabStop = false;
-                    MainWindow.autoLaunch.TabStop = false;
-                    MainWindow.getOtpButton.TabStop = false;
-
                     MainWindow.accountInput.Enabled = true;
                     MainWindow.pwdInput.Enabled = true;
-                    InputChanged();
+                    UpdateLoginButtonText();
                     MainWindow.loginButton.Enabled = true;
-                    MainWindow.AcceptButton = MainWindow.loginButton;
                     MainWindow.UseWaitCursor = false;
                 }
 
                 public void LoggedIn()
                 {
-                    if (MainWindow.rememberPwd.Checked == true)
-                        Password.Save(MainWindow.pwdInput.Text);
-                    Properties.Settings.Default.autoLogin = MainWindow.autoLogin.Checked;
-                    Properties.Settings.Default.Save();
-
                     MainWindow.accountInput.Enabled = false;
                     MainWindow.pwdInput.Enabled = false;
+                    if (MainWindow.rememberPwd.Checked)
+                        Password.Save(MainWindow.pwdInput.Text);
+                    else
+                        Password.Delete();
                     MainWindow.loginButton.Text = "登出";
                     MainWindow.loginButton.Enabled = true;
-                    UpdateGetOtpButton();
                     MainWindow.otpDisplay.Text = "";
-                    
 
                     try
                     {
                         RedrawSAccountList();
-                        MainWindow.Size = new Size(MainWindow.Size.Width, loggedInHeight);
-
-                        MainWindow.accounts.TabStop = true;
-                        MainWindow.autoSelect.TabStop = true;
-                        MainWindow.autoLaunch.TabStop = true;
-                        MainWindow.getOtpButton.TabStop = true;
-                        
-                        MainWindow.AcceptButton = MainWindow.getOtpButton;
-                        //Auto-select
-                        if (Properties.Settings.Default.autoSelect && Properties.Settings.Default.autoSelectIndex < MainWindow.accounts.Items.Count)
-                            if(MainWindow.accounts.Enabled)
-                                MainWindow.accounts.Items[Properties.Settings.Default.autoSelectIndex].Selected = true;
-                        MainWindow.autoSelect_CheckedChanged(null, null);
-                        MainWindow.UseWaitCursor = false;
-                        //Auto-launch
-                        if (!MainWindow.GameIsRunning() && Properties.Settings.Default.opengame)
-                            if(MainWindow.getOtpButton.Enabled)
-                                MainWindow.getOtpButton_Click(null, null);
                     }
                     catch
                     {
-                        ShowError("登入失敗，無法取得帳號列表。", HelperFunctions.UI.ErrorType.LoginFailed);
+                        ShowError("登入失敗，無法取得帳號列表。", ErrorType.LoginFailed);
                         LoginFailed();
                     }
+
+                    BoldAutoSelection(MainWindow.autoSelect.Checked);
+                    //Auto-select
+                    if (MainWindow.autoSelect.Checked
+                        && Properties.Settings.Default.autoSelectIndex >= 0 //There is selection
+                        && Properties.Settings.Default.autoSelectIndex < MainWindow.accounts.Items.Count) //Selection is within the range of the list
+                        if (MainWindow.accounts.Enabled)
+                            MainWindow.accounts.Items[Properties.Settings.Default.autoSelectIndex].Selected = true;
+                    UpdateGetOtpButton();
+                    MainWindow.Size = new Size(MainWindow.Size.Width, loggedInHeight);
+                    MainWindow.UseWaitCursor = false;
+
+                    MainWindow.accounts.TabStop = true;
+                    MainWindow.autoSelect.TabStop = true;
+                    MainWindow.autoLaunch.TabStop = true;
+                    MainWindow.getOtpButton.TabStop = true;
+                    MainWindow.AcceptButton = MainWindow.getOtpButton;
+
+                    //Auto-launch
+                    if (MainWindow.autoLaunch.Checked && !MainWindow.GameIsRunning())
+                        if (MainWindow.getOtpButton.Enabled)
+                            MainWindow.getOtpButton_Click(null, null);
                 }
 
                 public void LoggedOut()
                 {
-                    if (Properties.Settings.Default.autoSelect)
-                        if (MainWindow.accounts.SelectedItems.Count == 0)
-                            Properties.Settings.Default.autoSelectIndex = 0;
-                        else
-                            Properties.Settings.Default.autoSelectIndex = MainWindow.accounts.SelectedItems[0].Index;
-                    bool autoLogin = MainWindow.autoLogin.Checked;
-                    Properties.Settings.Default.autoLogin = false;
-                    Properties.Settings.Default.Save();
-                    MainWindow.autoLogin.Checked = autoLogin;
-
-                    MainWindow.Size = new Size(MainWindow.Size.Width, initialWindowHeight);
-
                     MainWindow.accounts.TabStop = false;
                     MainWindow.autoSelect.TabStop = false;
                     MainWindow.autoLaunch.TabStop = false;
                     MainWindow.getOtpButton.TabStop = false;
+                    MainWindow.Size = new Size(MainWindow.Size.Width, initialWindowHeight);
 
                     MainWindow.accountInput.Enabled = true;
                     MainWindow.pwdInput.Enabled = true;
-                    InputChanged();
+                    UpdateLoginButtonText();
                     MainWindow.loginButton.Enabled = true;
                     MainWindow.AcceptButton = MainWindow.loginButton;
                     MainWindow.UseWaitCursor = false;
-                }
-
-                public bool LaunchingGame()
-                {
-                    //Check executable path
-                    bool pathOK;
-                    if (!File.Exists(MainWindow.gamePaths.Get(MainWindow.service_name)) ||
-                        !MainWindow.gamePaths.Get(MainWindow.service_name).EndsWith("\\" + MainWindow.gamePaths.GetAlias(MainWindow.service_name)))
-                    {
-                        do
-                        {
-                            if (!RequestGamePath())
-                                return false;
-                            if (!MainWindow.gamePaths.Get(MainWindow.service_name).EndsWith(MainWindow.gamePaths.GetAlias(MainWindow.service_name)))
-                            {
-                                MessageBox.Show($"請選擇{MainWindow.service_name}遊戲執行檔。", "錯誤檔案");
-                                pathOK = false;
-                            }
-                            else
-                                pathOK = true;
-                        }
-                        while (!pathOK);
-                    }
-                    return true;
                 }
 
                 public void GettingOtp()
@@ -211,6 +167,15 @@ namespace MaplestoryLauncher
                     MainWindow.accounts.Enabled = false;
                     MainWindow.getOtpButton.Enabled = false;
 
+                    if (MainWindow.autoSelect.Checked)
+                    {
+                        BoldAutoSelection(false);
+                        Properties.Settings.Default.autoSelectIndex = MainWindow.accounts.SelectedItems[0].Index;
+                        Properties.Settings.Default.Save();
+                        BoldAutoSelection();
+                        UpdateAutoLaunchCheckBoxText();
+                    }
+
                     if (MainWindow.GameIsRunning())
                     {
                         MainWindow.otpDisplay.PasswordChar = default;
@@ -218,20 +183,20 @@ namespace MaplestoryLauncher
                     }
                 }
 
-                public void GameRun()
-                {
-                    MainWindow.loginButton.Enabled = true;
-                    MainWindow.accounts.Enabled = true;
-                    MainWindow.accounts_ItemSelectionChanged(null, null);
-                }
-
                 public void OtpGot(string otp)
                 {
-                    MainWindow.otpDisplay.PasswordChar = '*';
+                    if (otp == "" || !otp.IsAllDigits())
+                        MainWindow.otpDisplay.PasswordChar = default;
+                    else
+                        MainWindow.otpDisplay.PasswordChar = '*';
                     MainWindow.otpDisplay.Text = otp;
+                    UpdateGetOtpButton();
+                    MainWindow.accounts.Enabled = true;
+                    MainWindow.loginButton.Enabled = true;
+
                     try
                     {
-                        if(otp != "")
+                        if(otp != "" && otp.IsAllDigits())
                         {
                             Clipboard.SetText(otp);
                             MainWindow.Notification.Hide(MainWindow.otpDisplay);
@@ -246,6 +211,22 @@ namespace MaplestoryLauncher
                 #endregion
 
                 #region Operations
+                public void UpdateLoginButtonText()
+                {
+                    if (MainWindow.accountInput.Text == "" && MainWindow.pwdInput.Text == "")
+                        MainWindow.loginButton.Text = "顯示 QRCode";
+                    else
+                        MainWindow.loginButton.Text = "登入";
+                }
+
+                public void UpdateAutoLaunchCheckBoxText()
+                {
+                    if (MainWindow.autoSelect.Checked && Properties.Settings.Default.autoSelectIndex >= 0)
+                        MainWindow.autoLaunch.Text = "自動啟動遊戲並登入";
+                    else
+                        MainWindow.autoLaunch.Text = "自動啟動遊戲";
+                }
+
                 public void UpdateGetOtpButton()
                 {
                     if (!MainWindow.GameIsRunning())
@@ -262,6 +243,40 @@ namespace MaplestoryLauncher
                         MainWindow.getOtpButton.Enabled = true;
                 }
 
+                public bool CheckGamePath()
+                {
+                    bool pathOK;
+                    if (!File.Exists(MainWindow.gamePaths.Get(MainWindow.service_name)) ||
+                        !MainWindow.gamePaths.Get(MainWindow.service_name).EndsWith("\\" + MainWindow.gamePaths.GetAlias(MainWindow.service_name)))
+                    {
+                        do
+                        {
+                            if (!RequestGamePath())
+                                return false;
+                            if (!MainWindow.gamePaths.Get(MainWindow.service_name).EndsWith("\\" + MainWindow.gamePaths.GetAlias(MainWindow.service_name)))
+                            {
+                                MessageBox.Show($"請選擇{MainWindow.service_name}遊戲執行檔。", "錯誤檔案");
+                                pathOK = false;
+                            }
+                            else
+                                pathOK = true;
+                        }
+                        while (!pathOK);
+                    }
+                    return true;
+                }
+
+                public void BoldAutoSelection(bool toggle = true)
+                {
+                    if (Properties.Settings.Default.autoSelectIndex >= 0
+                       && Properties.Settings.Default.autoSelectIndex < MainWindow.accounts.Items.Count)
+                    {
+                        MainWindow.accounts.Items[Properties.Settings.Default.autoSelectIndex].Font
+                        = new Font(MainWindow.accounts.Items[Properties.Settings.Default.autoSelectIndex].Font,
+                                   toggle ? FontStyle.Bold : FontStyle.Regular);
+                    }
+                }
+
                 public enum ErrorType
                 {
                     Unspecified,
@@ -269,7 +284,7 @@ namespace MaplestoryLauncher
                     LoginFailed
                 }
 
-                public bool ShowError(string msg, ErrorType type = ErrorType.Unspecified, string title = null)
+                public void ShowError(string msg, ErrorType type = ErrorType.Unspecified, string title = null)
                 {
                     if (Properties.Settings.Default.GAEnabled)
                         AutoMeasurement.Client.TrackException(msg);
@@ -312,8 +327,6 @@ namespace MaplestoryLauncher
                         Application.Exit();
                     else if (type == ErrorType.LoginFailed)
                         LoginFailed();
-
-                    return false;
                 }
                 #endregion
 
@@ -327,7 +340,6 @@ namespace MaplestoryLauncher
                         var listViewItem = new ListViewItem(row);
                         MainWindow.accounts.Items.Add(listViewItem);
                     }
-                    MainWindow.accounts_ItemSelectionChanged(null, null);
                 }
 
                 private bool RequestGamePath()

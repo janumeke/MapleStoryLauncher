@@ -11,19 +11,19 @@
     <Setting Name="autoLogin" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="AccountID" Type="System.String" Scope="User">
+    <Setting Name="accountID" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="autoSelect" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="autoSelectIndex" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">0</Value>
+      <Value Profile="(Default)">-1</Value>
     </Setting>
     <Setting Name="entropy" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="gamePath" Type="System.String" Scope="User">
+    <Setting Name="defaultGamePath" Type="System.String" Scope="User">
       <Value Profile="(Default)">Gamania\MapleStory\MapleStory.exe</Value>
     </Setting>
     <Setting Name="loginMethod" Type="System.Int32" Scope="User">
@@ -41,7 +41,7 @@
     <Setting Name="entropyForList" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="opengame" Type="System.Boolean" Scope="User">
+    <Setting Name="autoLaunch" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="autoPaste" Type="System.Boolean" Scope="User">

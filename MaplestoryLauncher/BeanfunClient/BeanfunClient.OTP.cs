@@ -85,8 +85,9 @@ namespace MaplestoryLauncher
                 string plain = response.Substring(8);
                 string otp = DecryptDES(plain, key);
                 if (otp != null)
-                    this.errmsg = null;       
-           
+                    this.errmsg = null;
+
+                otp = otp.Trim('\0');
                 return otp;
             }
             catch (Exception e)

@@ -15,6 +15,9 @@ This project uses an [MIT license](LICENSE.md).
 
 ## Version Log
 
+v1.2.1
+1. Adjusted UI behaviours and fixed UI-related bugs.
+
 v1.2
 1. Adjusted UI behaviours and appearance.
 

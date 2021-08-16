@@ -41,10 +41,18 @@ namespace MaplestoryLauncher
                 }
                 catch
                 {
-                    File.Delete(localAppDataPath + "\\MaplestoryLauncher\\UserState.dat");
+                    Delete();
                 }
             }
             return String.Empty;
+        }
+
+        public static void Delete()
+        {
+            string localAppDataPath = Environment.GetEnvironmentVariable("LocalAppData");
+            File.Delete(localAppDataPath + "\\MaplestoryLauncher\\UserState.dat");
+            Properties.Settings.Default.entropy = "";
+            Properties.Settings.Default.Save();
         }
     }
 }
