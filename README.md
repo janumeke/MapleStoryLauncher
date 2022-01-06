@@ -22,7 +22,7 @@ v1.2
 1. Adjusted UI behaviours and appearance.
 
 v1.1.1
-1. Merge upstream and fix a protocol issue.
+1. Merged upstream and fixed a protocol issue.
 
 v1.1
 1. Brought back QRCode login method.
@@ -35,7 +35,7 @@ v1.0.1
 3. Minor fixes.
 
 v1.0
-1. Adjusted UI and its behaviours.
+1. Reworked UI and its behaviours.
 2. Removed functions(login methods now only traditional, stored accounts, game choices now only Maplestory, auto update checking).
 3. Disabled Google Analytics to avoid contaminating the statistics.
 

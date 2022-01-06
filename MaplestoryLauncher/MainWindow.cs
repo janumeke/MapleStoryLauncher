@@ -186,7 +186,7 @@ namespace MaplestoryLauncher
 
         private void autoSelect_CheckedChanged(object sender, EventArgs e)
         {
-            UI.BoldAutoSelection(autoSelect.Checked);
+            UI.EmboldenAutoSelection(autoSelect.Checked);
             UI.UpdateAutoLaunchCheckBoxText();
 
             if (Properties.Settings.Default.GAEnabled)
@@ -300,6 +300,7 @@ namespace MaplestoryLauncher
         {
 
             Properties.Settings.Default.rememberAccount = rememberAccount.Checked;
+            Properties.Settings.Default.rememberPwd = rememberPwd.Checked;
             Properties.Settings.Default.autoSelect = autoSelect.Checked;
             Properties.Settings.Default.autoLaunch = autoLaunch.Checked;
 
@@ -314,7 +315,8 @@ namespace MaplestoryLauncher
                         Password.Save(pwdInput.Text);
                     else
                         Password.Delete();
-                    Properties.Settings.Default.rememberPwd = rememberPwd.Checked;
+                    if (!autoSelect.Checked)
+                        Properties.Settings.Default.autoSelectIndex = -1;
                     Properties.Settings.Default.autoLogin = autoLogin.Checked;
                     break;
                 case LogInState.LoggedOut:
@@ -322,7 +324,6 @@ namespace MaplestoryLauncher
                         Properties.Settings.Default.accountID = "";
                     if (!rememberPwd.Checked)
                         Password.Delete();
-                    Properties.Settings.Default.rememberPwd = false;
                     Properties.Settings.Default.autoLogin = false;
                     break;
             }

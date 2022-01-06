@@ -122,7 +122,7 @@ namespace MaplestoryLauncher
                         LoginFailed();
                     }
 
-                    BoldAutoSelection(MainWindow.autoSelect.Checked);
+                    EmboldenAutoSelection(MainWindow.autoSelect.Checked);
                     //Auto-select
                     if (MainWindow.autoSelect.Checked
                         && Properties.Settings.Default.autoSelectIndex >= 0 //There is selection
@@ -153,6 +153,12 @@ namespace MaplestoryLauncher
                     MainWindow.getOtpButton.TabStop = false;
                     MainWindow.Size = new Size(MainWindow.Size.Width, initialWindowHeight);
 
+                    if (!MainWindow.autoSelect.Checked)
+                    {
+                        Properties.Settings.Default.autoSelectIndex = -1;
+                        Properties.Settings.Default.Save();
+                    }
+
                     MainWindow.accountInput.Enabled = true;
                     MainWindow.pwdInput.Enabled = true;
                     UpdateLoginButtonText();
@@ -169,10 +175,10 @@ namespace MaplestoryLauncher
 
                     if (MainWindow.autoSelect.Checked)
                     {
-                        BoldAutoSelection(false);
+                        EmboldenAutoSelection(false);
                         Properties.Settings.Default.autoSelectIndex = MainWindow.accounts.SelectedItems[0].Index;
                         Properties.Settings.Default.Save();
-                        BoldAutoSelection();
+                        EmboldenAutoSelection();
                         UpdateAutoLaunchCheckBoxText();
                     }
 
@@ -266,7 +272,7 @@ namespace MaplestoryLauncher
                     return true;
                 }
 
-                public void BoldAutoSelection(bool toggle = true)
+                public void EmboldenAutoSelection(bool toggle = true)
                 {
                     if (Properties.Settings.Default.autoSelectIndex >= 0
                        && Properties.Settings.Default.autoSelectIndex < MainWindow.accounts.Items.Count)
