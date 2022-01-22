@@ -19,7 +19,7 @@ namespace MaplestoryLauncher
             public sealed class UI
             {
                 readonly MainWindow MainWindow;
-                const int initialWindowHeight = 225;
+                const int initialWindowHeight = 215;
                 const int loggedInHeight = 470;
 
                 public UI(MainWindow handle)
@@ -32,16 +32,9 @@ namespace MaplestoryLauncher
                 {
                     MainWindow.Text = $"新楓之谷啟動器";
                     Version version = Assembly.GetExecutingAssembly().GetName().Version;
-                    if(version.Major != 0)
-                    {
-                        MainWindow.Text += $" v{version.Major}";
-                        if (version.Minor != 0)
-                        {
-                            MainWindow.Text += $".{version.Minor}";
-                            if (version.Build != 0)
-                                MainWindow.Text += $".{version.Build}";
-                        }
-                    }
+                    MainWindow.Text += $" v{version.Major}.{version.Minor}";
+                    if (version.Build != 0)
+                        MainWindow.Text += $".{version.Build}";
 
                     MainWindow.accountInput.Text = Properties.Settings.Default.accountID;
                     MainWindow.pwdInput.Text =  Password.Load();
