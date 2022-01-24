@@ -5,8 +5,10 @@ using System.Windows.Forms;
 using System.Net;
 using System.IO;
 using System.Diagnostics;
+using System.Collections.Generic;
 using CSharpAnalytics;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace MaplestoryLauncher
 {
@@ -210,6 +212,33 @@ namespace MaplestoryLauncher
                 #endregion
 
                 #region Operations
+                [DllImport("user32.dll")]
+                public static extern void SwitchToThisWindow(IntPtr hWnd);
+                public void CheckMultipleInstances()
+                {
+                    string filePath = Application.ExecutablePath;
+                    string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(filePath);
+                    int processId = Process.GetCurrentProcess().Id;
+                    IEnumerable<Process> sameProcesses =
+                        from process in Process.GetProcessesByName(fileNameWithoutExtension)
+                        where process.MainModule.FileName == filePath && process.Id != processId
+                        select process;
+                    if(sameProcesses.Count() != 0)
+                    {
+                        if(MessageBox.Show(
+                            "同時執行多份相同路徑的執行檔可能使設定檔儲存不正確。\n" +
+                            "你可以複製此執行檔成多個不同檔案位置或名稱的執行檔。\n" +
+                            "你確定仍要執行？",
+                            "警告 - 偵測到多個實例",
+                            MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2)
+                           == DialogResult.Cancel)
+                        {
+                            SwitchToThisWindow(sameProcesses.First().MainWindowHandle);
+                            Environment.Exit(0);
+                        }
+                    }
+                }
+
                 public void UpdateLoginButtonText()
                 {
                     if (MainWindow.accountInput.Text == "" && MainWindow.pwdInput.Text == "")

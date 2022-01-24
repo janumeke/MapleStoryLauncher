@@ -69,6 +69,7 @@ namespace MaplestoryLauncher
 
             timedActivity = new CSharpAnalytics.Activities.AutoTimedEventActivity("FormLoad", Properties.Settings.Default.loginMethod.ToString());
 
+            UI.CheckMultipleInstances();
             InitializeComponent();
             UI.FormLoaded();
 

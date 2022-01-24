@@ -77,7 +77,7 @@
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(340, 456);
+            this.panel1.Size = new System.Drawing.Size(340, 441);
             this.panel1.TabIndex = 0;
             // 
             // pictureBox2
@@ -268,7 +268,7 @@
             // 
             this.getOtpButton.FlatStyle = System.Windows.Forms.FlatStyle.System;
             this.getOtpButton.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.getOtpButton.Location = new System.Drawing.Point(16, 400);
+            this.getOtpButton.Location = new System.Drawing.Point(18, 400);
             this.getOtpButton.Name = "getOtpButton";
             this.getOtpButton.Size = new System.Drawing.Size(145, 29);
             this.getOtpButton.TabIndex = 9;
@@ -303,11 +303,10 @@
             this.accounts.GridLines = true;
             this.accounts.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
             this.accounts.HideSelection = false;
-            this.accounts.LabelEdit = true;
-            this.accounts.Location = new System.Drawing.Point(17, 220);
+            this.accounts.Location = new System.Drawing.Point(18, 220);
             this.accounts.MultiSelect = false;
             this.accounts.Name = "accounts";
-            this.accounts.Size = new System.Drawing.Size(307, 138);
+            this.accounts.Size = new System.Drawing.Size(305, 138);
             this.accounts.TabIndex = 6;
             this.accounts.TabStop = false;
             this.accounts.UseCompatibleStateImageBehavior = false;
@@ -318,12 +317,12 @@
             // CharName
             // 
             this.CharName.Text = "遊戲帳號";
-            this.CharName.Width = 186;
+            this.CharName.Width = 185;
             // 
             // Account
             // 
             this.Account.Text = "登入帳號";
-            this.Account.Width = 116;
+            this.Account.Width = 115;
             // 
             // getOtpWorker
             // 
@@ -363,7 +362,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(340, 456);
+            this.ClientSize = new System.Drawing.Size(340, 441);
             this.Controls.Add(this.panel1);
             this.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;

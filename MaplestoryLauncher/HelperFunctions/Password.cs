@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Security.Cryptography;
 using System.IO;
+using System.Windows.Forms;
 
 namespace MaplestoryLauncher
 {
@@ -11,8 +12,7 @@ namespace MaplestoryLauncher
     {
         public static void Save(string password)
         {
-            string localAppDataPath = Environment.GetEnvironmentVariable("LocalAppData");
-            using (BinaryWriter writer = new BinaryWriter(File.Open(localAppDataPath + "\\MaplestoryLauncher\\UserState.dat", FileMode.Create)))
+            using (BinaryWriter writer = new BinaryWriter(File.Open(Application.UserAppDataPath + "\\MaplestoryLauncher\\UserState.dat", FileMode.Create)))
             {
                 // Create random entropy of 8 characters.
                 var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
