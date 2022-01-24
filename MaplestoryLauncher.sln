@@ -3,12 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31205.134
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpAnalytics.Net45", "CSharpAnalytics\Source\CSharpAnalytics\CSharpAnalytics.Net45.csproj", "{0334B071-1FB1-4372-B500-4BC58A11EE59}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MaplestoryLauncher", "MaplestoryLauncher\MaplestoryLauncher.csproj", "{AE885E1D-D21F-4810-9F82-EF797DD7845A}"
-	ProjectSection(ProjectDependencies) = postProject
-		{0334B071-1FB1-4372-B500-4BC58A11EE59} = {0334B071-1FB1-4372-B500-4BC58A11EE59}
-	EndProjectSection
 EndProject
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "WiXInstaller", "WiX\WiXInstaller.wixproj", "{CD3DB338-6B72-454A-A665-B3886F5FE0B9}"
 EndProject
@@ -20,14 +15,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{0334B071-1FB1-4372-B500-4BC58A11EE59}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0334B071-1FB1-4372-B500-4BC58A11EE59}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0334B071-1FB1-4372-B500-4BC58A11EE59}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{0334B071-1FB1-4372-B500-4BC58A11EE59}.Debug|x86.Build.0 = Debug|Any CPU
-		{0334B071-1FB1-4372-B500-4BC58A11EE59}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0334B071-1FB1-4372-B500-4BC58A11EE59}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0334B071-1FB1-4372-B500-4BC58A11EE59}.Release|x86.ActiveCfg = Release|Any CPU
-		{0334B071-1FB1-4372-B500-4BC58A11EE59}.Release|x86.Build.0 = Release|Any CPU
 		{AE885E1D-D21F-4810-9F82-EF797DD7845A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AE885E1D-D21F-4810-9F82-EF797DD7845A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AE885E1D-D21F-4810-9F82-EF797DD7845A}.Debug|x86.ActiveCfg = Debug|Any CPU

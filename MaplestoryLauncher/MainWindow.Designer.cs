@@ -43,7 +43,6 @@
             this.rememberPwd = new System.Windows.Forms.CheckBox();
             this.autoLogin = new System.Windows.Forms.CheckBox();
             this.autoSelect = new System.Windows.Forms.CheckBox();
-            this.autoPaste = new System.Windows.Forms.CheckBox();
             this.autoLaunch = new System.Windows.Forms.CheckBox();
             this.keepLogged = new System.Windows.Forms.CheckBox();
             this.getOtpButton = new System.Windows.Forms.Button();
@@ -68,7 +67,6 @@
             this.panel1.Controls.Add(this.pictureBox1);
             this.panel1.Controls.Add(this.groupBoxBeanfun);
             this.panel1.Controls.Add(this.autoSelect);
-            this.panel1.Controls.Add(this.autoPaste);
             this.panel1.Controls.Add(this.autoLaunch);
             this.panel1.Controls.Add(this.keepLogged);
             this.panel1.Controls.Add(this.getOtpButton);
@@ -220,21 +218,6 @@
             this.autoSelect.UseVisualStyleBackColor = true;
             this.autoSelect.CheckedChanged += new System.EventHandler(this.autoSelect_CheckedChanged);
             // 
-            // autoPaste
-            // 
-            this.autoPaste.AutoSize = true;
-            this.autoPaste.Checked = global::MaplestoryLauncher.Properties.Settings.Default.autoPaste;
-            this.autoPaste.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.autoPaste.DataBindings.Add(new System.Windows.Forms.Binding("Checked", global::MaplestoryLauncher.Properties.Settings.Default, "autoPaste", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
-            this.autoPaste.Location = new System.Drawing.Point(101, 465);
-            this.autoPaste.Name = "autoPaste";
-            this.autoPaste.Size = new System.Drawing.Size(75, 21);
-            this.autoPaste.TabIndex = 10;
-            this.autoPaste.Text = "自動輸入";
-            this.autoPaste.UseVisualStyleBackColor = true;
-            this.autoPaste.Visible = false;
-            this.autoPaste.CheckedChanged += new System.EventHandler(this.autoPaste_CheckedChanged);
-            // 
             // autoLaunch
             // 
             this.autoLaunch.AutoSize = true;
@@ -246,7 +229,6 @@
             this.autoLaunch.TabStop = false;
             this.autoLaunch.Text = "自動啟動遊戲";
             this.autoLaunch.UseVisualStyleBackColor = true;
-            this.autoLaunch.CheckedChanged += new System.EventHandler(this.autoLaunch_CheckedChanged);
             // 
             // keepLogged
             // 
@@ -406,7 +388,6 @@
         private System.Windows.Forms.ToolTip Tip;
         private System.Windows.Forms.ToolTip Notification;
         private System.Windows.Forms.CheckBox autoLaunch;
-        private System.Windows.Forms.CheckBox autoPaste;
         private System.Windows.Forms.CheckBox autoSelect;
         private System.Windows.Forms.GroupBox groupBoxBeanfun;
         private System.Windows.Forms.PictureBox pictureBox1;

@@ -12,7 +12,6 @@ using System.Threading;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Drawing;
-using CSharpAnalytics;
 
 namespace MaplestoryLauncher
 {
@@ -58,11 +57,6 @@ namespace MaplestoryLauncher
 
         private void loginWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            if (Properties.Settings.Default.GAEnabled && this.timedActivity != null)
-            {
-                AutoMeasurement.Client.Track(this.timedActivity);
-                this.timedActivity = null;
-            }
             Debug.WriteLine("loginWorker end");
 
             if (e.Cancelled)
@@ -118,24 +112,11 @@ namespace MaplestoryLauncher
             Debug.WriteLine("call GetOTP done");
             if (resultOtp == null)
             {
-                resultIndex = -1;
                 if (GameIsRunning())
                     resultGameRun = GameState.Running;
                 else
                     resultGameRun = GameState.Failed;
                 return;
-            }
-
-            if (Properties.Settings.Default.GAEnabled)
-            {
-                try
-                {
-                    AutoMeasurement.Client.TrackEvent(Path.GetFileName(gamePaths.Get(service_name)), "processName");
-                }
-                catch
-                {
-                    Debug.WriteLine("invalid path:" + gamePaths.Get(service_name));
-                }
             }
 
             bool? gameStarted = null;
@@ -156,11 +137,6 @@ namespace MaplestoryLauncher
 
         private void getOtpWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            if (Properties.Settings.Default.GAEnabled && this.timedActivity != null)
-            {
-                AutoMeasurement.Client.Track(this.timedActivity);
-                this.timedActivity = null;
-            }
             Debug.WriteLine("getOtpWorker end");
 
             int resultIndex = (int)((object[])e.Result)[0];
@@ -173,7 +149,7 @@ namespace MaplestoryLauncher
                 UI.ShowError(e.Error.Message);
                 return;
             }
-            if (resultIndex == -1)
+            if (resultIndex == -1 || resultOtp == string.Empty)
             {
                 UI.OtpGot("取得失敗");
                 UI.ShowError(this.bfClient.errmsg);
@@ -202,24 +178,19 @@ namespace MaplestoryLauncher
 
         private bool GameIsRunning(bool runIfNot, string sacc, string otp, ref bool? started)
         {
-            switch (service_name)
+            string processName = Path.GetFileNameWithoutExtension(gameFileName);
+            if (Process.GetProcessesByName(processName).Length != 0)
             {
-                case "新楓之谷":
-                    string fileName = gamePaths.GetAlias(service_name);
-                    string processName = fileName.Substring(0, fileName.Length - 4); //Remove '.exe'
-                    if (Process.GetProcessesByName(processName).Length != 0)
-                    {
-                        Debug.WriteLine("find game");
-                        started = null;
-                        return true;
-                    }
-                    else if (runIfNot)
-                        if(otp == "")
-                            started = processStart(gamePaths.Get(service_name), "");
-                        else
-                            started = processStart(gamePaths.Get(service_name), "tw.login.maplestory.gamania.com 8484 BeanFun " + sacc + " " + otp);
-                    break;
+                Debug.WriteLine("find game");
+                started = null;
+                return true;
             }
+            else 
+                if (runIfNot)
+                    if(otp == "")
+                        started = processStart(Properties.Settings.Default.gamePath, "");
+                    else
+                        started = processStart(Properties.Settings.Default.gamePath, "tw.login.maplestory.gamania.com 8484 BeanFun " + sacc + " " + otp);
             return false;
         }
 

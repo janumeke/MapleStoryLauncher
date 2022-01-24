@@ -10,9 +10,12 @@ namespace MaplestoryLauncher
 {
     public static class Password
     {
+        static string filePath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\MaplestoryLauncher\\UserState.dat";
+
         public static void Save(string password)
         {
-            using (BinaryWriter writer = new BinaryWriter(File.Open(Application.UserAppDataPath + "\\MaplestoryLauncher\\UserState.dat", FileMode.Create)))
+            Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+            using (BinaryWriter writer = new BinaryWriter(File.Open(filePath, FileMode.Create)))
             {
                 // Create random entropy of 8 characters.
                 var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -29,12 +32,11 @@ namespace MaplestoryLauncher
 
         public static string Load()
         {
-            string localAppDataPath = Environment.GetEnvironmentVariable("LocalAppData");
-            if (File.Exists(localAppDataPath + "\\MaplestoryLauncher\\UserState.dat"))
+            if (File.Exists(filePath))
             {
                 try
                 {
-                    Byte[] cipher = File.ReadAllBytes(localAppDataPath + "\\MaplestoryLauncher\\UserState.dat");
+                    Byte[] cipher = File.ReadAllBytes(filePath);
                     string entropy = Properties.Settings.Default.entropy;
                     byte[] plaintext = ProtectedData.Unprotect(cipher, Encoding.UTF8.GetBytes(entropy), DataProtectionScope.CurrentUser);
                     return Encoding.UTF8.GetString(plaintext);
@@ -49,8 +51,8 @@ namespace MaplestoryLauncher
 
         public static void Delete()
         {
-            string localAppDataPath = Environment.GetEnvironmentVariable("LocalAppData");
-            File.Delete(localAppDataPath + "\\MaplestoryLauncher\\UserState.dat");
+            if (File.Exists(filePath))
+                File.Delete(filePath);
             Properties.Settings.Default.entropy = "";
             Properties.Settings.Default.Save();
         }

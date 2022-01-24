@@ -6,7 +6,6 @@ using System.Net;
 using System.IO;
 using System.Diagnostics;
 using System.Collections.Generic;
-using CSharpAnalytics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
@@ -273,17 +272,27 @@ namespace MaplestoryLauncher
 
                 public bool CheckGamePath()
                 {
+                    if (Properties.Settings.Default.gamePath == "") //Use default value
+                    {
+                        //For 32-bit client in 32-bit OS or 64-bit client in 64-bit OS
+                        if (File.Exists("C:\\Program Files\\Gamania\\MapleStory\\" + MainWindow.gameFileName))
+                            Properties.Settings.Default.gamePath = "C:\\Program Files\\Gamania\\MapleStory\\" + MainWindow.gameFileName;
+                        //For 32-bit client in 64-bit OS
+                        if (File.Exists("C:\\Program Files (x86)\\Gamania\\MapleStory\\" + MainWindow.gameFileName))
+                            Properties.Settings.Default.gamePath = "C:\\Program Files (x86)\\Gamania\\MapleStory\\" + MainWindow.gameFileName;
+                    }
+
                     bool pathOK;
-                    if (!File.Exists(MainWindow.gamePaths.Get(MainWindow.service_name)) ||
-                        !MainWindow.gamePaths.Get(MainWindow.service_name).EndsWith("\\" + MainWindow.gamePaths.GetAlias(MainWindow.service_name)))
+                    if (!File.Exists(Properties.Settings.Default.gamePath) ||
+                        !Properties.Settings.Default.gamePath.EndsWith(MainWindow.gameFileName))
                     {
                         do
                         {
                             if (!RequestGamePath())
                                 return false;
-                            if (!MainWindow.gamePaths.Get(MainWindow.service_name).EndsWith("\\" + MainWindow.gamePaths.GetAlias(MainWindow.service_name)))
+                            if (!Properties.Settings.Default.gamePath.EndsWith(MainWindow.gameFileName))
                             {
-                                MessageBox.Show($"請選擇{MainWindow.service_name}遊戲執行檔。", "錯誤檔案");
+                                MessageBox.Show($"請選擇{MainWindow.gameName}遊戲執行檔。", "錯誤檔案");
                                 pathOK = false;
                             }
                             else
@@ -314,9 +323,6 @@ namespace MaplestoryLauncher
 
                 public void ShowError(string msg, ErrorType type = ErrorType.Unspecified, string title = null)
                 {
-                    if (Properties.Settings.Default.GAEnabled)
-                        AutoMeasurement.Client.TrackException(msg);
-
                     switch (msg)
                     {
                         case "LoginNoResponse":
@@ -373,23 +379,15 @@ namespace MaplestoryLauncher
                 private bool RequestGamePath()
                 {
                     OpenFileDialog openFileDialog = new OpenFileDialog();
-                    string identName = MainWindow.service_name;//comboBox2.SelectedItem.ToString();
-                    string binaryName = MainWindow.gamePaths.GetAlias(identName);
-                    if (binaryName == identName) binaryName = "*.exe";
-                    openFileDialog.Filter = String.Format("{0} ({1})|{1}|All files (*.*)|*.*", identName, binaryName);
+                    openFileDialog.Filter = String.Format("{0} ({1})|{1}|所有檔案 (*.*)|*.*", MainWindow.gameName, MainWindow.gameFileName);
                     openFileDialog.Title = "選擇遊戲執行檔";
-                    openFileDialog.InitialDirectory = MainWindow.gamePaths.Get(identName);
+                    openFileDialog.InitialDirectory = Properties.Settings.Default.gamePath;
 
                     if (openFileDialog.ShowDialog() == DialogResult.OK)
                     {
-                        string file = openFileDialog.FileName;
-                        MainWindow.gamePaths.Set(identName, file);
-                        MainWindow.gamePaths.Save();
+                        Properties.Settings.Default.gamePath = openFileDialog.FileName;
+                        Properties.Settings.Default.Save();
 
-                        if (Properties.Settings.Default.GAEnabled)
-                        {
-                            AutoMeasurement.Client.TrackEvent("set game path", "set game path");
-                        }
                         return true;
                     }
                     else

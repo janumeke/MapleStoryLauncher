@@ -73,6 +73,18 @@ namespace MaplestoryLauncher.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string entropy {
+            get {
+                return ((string)(this["entropy"]));
+            }
+            set {
+                this["entropy"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool autoSelect {
             get {
@@ -98,84 +110,12 @@ namespace MaplestoryLauncher.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string entropy {
+        public string gamePath {
             get {
-                return ((string)(this["entropy"]));
+                return ((string)(this["gamePath"]));
             }
             set {
-                this["entropy"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Gamania\\MapleStory\\MapleStory.exe")]
-        public string defaultGamePath {
-            get {
-                return ((string)(this["defaultGamePath"]));
-            }
-            set {
-                this["defaultGamePath"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int loginMethod {
-            get {
-                return ((int)(this["loginMethod"]));
-            }
-            set {
-                this["loginMethod"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool keepLogged {
-            get {
-                return ((bool)(this["keepLogged"]));
-            }
-            set {
-                this["keepLogged"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool showTip {
-            get {
-                return ((bool)(this["showTip"]));
-            }
-            set {
-                this["showTip"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("610074_T9")]
-        public string loginGame {
-            get {
-                return ((string)(this["loginGame"]));
-            }
-            set {
-                this["loginGame"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string entropyForList {
-            get {
-                return ((string)(this["entropyForList"]));
-            }
-            set {
-                this["entropyForList"] = value;
+                this["gamePath"] = value;
             }
         }
         
@@ -194,60 +134,12 @@ namespace MaplestoryLauncher.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool autoPaste {
+        public bool keepLogged {
             get {
-                return ((bool)(this["autoPaste"]));
+                return ((bool)(this["keepLogged"]));
             }
             set {
-                this["autoPaste"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool GAEnabled {
-            get {
-                return ((bool)(this["GAEnabled"]));
-            }
-            set {
-                this["GAEnabled"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1.9.7")]
-        public string IgnoreVersion {
-            get {
-                return ((string)(this["IgnoreVersion"]));
-            }
-            set {
-                this["IgnoreVersion"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("{}")]
-        public string gamePathDB {
-            get {
-                return ((string)(this["gamePathDB"]));
-            }
-            set {
-                this["gamePathDB"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool useNewQRCode {
-            get {
-                return ((bool)(this["useNewQRCode"]));
-            }
-            set {
-                this["useNewQRCode"] = value;
+                this["keepLogged"] = value;
             }
         }
     }

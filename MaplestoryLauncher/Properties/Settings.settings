@@ -14,49 +14,22 @@
     <Setting Name="accountID" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="entropy" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
     <Setting Name="autoSelect" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="autoSelectIndex" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">-1</Value>
     </Setting>
-    <Setting Name="entropy" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
-    </Setting>
-    <Setting Name="defaultGamePath" Type="System.String" Scope="User">
-      <Value Profile="(Default)">Gamania\MapleStory\MapleStory.exe</Value>
-    </Setting>
-    <Setting Name="loginMethod" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">0</Value>
-    </Setting>
-    <Setting Name="keepLogged" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
-    </Setting>
-    <Setting Name="showTip" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
-    </Setting>
-    <Setting Name="loginGame" Type="System.String" Scope="User">
-      <Value Profile="(Default)">610074_T9</Value>
-    </Setting>
-    <Setting Name="entropyForList" Type="System.String" Scope="User">
+    <Setting Name="gamePath" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="autoLaunch" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="autoPaste" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
-    </Setting>
-    <Setting Name="GAEnabled" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
-    <Setting Name="IgnoreVersion" Type="System.String" Scope="User">
-      <Value Profile="(Default)">1.9.7</Value>
-    </Setting>
-    <Setting Name="gamePathDB" Type="System.String" Scope="User">
-      <Value Profile="(Default)">{}</Value>
-    </Setting>
-    <Setting Name="useNewQRCode" Type="System.Boolean" Scope="User">
+    <Setting Name="keepLogged" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
   </Settings>
