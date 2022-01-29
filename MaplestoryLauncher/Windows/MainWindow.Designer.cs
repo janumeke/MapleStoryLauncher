@@ -44,10 +44,9 @@
             this.autoLogin = new System.Windows.Forms.CheckBox();
             this.autoSelect = new System.Windows.Forms.CheckBox();
             this.autoLaunch = new System.Windows.Forms.CheckBox();
-            this.keepLogged = new System.Windows.Forms.CheckBox();
             this.getOtpButton = new System.Windows.Forms.Button();
             this.otpDisplay = new System.Windows.Forms.TextBox();
-            this.accounts = new System.Windows.Forms.ListView();
+            this.accountListView = new System.Windows.Forms.ListView();
             this.CharName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.Account = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.getOtpWorker = new System.ComponentModel.BackgroundWorker();
@@ -68,10 +67,9 @@
             this.panel1.Controls.Add(this.groupBoxBeanfun);
             this.panel1.Controls.Add(this.autoSelect);
             this.panel1.Controls.Add(this.autoLaunch);
-            this.panel1.Controls.Add(this.keepLogged);
             this.panel1.Controls.Add(this.getOtpButton);
             this.panel1.Controls.Add(this.otpDisplay);
-            this.panel1.Controls.Add(this.accounts);
+            this.panel1.Controls.Add(this.accountListView);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
@@ -80,7 +78,7 @@
             // 
             // pictureBox2
             // 
-            this.pictureBox2.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox2.Image")));
+            this.pictureBox2.Image = global::MaplestoryLauncher.Properties.Resources.maple;
             this.pictureBox2.Location = new System.Drawing.Point(17, 195);
             this.pictureBox2.Name = "pictureBox2";
             this.pictureBox2.Size = new System.Drawing.Size(18, 18);
@@ -90,7 +88,7 @@
             // 
             // pictureBox1
             // 
-            this.pictureBox1.Image = ((System.Drawing.Image)(resources.GetObject("pictureBox1.Image")));
+            this.pictureBox1.Image = global::MaplestoryLauncher.Properties.Resources.beanfun;
             this.pictureBox1.Location = new System.Drawing.Point(15, 15);
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.Size = new System.Drawing.Size(18, 18);
@@ -230,24 +228,9 @@
             this.autoLaunch.Text = "自動啟動遊戲";
             this.autoLaunch.UseVisualStyleBackColor = true;
             // 
-            // keepLogged
-            // 
-            this.keepLogged.AutoSize = true;
-            this.keepLogged.Checked = global::MaplestoryLauncher.Properties.Settings.Default.keepLogged;
-            this.keepLogged.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.keepLogged.DataBindings.Add(new System.Windows.Forms.Binding("Checked", global::MaplestoryLauncher.Properties.Settings.Default, "keepLogged", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
-            this.keepLogged.Enabled = false;
-            this.keepLogged.Location = new System.Drawing.Point(20, 465);
-            this.keepLogged.Name = "keepLogged";
-            this.keepLogged.Size = new System.Drawing.Size(75, 21);
-            this.keepLogged.TabIndex = 8;
-            this.keepLogged.Text = "保持登入";
-            this.keepLogged.UseVisualStyleBackColor = true;
-            this.keepLogged.Visible = false;
-            this.keepLogged.CheckedChanged += new System.EventHandler(this.keepLogged_CheckedChanged);
-            // 
             // getOtpButton
             // 
+            this.getOtpButton.Enabled = false;
             this.getOtpButton.FlatStyle = System.Windows.Forms.FlatStyle.System;
             this.getOtpButton.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.getOtpButton.Location = new System.Drawing.Point(18, 400);
@@ -273,28 +256,28 @@
             this.otpDisplay.Click += new System.EventHandler(this.otpDisplay_OnClick);
             this.otpDisplay.DoubleClick += new System.EventHandler(this.otpDisplay_DoubleClick);
             // 
-            // accounts
+            // accountListView
             // 
-            this.accounts.Activation = System.Windows.Forms.ItemActivation.TwoClick;
-            this.accounts.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.accountListView.Activation = System.Windows.Forms.ItemActivation.TwoClick;
+            this.accountListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.CharName,
             this.Account});
-            this.accounts.Cursor = System.Windows.Forms.Cursors.Arrow;
-            this.accounts.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.accounts.FullRowSelect = true;
-            this.accounts.GridLines = true;
-            this.accounts.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
-            this.accounts.HideSelection = false;
-            this.accounts.Location = new System.Drawing.Point(18, 220);
-            this.accounts.MultiSelect = false;
-            this.accounts.Name = "accounts";
-            this.accounts.Size = new System.Drawing.Size(305, 138);
-            this.accounts.TabIndex = 6;
-            this.accounts.TabStop = false;
-            this.accounts.UseCompatibleStateImageBehavior = false;
-            this.accounts.View = System.Windows.Forms.View.Details;
-            this.accounts.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.accounts_ItemSelectionChanged);
-            this.accounts.DoubleClick += new System.EventHandler(this.accounts_DoubleClick);
+            this.accountListView.Cursor = System.Windows.Forms.Cursors.Arrow;
+            this.accountListView.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.accountListView.FullRowSelect = true;
+            this.accountListView.GridLines = true;
+            this.accountListView.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
+            this.accountListView.HideSelection = false;
+            this.accountListView.Location = new System.Drawing.Point(18, 220);
+            this.accountListView.MultiSelect = false;
+            this.accountListView.Name = "accountListView";
+            this.accountListView.Size = new System.Drawing.Size(305, 138);
+            this.accountListView.TabIndex = 6;
+            this.accountListView.TabStop = false;
+            this.accountListView.UseCompatibleStateImageBehavior = false;
+            this.accountListView.View = System.Windows.Forms.View.Details;
+            this.accountListView.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.accountListView_ItemSelectionChanged);
+            this.accountListView.DoubleClick += new System.EventHandler(this.accountListView_DoubleClick);
             // 
             // CharName
             // 
@@ -342,8 +325,8 @@
             // 
             // MainWindow
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.ClientSize = new System.Drawing.Size(340, 441);
             this.Controls.Add(this.panel1);
             this.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -368,7 +351,7 @@
         #endregion
 
         private System.Windows.Forms.Panel panel1;
-        private System.Windows.Forms.ListView accounts;
+        private System.Windows.Forms.ListView accountListView;
         private System.Windows.Forms.ColumnHeader CharName;
         private System.Windows.Forms.ColumnHeader Account;
         private System.Windows.Forms.CheckBox autoLogin;
@@ -384,7 +367,6 @@
         private System.ComponentModel.BackgroundWorker getOtpWorker;
         private System.ComponentModel.BackgroundWorker loginWorker;
         private System.ComponentModel.BackgroundWorker pingWorker;
-        private System.Windows.Forms.CheckBox keepLogged;
         private System.Windows.Forms.ToolTip Tip;
         private System.Windows.Forms.ToolTip Notification;
         private System.Windows.Forms.CheckBox autoLaunch;

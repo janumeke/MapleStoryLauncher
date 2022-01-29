@@ -33,7 +33,7 @@ namespace MaplestoryLauncher
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(QRCodeWindow));
             this.qrcodeDisplay = new System.Windows.Forms.PictureBox();
             this.getQRCodeWorker = new System.ComponentModel.BackgroundWorker();
-            this.CheckQRCodeStatusTimer = new System.Windows.Forms.Timer(this.components);
+            this.checkQRCodeStatusTimer = new System.Windows.Forms.Timer(this.components);
             this.progressReport = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.qrcodeDisplay)).BeginInit();
             this.SuspendLayout();
@@ -57,10 +57,10 @@ namespace MaplestoryLauncher
             this.getQRCodeWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.getQRCodeWorker_DoWork);
             this.getQRCodeWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.getQRCodeWorker_RunWorkerCompleted);
             // 
-            // CheckQRCodeStatusTimer
+            // checkQRCodeStatusTimer
             // 
-            this.CheckQRCodeStatusTimer.Interval = 3000;
-            this.CheckQRCodeStatusTimer.Tick += new System.EventHandler(this.CheckQRCodeStatusTimer_Tick);
+            this.checkQRCodeStatusTimer.Interval = 3000;
+            this.checkQRCodeStatusTimer.Tick += new System.EventHandler(this.checkQRCodeStatusTimer_Tick);
             // 
             // progressReport
             // 
@@ -76,8 +76,8 @@ namespace MaplestoryLauncher
             // 
             // QRCodeWindow
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 17F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.ClientSize = new System.Drawing.Size(280, 281);
             this.Controls.Add(this.progressReport);
             this.Controls.Add(this.qrcodeDisplay);
@@ -102,7 +102,7 @@ namespace MaplestoryLauncher
 
         private System.Windows.Forms.PictureBox qrcodeDisplay;
         private System.ComponentModel.BackgroundWorker getQRCodeWorker;
-        private System.Windows.Forms.Timer CheckQRCodeStatusTimer;
+        private System.Windows.Forms.Timer checkQRCodeStatusTimer;
         private System.Windows.Forms.Label progressReport;
     }
 }

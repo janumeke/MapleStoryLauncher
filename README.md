@@ -15,6 +15,15 @@ This project uses an [MIT license](LICENSE.md).
 
 ## Version Log
 
+v1.3
+1. Rewrote network code and its interactions with the UI.
+2. Now supports App authentication to log in.
+3. Now possible to save the last response when unexpected errors have happened.
+4. Adjusted UI behaviours and appearance.
+5. Now warns running multiple instances of the program.
+6. Cleaning up old codes greatly reduced build time and executable size.
+
+v1.2.2  
 v1.2.1
 1. Adjusted UI behaviours and fixed UI-related bugs.
 

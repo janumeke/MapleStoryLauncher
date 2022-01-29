@@ -7,18 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Net;
+using System.Net.Mail;
 using System.Text.RegularExpressions;
-using System.Collections.Specialized;
-using System.Security;
-using System.Security.Cryptography;
-using System.IO;
-using Microsoft.Win32;
-using System.Diagnostics;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System.Threading;
-using System.Reflection;
 
 namespace MaplestoryLauncher
 {
@@ -26,8 +16,6 @@ namespace MaplestoryLauncher
 
     public partial class MainWindow : Form
     {
-        public BeanfunClient bfClient;
-
         private string gameName = "新楓之谷";
 
         private string gameFileName = "MapleStory.exe";
@@ -37,18 +25,18 @@ namespace MaplestoryLauncher
             LoggedOut,
             LoggedIn
         }
-
+        
         private LogInState status = LogInState.LoggedOut;
 
-        readonly HelperFunctions.UI UI;
+        readonly UI ui;
 
         public MainWindow()
         {
-            UI = new HelperFunctions.UI(this);
+            ui = new UI(this);
 
-            UI.CheckMultipleInstances();
+            ui.CheckMultipleInstances();
             InitializeComponent();
-            UI.FormLoaded();
+            ui.FormLoaded();
         }
 
         #region ButtonEvents
@@ -58,47 +46,72 @@ namespace MaplestoryLauncher
             switch(status)
             {
                 case LogInState.LoggedOut:
+                    //Check formats of the account and password only when not using QRCode
+                    if (accountInput.Text != String.Empty || pwdInput.Text != String.Empty)
+                    {
+                        if (!Regex.Match(accountInput.Text, "^[0-9A-Za-z]{8,20}$").Success)
+                        {
+                            try { new MailAddress(accountInput.Text); }
+                            catch
+                            {
+                                MessageBox.Show("帳號或認證 Email 格式錯誤。\n" +
+                                                "帳號格式必須是：" +
+                                                "1. 英文字母與數字\n" +
+                                                "2. 長度為 8 至 20", "錯誤");
+                                return;
+                            }
+                        }
+                        if (!Regex.Match(pwdInput.Text, "^[0-9A-Za-z]{8,20}$").Success)
+                        {
+                            MessageBox.Show("密碼格式錯誤，必須是：\n" +
+                                            "1. 英文字母與數字\n" +
+                                            "2. 長度為 8 至 20", "錯誤");
+                            return;
+                        }
+                    }
                     //Log in
-                    UI.LoggingIn();
+                    ui.LoggingIn();
                     loginWorker.RunWorkerAsync();
                     break;
                 case LogInState.LoggedIn:
-                    //Log out or close window
                     if (pingWorker.IsBusy)
                         pingWorker.CancelAsync();
-                    bfClient.Logout();
-                    if (!(e is FormClosingEventArgs)) //Log out only
+                    if(beanfun.Logout()) //beanfun has reader-writer lock
                     {
-                        status = LogInState.LoggedOut; //Closing does't change the state
-                        Password.Delete();
+                        status = LogInState.LoggedOut;
+                        if (!(e is FormClosingEventArgs))
+                        {
+                            //Log out only
+                            Password.Delete();
+                        }
+                        //Log out or close window
+                        if (!autoSelect.Checked)
+                        {
+                            Properties.Settings.Default.autoSelectIndex = -1;
+                            Properties.Settings.Default.Save();
+                        }
+                        ui.LoggedOut();
                     }
-                    if (!autoSelect.Checked)
-                    {
-                        Properties.Settings.Default.autoSelectIndex = -1;
-                        Properties.Settings.Default.Save();
-                    }
-                    UI.LoggedOut();
+                    else
+                        MessageBox.Show("登出失敗，請重開程式。\n請回報開發者。", "預期外的錯誤");
                     break;
             }
-        }    
+        }
 
         // The start game/get OTP button.
         private void getOtpButton_Click(object sender, EventArgs e)
         {
-            if (GameIsRunning() && accounts.SelectedItems.Count == 0)
+            if (IsGameRunning() && accountListView.SelectedItems.Count != 1)
                 return;
-            if (!GameIsRunning() && !UI.CheckGamePath())
+            if (!IsGameRunning() && !ui.CheckGamePath())
                 return;
 
-            if (accounts.SelectedItems.Count == 0)
+            if (accountListView.SelectedItems.Count == 0)
+                StartGame();
+            if (accountListView.SelectedItems.Count == 1)
             {
-                bool? gameStarted = null;
-                GameIsRunning(true, "", "", ref gameStarted);
-            }
-            else
-            {
-                UI.GettingOtp();
-                getOtpWorker.RunWorkerAsync(accounts.SelectedItems[0].Index);
+                ui.GettingOtp();
+                getOtpWorker.RunWorkerAsync(gameAccounts[accountListView.SelectedIndices[0]]);
             }
         }
         #endregion
@@ -108,8 +121,8 @@ namespace MaplestoryLauncher
         {
             if (!rememberAccount.Checked)
             {
-                rememberPwd.Checked = false;
                 autoLogin.Checked = false;
+                rememberPwd.Checked = false;
             }
         }
 
@@ -133,58 +146,38 @@ namespace MaplestoryLauncher
 
         private void autoSelect_CheckedChanged(object sender, EventArgs e)
         {
-            UI.EmboldenAutoSelection(autoSelect.Checked);
-            UI.UpdateAutoLaunchCheckBoxText();
-        }
-
-        private void keepLogged_CheckedChanged(object sender, EventArgs e)
-        {
-            if (keepLogged.Checked)
-            {
-                if (!this.pingWorker.IsBusy)
-                    this.pingWorker.RunWorkerAsync();
-            }
-            else
-                if (this.pingWorker.IsBusy)
-                    this.pingWorker.CancelAsync();
-            Properties.Settings.Default.Save();
+            ui.EmboldenAutoSelection(autoSelect.Checked);
+            ui.UpdateAutoLaunchCheckBoxText();
         }
         #endregion
 
         //Copy on click
-        private void accounts_DoubleClick(object sender, EventArgs e)
+        private void accountListView_DoubleClick(object sender, EventArgs e)
         {
-            if (accounts.SelectedItems.Count == 1)
+            if (accountListView.SelectedItems.Count == 1)
             {
-                try
-                {
-                    Clipboard.SetText(this.bfClient.accountList[this.accounts.SelectedItems[0].Index].sacc);
-                }
-                catch
-                {
-
-                }
+                try { Clipboard.SetText(gameAccounts[accountListView.SelectedIndices[0]].Username); }
+                catch { }
             }
         }
 
         private void otpDisplay_OnClick(object sender, EventArgs e)
         {
-            if (otpDisplay.Text == "" || !otpDisplay.Text.IsAllDigits()) return;
+            if (otpDisplay.Text == "" || !otpDisplay.Text.IsAllDigits())
+                return;
             try
             {
                 Clipboard.SetText(otpDisplay.Text);
                 Notification.Hide(otpDisplay);
                 Notification.Show("已複製密碼！", otpDisplay, (int)(0.25 * otpDisplay.Width), (int)(-1.5 * otpDisplay.Height), 1000);
             }
-            catch
-            {
-
-            }
+            catch { }
         }
 
         private void otpDisplay_DoubleClick(object sender, EventArgs e)
         {
-            if (otpDisplay.Text == "" || !otpDisplay.Text.IsAllDigits()) return;
+            if (otpDisplay.Text == "" || !otpDisplay.Text.IsAllDigits())
+                return;
             if (otpDisplay.PasswordChar == default)
                 otpDisplay.PasswordChar = '*';
             else
@@ -194,17 +187,17 @@ namespace MaplestoryLauncher
         //Refresh UI when changed
         private void Input_TextChanged(object sender, EventArgs e)
         {
-            UI.UpdateLoginButtonText();
+            ui.UpdateLoginButtonText();
         }
 
-        private void accounts_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
+        private void accountListView_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
         {
-            UI.UpdateGetOtpButton();
+            ui.UpdateGetOtpButton();
         }
 
         private void MainWindow_Activated(object sender, EventArgs e)
         {
-            UI.FormFocused();
+            ui.FormFocused();
         }
 
         //Cleanup before closing
@@ -216,7 +209,7 @@ namespace MaplestoryLauncher
                 else
                 {
                     e.Cancel = true;
-                    UI.ShowError("請先登出再關閉程式。");
+                    MessageBox.Show("請先登出再關閉程式。", "");
                 }
         }
 

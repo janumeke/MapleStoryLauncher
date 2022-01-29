@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Data;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Security.Cryptography;
 using System.IO;
-using System.Windows.Forms;
 
 namespace MaplestoryLauncher
 {
@@ -43,7 +43,7 @@ namespace MaplestoryLauncher
                 }
                 catch
                 {
-                    Delete();
+                    
                 }
             }
             return String.Empty;
