@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace MaplestoryLauncher
+namespace MapleStoryLauncher
 {
     public partial class AppAuthWindow : Form
     {

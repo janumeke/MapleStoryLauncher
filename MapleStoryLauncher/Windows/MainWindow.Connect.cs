@@ -11,11 +11,11 @@ using System.Diagnostics;
 using System.Threading;
 using System.IO;
 
-namespace MaplestoryLauncher
+namespace MapleStoryLauncher
 {
     public partial class MainWindow : Form
     {
-        public BeanfunBroker beanfun = new BeanfunBroker();
+        public BeanfunBroker beanfun = new();
 
         List<BeanfunBroker.GameAccount> gameAccounts = default;
 
@@ -28,7 +28,7 @@ namespace MaplestoryLauncher
                 pingWorker.CancelAsync();
             if (accountInput.Text == "" && pwdInput.Text == "")
             {
-                QRCodeWindow qrcodeWindow = new QRCodeWindow(this);
+                QRCodeWindow qrcodeWindow = new(this);
                 qrcodeWindow.ShowDialog();
                 e.Result = qrcodeWindow.result;
                 if (e.Result == default(BeanfunBroker.LoginResult))
@@ -40,7 +40,7 @@ namespace MaplestoryLauncher
                 switch (result.Status)
                 {
                     case BeanfunBroker.LoginStatus.RequireAppAuthentication:
-                        AppAuthWindow appAuthWindow = new AppAuthWindow(this);
+                        AppAuthWindow appAuthWindow = new(this);
                         appAuthWindow.ShowDialog();
                         e.Result = appAuthWindow.result;
                         if (e.Result == default(BeanfunBroker.LoginResult))
@@ -57,7 +57,7 @@ namespace MaplestoryLauncher
             {
                 BeanfunBroker.GameAccountResult result = beanfun.GetGameAccounts();
                 if (result.Status == BeanfunBroker.LoginStatus.Success)
-                    gameAccounts = result.gameAccounts;
+                    gameAccounts = result.GameAccounts;
                 e.Result = result;
             }
         }
@@ -126,12 +126,12 @@ namespace MaplestoryLauncher
         {
             Thread.CurrentThread.Name = "ping Worker";
             Debug.WriteLine("pingWorker start");
-            const int WaitSecs = 600; //10 mins
-            bool cancel = false;
+            const int PeriodSeconds = 600; //10 mins
+            int currentTimeout = PeriodSeconds;
 
-            while (!cancel)
-            {   
-                if(!pingWorker.CancellationPending)
+            while (true)
+            {
+                if (!pingWorker.CancellationPending)
                 {
                     BeanfunBroker.LoginResult result = beanfun.Ping(); //beanfun has reader-writer lock
                     switch (result.Status)
@@ -139,18 +139,20 @@ namespace MaplestoryLauncher
                         case BeanfunBroker.LoginStatus.Failed:
                         case BeanfunBroker.LoginStatus.LoginFirst:
                             e.Result = result;
-                            cancel = true;
-                            break;
+                            return;
                         case BeanfunBroker.LoginStatus.ConnectionLost:
+                            currentTimeout = 3;
+                            break;
                         case BeanfunBroker.LoginStatus.Success:
+                            currentTimeout = PeriodSeconds;
                             break;
                     }
                 }
 
-                for (int i = 1; i <= WaitSecs; ++i)
+                for (int i = 1; i <= currentTimeout; ++i)
                 {
                     if (pingWorker.CancellationPending)
-                        cancel = true;
+                        return;
                     System.Threading.Thread.Sleep(1000 * 1);
                 }
             }
@@ -177,25 +179,27 @@ namespace MaplestoryLauncher
                 return false;
         }
 
-        private bool StartGame()
+        private static bool StartGame()
         {
             return StartProcess(Properties.Settings.Default.gamePath, "");
         }
 
-        private bool StartGame(string username, string otp)
+        private static bool StartGame(string username, string otp)
         {
             return StartProcess(Properties.Settings.Default.gamePath, "tw.login.maplestory.gamania.com 8484 BeanFun " + username + " " + otp);
         }
 
-        private bool StartProcess(string path, string arg)
+        private static bool StartProcess(string path, string arg)
         {
             try
             {
                 Debug.WriteLine("try open game");
-                ProcessStartInfo psInfo = new ProcessStartInfo();
-                psInfo.FileName = path;
-                psInfo.Arguments = arg;
-                psInfo.WorkingDirectory = Path.GetDirectoryName(path);
+                ProcessStartInfo psInfo = new()
+                {
+                    FileName = path,
+                    Arguments = arg,
+                    WorkingDirectory = Path.GetDirectoryName(path)
+                };
                 Process.Start(psInfo);
                 Debug.WriteLine("try open game done");
                 return true;

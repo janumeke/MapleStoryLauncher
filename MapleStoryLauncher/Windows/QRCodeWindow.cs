@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace MaplestoryLauncher
+namespace MapleStoryLauncher
 {
     public partial class QRCodeWindow : Form
     {
@@ -22,16 +22,16 @@ namespace MaplestoryLauncher
 
         public BeanfunBroker.LoginResult result = default;
 
-        private void getQRCodeWorker_DoWork(object sender, DoWorkEventArgs e)
-        {
-            e.Result = MainWindow.beanfun.GetQRCode();
-        }
-
         private void QRCodeWindow_Shown(object sender, EventArgs e)
         {
             TopMost = true;
             Waiting();
             getQRCodeWorker.RunWorkerAsync();
+        }
+
+        private void getQRCodeWorker_DoWork(object sender, DoWorkEventArgs e)
+        {
+            e.Result = MainWindow.beanfun.GetQRCode();
         }
 
         private void getQRCodeWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)

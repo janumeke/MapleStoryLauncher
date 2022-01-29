@@ -4,12 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Net;
-using System.Net.Http;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
-using System.Drawing;
 
-namespace MaplestoryLauncher
+namespace MapleStoryLauncher
 {
     public partial class BeanfunBroker
     {
@@ -89,7 +87,7 @@ namespace MaplestoryLauncher
                 req = new HttpRequestMessage(HttpMethod.Get, $"https://tw.newlogin.beanfun.com/loginform.aspx?skey={skey}&display_mode=2");
                 req.Headers.Referrer = new Uri($"https://tw.newlogin.beanfun.com/checkin_step2.aspx?skey={skey}&display_mode=2");
                 try { res = client.SendAsync(req).Result; }
-                catch { new LoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(登入頁面(一般))" }; }
+                catch { return new LoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(登入頁面(一般))" }; }
                 if (!res.IsSuccessStatusCode)
                     return new LoginResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(登入頁面(一般))" };
                 #endregion
@@ -119,15 +117,17 @@ namespace MaplestoryLauncher
                 #region Get akey and writeUrl
                 req = new HttpRequestMessage(HttpMethod.Post, $"https://tw.newlogin.beanfun.com/login/id-pass_form.aspx?skey={skey}&clientID=undefined");
                 req.Headers.Referrer = new Uri($"https://tw.newlogin.beanfun.com/login/id-pass_form.aspx?skey={skey}&clientID=undefined");
-                form = new Dictionary<string, string>();
-                form.Add("__EVENTTARGET", "");
-                form.Add("__EVENTARGUMENT", "");
-                form.Add("__VIEWSTATE", viewstate);
-                form.Add("__VIEWSTATEGENERATOR", viewstateGenerator);
-                form.Add("__EVENTVALIDATION", eventvalidation);
-                form.Add("t_AccountID", username);
-                form.Add("t_Password", password);
-                form.Add("btn_login", "登入");
+                form = new Dictionary<string, string>
+                {
+                    { "__EVENTTARGET", "" },
+                    { "__EVENTARGUMENT", "" },
+                    { "__VIEWSTATE", viewstate },
+                    { "__VIEWSTATEGENERATOR", viewstateGenerator },
+                    { "__EVENTVALIDATION", eventvalidation },
+                    { "t_AccountID", username },
+                    { "t_Password", password },
+                    { "btn_login", "登入" }
+                };
                 req.Content = new FormUrlEncodedContent(form);
                 try { res = client.SendAsync(req).Result; }
                 catch { return new LoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(akey, writeUrl)" }; }
@@ -138,15 +138,20 @@ namespace MaplestoryLauncher
                 match = Regex.Match(body, @"pollRequest\(""bfAPPAutoLogin\.ashx"",""([^""]*)"",""[^""]*""\);");
                 if (match != Match.Empty)
                 {
-                    account = new BeanfunAccount();
-                    account.skey = skey;
-                    account.lt = match.Groups[1].Value;
+                    account = new BeanfunAccount
+                    {
+                        skey = skey,
+                        lt = match.Groups[1].Value
+                    };
                     return new LoginResult { Status = LoginStatus.RequireAppAuthentication };
                 }
                 //Check for errors
                 match = Regex.Match(body, @"<div id=""pnlMsg"">.*<script type=""text\/javascript"">\$\(function\(\)\{MsgBox\.Show\('(.*)'\);\}\);<\/script>.*<\/div>", RegexOptions.Singleline);
                 if (match != Match.Empty)
+                {
+                    ClearCookies();
                     return new LoginResult { Status = LoginStatus.Denied, Message = match.Groups[1].Value.Replace("<br />", "\n") };
+                }
                 //Retrieve info
                 match = Regex.Match(body, @"AuthKey.value = ""([^""]*)"";");
                 if (match == Match.Empty)
@@ -170,12 +175,14 @@ namespace MaplestoryLauncher
                 #region Get bfwebtoken
                 req = new HttpRequestMessage(HttpMethod.Post, $"https://tw.beanfun.com/beanfun_block/bflogin/return.aspx");
                 req.Headers.Referrer = new Uri("https://tw.newlogin.beanfun.com/");
-                form = new Dictionary<string, string>();
-                form.Add("SessionKey", skey);
-                form.Add("AuthKey", akey);
-                form.Add("ServiceCode", "");
-                form.Add("ServiceRegion", "");
-                form.Add("ServiceAccountSN", "0");
+                form = new Dictionary<string, string>
+                {
+                    { "SessionKey", skey },
+                    { "AuthKey", akey },
+                    { "ServiceCode", "" },
+                    { "ServiceRegion", "" },
+                    { "ServiceAccountSN", "0" }
+                };
                 req.Content = new FormUrlEncodedContent(form);
                 try { res = client.SendAsync(req).Result; }
                 catch { return new LoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(bfWebToken)" }; }
@@ -186,8 +193,10 @@ namespace MaplestoryLauncher
                 string bfwebtoken = cookies.GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"].Value;
                 #endregion
 
-                account = new BeanfunAccount();
-                account.webtoken = bfwebtoken;
+                account = new BeanfunAccount
+                {
+                    webtoken = bfwebtoken
+                };
                 return new LoginResult { Status = LoginStatus.Success };
             }
             finally
@@ -237,8 +246,10 @@ namespace MaplestoryLauncher
 
                 req = new HttpRequestMessage(HttpMethod.Post, "https://tw.newlogin.beanfun.com/login/bfAPPAutoLogin.ashx");
                 req.Headers.Referrer = new Uri($"https://tw.newlogin.beanfun.com/login/id-pass_form.aspx?skey={account.skey}&clientID=undefined");
-                form = new Dictionary<string, string>();
-                form.Add("LT", account.lt);
+                form = new Dictionary<string, string>
+                {
+                    { "LT", account.lt }
+                };
                 req.Content = new FormUrlEncodedContent(form);
                 try { res = client.SendAsync(req).Result; }
                 catch { return new LoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(檢查App授權)" }; }
@@ -301,12 +312,14 @@ namespace MaplestoryLauncher
                         #region Get bfwebtoken
                         req = new HttpRequestMessage(HttpMethod.Post, $"https://tw.beanfun.com/beanfun_block/bflogin/return.aspx");
                         req.Headers.Referrer = new Uri("https://tw.newlogin.beanfun.com/");
-                        form = new Dictionary<string, string>();
-                        form.Add("SessionKey", account.skey);
-                        form.Add("AuthKey", akey);
-                        form.Add("ServiceCode", "");
-                        form.Add("ServiceRegion", "");
-                        form.Add("ServiceAccountSN", "0");
+                        form = new Dictionary<string, string>
+                        {
+                            { "SessionKey", account.skey },
+                            { "AuthKey", akey },
+                            { "ServiceCode", "" },
+                            { "ServiceRegion", "" },
+                            { "ServiceAccountSN", "0" }
+                        };
                         req.Content = new FormUrlEncodedContent(form);
                         try { res = client.SendAsync(req).Result; }
                         catch { return new LoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(bfWebToken)" }; }
@@ -411,7 +424,7 @@ namespace MaplestoryLauncher
                     return new QRLoginResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(encryptdata)" };
                 GetQRCodeResponse qrdata = JsonConvert.DeserializeObject<GetQRCodeResponse>(res.Content.ReadAsStringAsync().Result);
                 string encryptdata;
-                if (qrdata.strEncryptData != default(string))
+                if (qrdata.strEncryptData != default)
                     encryptdata = qrdata.strEncryptData;
                 else
                     return new QRLoginResult { Status = LoginStatus.Failed, Message = "找不到 encryptdata。" };
@@ -424,12 +437,14 @@ namespace MaplestoryLauncher
                 catch { return new QRLoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(QRcode圖片)" }; }
                 if (!res.IsSuccessStatusCode)
                     return new QRLoginResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(QRcode圖片)" };
-                Bitmap qrPic = new Bitmap(res.Content.ReadAsStreamAsync().Result);
+                Bitmap qrPic = new(res.Content.ReadAsStreamAsync().Result);
                 #endregion
 
-                account = new BeanfunAccount();
-                account.skey = skey;
-                account.encryptdata = encryptdata;
+                account = new BeanfunAccount
+                {
+                    skey = skey,
+                    encryptdata = encryptdata
+                };
                 return new QRLoginResult { Status = LoginStatus.Success, Picture = qrPic };
             }
             finally
@@ -477,8 +492,10 @@ namespace MaplestoryLauncher
 
                 req = new HttpRequestMessage(HttpMethod.Post, "https://tw.newlogin.beanfun.com/generic_handlers/CheckLoginStatus.ashx");
                 req.Headers.Referrer = new Uri($"https://tw.newlogin.beanfun.com/login/qr_form.aspx?skey={account.skey}&clientID=undefined");
-                form = new Dictionary<string, string>();
-                form.Add("status", account.encryptdata);
+                form = new Dictionary<string, string>
+                {
+                    { "status", account.encryptdata }
+                };
                 req.Content = new FormUrlEncodedContent(form);
                 try { res = client.SendAsync(req).Result; }
                 catch { return new LoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(檢查QRCode)" }; }
@@ -562,12 +579,14 @@ namespace MaplestoryLauncher
                         #region Get bfwebtoken
                         req = new HttpRequestMessage(HttpMethod.Post, $"https://tw.beanfun.com/beanfun_block/bflogin/return.aspx");
                         req.Headers.Referrer = new Uri("https://tw.newlogin.beanfun.com/");
-                        form = new Dictionary<string, string>();
-                        form.Add("SessionKey", account.skey);
-                        form.Add("AuthKey", akey);
-                        form.Add("ServiceCode", "");
-                        form.Add("ServiceRegion", "");
-                        form.Add("ServiceAccountSN", "0");
+                        form = new Dictionary<string, string>
+                        {
+                            { "SessionKey", account.skey },
+                            { "AuthKey", akey },
+                            { "ServiceCode", "" },
+                            { "ServiceRegion", "" },
+                            { "ServiceAccountSN", "0" }
+                        };
                         req.Content = new FormUrlEncodedContent(form);
                         try { res = client.SendAsync(req).Result; }
                         catch { return new LoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(bfWebToken)" }; }
@@ -726,14 +745,12 @@ namespace MaplestoryLauncher
                 if (match == Match.Empty)
                     return new LoginResult { Status = LoginStatus.Failed, Message = "不是預期的結果。(ping)" };
                 PingResponse result = JsonConvert.DeserializeObject<PingResponse>(match.Groups[1].Value);
-                switch (result.ResultCode)
+                return result.ResultCode switch
                 {
-                    case 0:
-                        return new LoginResult { Status = LoginStatus.LoginFirst };
-                    case 1:
-                        return new LoginResult { Status = LoginStatus.Success, Message = result.MainAccountID };
-                }
-                return new LoginResult { Status = LoginStatus.Failed, Message = "不是預期的結果。(ping)" };
+                    0 => new LoginResult { Status = LoginStatus.LoginFirst },
+                    1 => new LoginResult { Status = LoginStatus.Success, Message = result.MainAccountID },
+                    _ => new LoginResult { Status = LoginStatus.Failed, Message = "不是預期的結果。(ping)" },
+                };
             }
             finally
             {

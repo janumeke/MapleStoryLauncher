@@ -10,15 +10,15 @@ using System.Windows.Forms;
 using System.Net.Mail;
 using System.Text.RegularExpressions;
 
-namespace MaplestoryLauncher
+namespace MapleStoryLauncher
 {
     using ExtentionMethods;
 
     public partial class MainWindow : Form
     {
-        private string gameName = "新楓之谷";
+        private readonly string gameName = "新楓之谷";
 
-        private string gameFileName = "MapleStory.exe";
+        private readonly string gameFileName = "MapleStory.exe";
         
         enum LogInState
         {
@@ -33,8 +33,8 @@ namespace MaplestoryLauncher
         public MainWindow()
         {
             ui = new UI(this);
-
-            ui.CheckMultipleInstances();
+            
+            UI.CheckMultipleInstances();
             InitializeComponent();
             ui.FormLoaded();
         }
@@ -79,7 +79,7 @@ namespace MaplestoryLauncher
                     if(beanfun.Logout()) //beanfun has reader-writer lock
                     {
                         status = LogInState.LoggedOut;
-                        if (!(e is FormClosingEventArgs))
+                        if (e is not FormClosingEventArgs)
                         {
                             //Log out only
                             Password.Delete();
@@ -108,7 +108,8 @@ namespace MaplestoryLauncher
 
             if (accountListView.SelectedItems.Count == 0)
                 StartGame();
-            if (accountListView.SelectedItems.Count == 1)
+            if (accountListView.SelectedItems.Count == 1 &&
+                !getOtpWorker.IsBusy)
             {
                 ui.GettingOtp();
                 getOtpWorker.RunWorkerAsync(gameAccounts[accountListView.SelectedIndices[0]]);

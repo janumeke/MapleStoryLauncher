@@ -1,5 +1,5 @@
 ﻿
-namespace MaplestoryLauncher
+namespace MapleStoryLauncher
 {
     partial class QRCodeWindow
     {
@@ -65,7 +65,7 @@ namespace MaplestoryLauncher
             // progressReport
             // 
             this.progressReport.AutoSize = true;
-            this.progressReport.Font = new System.Drawing.Font("Microsoft YaHei UI", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.progressReport.Font = new System.Drawing.Font("Microsoft YaHei UI", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.progressReport.Location = new System.Drawing.Point(14, 13);
             this.progressReport.Name = "progressReport";
             this.progressReport.Size = new System.Drawing.Size(84, 25);
@@ -81,7 +81,7 @@ namespace MaplestoryLauncher
             this.ClientSize = new System.Drawing.Size(280, 281);
             this.Controls.Add(this.progressReport);
             this.Controls.Add(this.qrcodeDisplay);
-            this.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.MaximizeBox = false;

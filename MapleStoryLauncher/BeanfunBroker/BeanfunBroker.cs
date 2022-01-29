@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Threading;
 using System.Net;
-using System.Net.Http;
 using Microsoft.Win32;
 
-namespace MaplestoryLauncher
+namespace MapleStoryLauncher
 {
     /**
      * <summary>
@@ -18,17 +16,17 @@ namespace MaplestoryLauncher
      */
     public partial class BeanfunBroker
     {
-        private ReaderWriterLockSlim rwLock = new ReaderWriterLockSlim();
+        private readonly ReaderWriterLockSlim rwLock = new();
 
         private class CustomHandler : DelegatingHandler
         {
-            public CookieContainer CookieContainer { get; }
+            public CookieContainer CookieContainer { get; set; }
 
             private readonly string userAgent;
 
             public CustomHandler()
             {
-                HttpClientHandler httpClientHandler = new HttpClientHandler();
+                HttpClientHandler httpClientHandler = new();
                 InnerHandler = httpClientHandler;
                 CookieContainer = httpClientHandler.CookieContainer;
 
@@ -36,46 +34,32 @@ namespace MaplestoryLauncher
                 string win7 = "NT 6.1", win8 = "NT 6.2", win8_1 = "NT 6.3", win10 = "NT 10.0";
                 string os;
                 if (Environment.OSVersion.Version.Major == 6)
-                    switch (Environment.OSVersion.Version.Minor)
+                    os = Environment.OSVersion.Version.Minor switch
                     {
-                        case 2:
-                            os = win8;
-                            break;
-                        case 3:
-                            os = win8_1;
-                            break;
-                        default:
-                            os = win7;
-                            break;
-                    }
+                        2 => win8,
+                        3 => win8_1,
+                        _ => win7,
+                    };
                 else
                     os = win10;
                 string firefox95 = $"Mozilla/5.0 (Windows {os}; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0";
                 string chrome97 = $"Mozilla/5.0 (Windows {os}; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36";
                 string edge97 = $"Mozilla/5.0 (Windows {os}; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36 Edg/97.0.1072.69";
-                using (RegistryKey key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\Shell\Associations\UrlAssociations\https\UserChoice"))
+                using RegistryKey key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\Shell\Associations\UrlAssociations\https\UserChoice");
+                if (key == null)
+                    userAgent = edge97;
+                else
                 {
-                    if (key == null)
+                    object progId = key.GetValue("ProgId");
+                    if (progId == null)
                         userAgent = edge97;
                     else
-                    {
-                        object progId = key.GetValue("ProgId");
-                        if (progId == null)
-                            userAgent = edge97;
-                        else
-                            switch (progId.ToString())
-                            {
-                                case "FirefoxURL":
-                                    userAgent = firefox95;
-                                    break;
-                                case "ChromeHTML":
-                                    userAgent = chrome97;
-                                    break;
-                                default:
-                                    userAgent = edge97;
-                                    break;
-                            }
-                    }
+                        userAgent = progId.ToString() switch
+                        {
+                            "FirefoxURL" => firefox95,
+                            "ChromeHTML" => chrome97,
+                            _ => edge97,
+                        };
                 }
             }
 
@@ -91,7 +75,7 @@ namespace MaplestoryLauncher
 
         public BeanfunBroker()
         {
-            CustomHandler customHandler = new CustomHandler();
+            CustomHandler customHandler = new();
             client = new HttpClient(customHandler);
             cookies = customHandler.CookieContainer;
         }
@@ -124,6 +108,16 @@ namespace MaplestoryLauncher
             }
         }
 
+        /**
+         * <summary>Clear all cookies of the internal http client.</summary>
+         */
+        public void ClearCookies()
+        {
+            CustomHandler customHandler = new();
+            client = new HttpClient(customHandler);
+            cookies = customHandler.CookieContainer;
+        }
+
         private enum DateTimeType
         {
             Skey,
@@ -135,7 +129,7 @@ namespace MaplestoryLauncher
             System
         }
 
-        private string GetDateTime(DateTimeType type)
+        private static string GetDateTime(DateTimeType type)
         {
             DateTime now = DateTime.Now;
             switch (type)
@@ -149,7 +143,7 @@ namespace MaplestoryLauncher
                 case DateTimeType.Regular:
                     return now.ToString("yyyyMMddHHmmss");
                 case DateTimeType.UNIX:
-                    DateTime origin = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+                    DateTime origin = new(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
                     TimeSpan diff = now.ToUniversalTime() - origin;
                     return diff.TotalMilliseconds.ToString("F0");
                 case DateTimeType.System:

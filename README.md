@@ -1,8 +1,8 @@
-﻿# MaplestoryLauncher
+﻿# MapleStoryLauncher
 
 A program that launches and logs in MapleStory by Beanfun accounts.
 
-**Modified from BeanfunLogin:**
+Modified from BeanfunLogin:
 > 
 > Login to Beanfun and MapleStory without browsers, using 3DES to encrypt the stored password and DES to decrypt and get the OTP.
 > 
@@ -13,7 +13,7 @@ A program that launches and logs in MapleStory by Beanfun accounts.
 This project uses an [MIT license](LICENSE.md).
 
 
-## Version Log
+## Changelog
 
 v1.3
 1. Rewrote network code and its interactions with the UI.
@@ -21,7 +21,6 @@ v1.3
 3. Now possible to save the last response when unexpected errors have happened.
 4. Adjusted UI behaviours and appearance.
 5. Now warns running multiple instances of the program.
-6. Cleaning up old codes greatly reduced build time and executable size.
 
 v1.2.2  
 v1.2.1
@@ -49,7 +48,8 @@ v1.0
 3. Disabled Google Analytics to avoid contaminating the statistics.
 
 
-### Beanfun Login
+<details>
+<summary>Beanfun Login</summary>
 
 Version 1.9.7
 - Support KartRider/elsword
@@ -191,3 +191,4 @@ Version 1.1
 
 Version 1.0
 - First deployment.
+</details>

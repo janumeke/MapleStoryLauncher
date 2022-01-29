@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Security.Cryptography;
-using System.IO;
 
-namespace MaplestoryLauncher
+namespace MapleStoryLauncher
 {
     public partial class BeanfunBroker
     {
@@ -22,7 +20,7 @@ namespace MaplestoryLauncher
 
         public class GameAccountResult : LoginResult
         {
-            public List<GameAccount> gameAccounts { get; set; }
+            public List<GameAccount> GameAccounts { get; set; }
         }
 
         /**
@@ -62,8 +60,8 @@ namespace MaplestoryLauncher
                 try { res = client.SendAsync(req).Result; }
                 catch { return new GameAccountResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(game accounts)" }; }
                 if (!res.IsSuccessStatusCode)
-                    new LoginResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(game accounts)" };
-                List<GameAccount> accounts = new List<GameAccount>();
+                    return new GameAccountResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(game accounts)" };
+                List<GameAccount> accounts = new();
                 matches = Regex.Matches(res.Content.ReadAsStringAsync().Result, @"(?<!')<li class=""([^""]*)""[^<>]*><div id=""([^""]*)"" sn=""([^""]*)"" name=""([^""]*)""");
                 foreach (Match match in matches)
                 {
@@ -75,7 +73,7 @@ namespace MaplestoryLauncher
                             Sotp = match.Groups[3].Value
                         });
                 }
-                return new GameAccountResult { Status = LoginStatus.Success, gameAccounts = accounts };
+                return new GameAccountResult { Status = LoginStatus.Success, GameAccounts = accounts };
             }
             finally
             {
@@ -144,13 +142,15 @@ namespace MaplestoryLauncher
 
                 req = new HttpRequestMessage(HttpMethod.Post, "https://tw.beanfun.com/beanfun_block/generic_handlers/record_service_start.ashx");
                 req.Headers.Referrer = new Uri($"https://tw.beanfun.com/beanfun_block/game_zone/game_start_step2.aspx?service_code=610074&service_region=T9&sotp={gameAccount.Sotp}&dt={GetDateTime(DateTimeType.OTP)}");
-                form = new Dictionary<string, string>();
-                form.Add("service_code", "610074");
-                form.Add("service_region", "T9");
-                form.Add("service_account_id", gameAccount.Username);
-                form.Add("sotp", gameAccount.Sotp);
-                form.Add("service_account_display_name", gameAccount.FriendlyName);
-                form.Add("service_account_create_time", createTime);
+                form = new Dictionary<string, string>
+                {
+                    { "service_code", "610074" },
+                    { "service_region", "T9" },
+                    { "service_account_id", gameAccount.Username },
+                    { "sotp", gameAccount.Sotp },
+                    { "service_account_display_name", gameAccount.FriendlyName },
+                    { "service_account_create_time", createTime }
+                };
                 req.Content = new FormUrlEncodedContent(form);
                 try { res = client.SendAsync(req).Result; }
                 catch { return new OTPResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(record_service)" }; }
@@ -183,12 +183,12 @@ namespace MaplestoryLauncher
                 des.Key = Encoding.ASCII.GetBytes(key);
                 des.Mode = CipherMode.ECB;
                 des.Padding = PaddingMode.None;
-                string cypher = body.Substring(10);
+                string cypher = body[10..];
                 byte[] cypherBytes = new byte[cypher.Length / 2];
                 for (int i = 0; i < cypherBytes.Length; ++i)
                     cypherBytes[i] = Convert.ToByte(cypher.Substring(i * 2, 2), 16);
-                MemoryStream output = new MemoryStream();
-                CryptoStream cryptoStream = new CryptoStream(output, des.CreateDecryptor(), CryptoStreamMode.Write);
+                MemoryStream output = new();
+                CryptoStream cryptoStream = new(output, des.CreateDecryptor(), CryptoStreamMode.Write);
                 cryptoStream.Write(cypherBytes, 0, cypherBytes.Length);
                 byte[] plainBytes = new byte[10];
                 output.Seek(0, SeekOrigin.Begin);

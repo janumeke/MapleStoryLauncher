@@ -1,5 +1,5 @@
 ﻿
-namespace MaplestoryLauncher
+namespace MapleStoryLauncher
 {
     partial class AppAuthWindow
     {
@@ -41,7 +41,7 @@ namespace MaplestoryLauncher
             // labelMessage
             // 
             this.labelMessage.AutoSize = true;
-            this.labelMessage.Font = new System.Drawing.Font("Microsoft YaHei UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelMessage.Font = new System.Drawing.Font("Microsoft YaHei UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.labelMessage.Location = new System.Drawing.Point(40, 20);
             this.labelMessage.Name = "labelMessage";
             this.labelMessage.Size = new System.Drawing.Size(231, 38);
@@ -52,7 +52,7 @@ namespace MaplestoryLauncher
             // labelWaiting
             // 
             this.labelWaiting.AutoSize = true;
-            this.labelWaiting.Font = new System.Drawing.Font("Microsoft YaHei UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelWaiting.Font = new System.Drawing.Font("Microsoft YaHei UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.labelWaiting.Location = new System.Drawing.Point(125, 75);
             this.labelWaiting.Name = "labelWaiting";
             this.labelWaiting.Size = new System.Drawing.Size(87, 19);
@@ -61,7 +61,7 @@ namespace MaplestoryLauncher
             // 
             // pictureBox1
             // 
-            this.pictureBox1.Image = global::MaplestoryLauncher.Properties.Resources.loading;
+            this.pictureBox1.Image = global::MapleStoryLauncher.Properties.Resources.loading;
             this.pictureBox1.Location = new System.Drawing.Point(95, 75);
             this.pictureBox1.Name = "pictureBox1";
             this.pictureBox1.Size = new System.Drawing.Size(20, 20);
@@ -83,7 +83,7 @@ namespace MaplestoryLauncher
             this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.labelWaiting);
             this.Controls.Add(this.labelMessage);
-            this.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;

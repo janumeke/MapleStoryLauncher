@@ -12,7 +12,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-namespace MaplestoryLauncher
+namespace MapleStoryLauncher
 {
     using ExtentionMethods;
 
@@ -215,16 +215,16 @@ namespace MaplestoryLauncher
             #region Operations
             [DllImport("user32.dll")]
             public static extern void SwitchToThisWindow(IntPtr hWnd);
-            public void CheckMultipleInstances()
+            public static void CheckMultipleInstances()
             {
                 string programPath = Application.ExecutablePath;
                 string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(programPath);
-                int processId = Process.GetCurrentProcess().Id;
+                int processId = Environment.ProcessId;
                 IEnumerable<Process> sameProcesses =
                     from process in Process.GetProcessesByName(fileNameWithoutExtension)
                     where process.MainModule.FileName == programPath && process.Id != processId
                     select process;
-                if (sameProcesses.Count() != 0)
+                if (sameProcesses.Any())
                 {
                     if (MessageBox.Show(
                         "同時執行多份相同路徑的執行檔可能使設定檔儲存不正確。\n" +
@@ -258,6 +258,9 @@ namespace MaplestoryLauncher
 
             public void UpdateGetOtpButton()
             {
+                if (MainWindow.getOtpWorker.IsBusy)
+                    return;
+
                 if (!MainWindow.IsGameRunning())
                     if (MainWindow.accountListView.SelectedItems.Count == 0)
                         MainWindow.getOtpButton.Text = "啟動遊戲";
@@ -329,7 +332,7 @@ namespace MaplestoryLauncher
                 foreach (BeanfunBroker.GameAccount account in MainWindow.gameAccounts)
                 {
                     string[] row = { account.FriendlyName, account.Username };
-                    ListViewItem listViewItem = new ListViewItem(row);
+                    ListViewItem listViewItem = new(row);
                     MainWindow.accountListView.Items.Add(listViewItem);
                 }
                 return true;
@@ -337,10 +340,12 @@ namespace MaplestoryLauncher
 
             private bool RequestGamePath()
             {
-                OpenFileDialog openFileDialog = new OpenFileDialog();
-                openFileDialog.Filter = String.Format("{0} ({1})|{1}|所有檔案 (*.*)|*.*", MainWindow.gameName, MainWindow.gameFileName);
-                openFileDialog.Title = "選擇遊戲執行檔";
-                openFileDialog.InitialDirectory = Properties.Settings.Default.gamePath;
+                OpenFileDialog openFileDialog = new()
+                {
+                    Filter = String.Format("{0} ({1})|{1}|所有檔案 (*.*)|*.*", MainWindow.gameName, MainWindow.gameFileName),
+                    Title = "選擇遊戲執行檔",
+                    InitialDirectory = Properties.Settings.Default.gamePath
+                };
 
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
