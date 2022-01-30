@@ -279,7 +279,7 @@ namespace MapleStoryLauncher
             {
                 if (Properties.Settings.Default.gamePath == "") //Use default value
                 {
-                    //TODO: use registry
+                    //TODO: use registry HKEY_LOCAL_MACHINE\SOFTWARE\GAMANIA\MapleStory
                     //For 32-bit client in 32-bit OS or 64-bit client in 64-bit OS
                     if (File.Exists("C:\\Program Files\\Gamania\\MapleStory\\" + MainWindow.gameFileName))
                         Properties.Settings.Default.gamePath = "C:\\Program Files\\Gamania\\MapleStory\\" + MainWindow.gameFileName;

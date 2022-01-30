@@ -51,9 +51,9 @@
             this.Account = new System.Windows.Forms.ColumnHeader();
             this.getOtpWorker = new System.ComponentModel.BackgroundWorker();
             this.loginWorker = new System.ComponentModel.BackgroundWorker();
-            this.pingWorker = new System.ComponentModel.BackgroundWorker();
             this.Tip = new System.Windows.Forms.ToolTip(this.components);
             this.Notification = new System.Windows.Forms.ToolTip(this.components);
+            this.pingTimer = new System.Windows.Forms.Timer(this.components);
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
@@ -302,13 +302,6 @@
             this.loginWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.loginWorker_DoWork);
             this.loginWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.loginWorker_RunWorkerCompleted);
             // 
-            // pingWorker
-            // 
-            this.pingWorker.WorkerReportsProgress = true;
-            this.pingWorker.WorkerSupportsCancellation = true;
-            this.pingWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.pingWorker_DoWork);
-            this.pingWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.pingWorker_RunWorkerCompleted);
-            // 
             // Tip
             // 
             this.Tip.AutoPopDelay = 5000;
@@ -321,6 +314,10 @@
             this.Notification.InitialDelay = 0;
             this.Notification.IsBalloon = true;
             this.Notification.ReshowDelay = 100;
+            // 
+            // pingTimer
+            // 
+            this.pingTimer.Tick += new System.EventHandler(this.pingTimer_Tick);
             // 
             // MainWindow
             // 
@@ -365,7 +362,6 @@
         private System.Windows.Forms.Button getOtpButton;
         private System.ComponentModel.BackgroundWorker getOtpWorker;
         private System.ComponentModel.BackgroundWorker loginWorker;
-        private System.ComponentModel.BackgroundWorker pingWorker;
         private System.Windows.Forms.ToolTip Tip;
         private System.Windows.Forms.ToolTip Notification;
         private System.Windows.Forms.CheckBox autoLaunch;
@@ -373,6 +369,7 @@
         private System.Windows.Forms.GroupBox groupBoxBeanfun;
         private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.PictureBox pictureBox2;
+        private System.Windows.Forms.Timer pingTimer;
     }
 }
 

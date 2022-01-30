@@ -40,7 +40,7 @@ namespace MapleStoryLauncher
         public GameAccountResult GetGameAccounts()
         {
             if (account == default(BeanfunAccount))
-                return new GameAccountResult { Status = LoginStatus.Failed, Message = "介面與網路模組失去同步。請重開程式。" };
+                return new GameAccountResult { Status = LoginStatus.Failed, Message = "登入狀態不允許此操作。(取得遊戲帳號)" };
 
             rwLock.EnterWriteLock();
             try
@@ -96,6 +96,8 @@ namespace MapleStoryLauncher
          *     3. Returned messages don't have the expected contents.
          *   ConnectionLost (description, none):
          *     Any connection failed.
+         *   Denied (reason given by beanfun):
+         *     Beanfun rejected the request for any reason.
          *   Success (retrieved OTP, username of the specified MapleStory acoount): 
          *     The OTP for the specified MapleStory account is retrieved.
          * </returns>
@@ -103,7 +105,7 @@ namespace MapleStoryLauncher
         public OTPResult GetOTP(GameAccount gameAccount)
         {
             if (account == default(BeanfunAccount))
-                return new OTPResult { Status = LoginStatus.Failed, Message = "介面與網路模組失去同步。請重開程式。" };
+                return new OTPResult { Status = LoginStatus.Failed, Message = "登入狀態不允許此操作。(取得 OTP)" };
 
             rwLock.EnterWriteLock();
             try
@@ -157,23 +159,30 @@ namespace MapleStoryLauncher
                 if (!res.IsSuccessStatusCode)
                     return new OTPResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(record_service)" };
 
+                req = new HttpRequestMessage(HttpMethod.Get, $"https://tw.beanfun.com/generic_handlers/adapter.ashx?cmd=06002&sn={sn}&result=1&d={GetDateTime(DateTimeType.System)}");
+                try { res = client.SendAsync(req).Result; }
+                catch { return new OTPResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(adapter)" }; }
+                if (!res.IsSuccessStatusCode)
+                    return new OTPResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(adapter)" };
+
+                req = new HttpRequestMessage(HttpMethod.Get, $"https://tw.beanfun.com/beanfun_block/generic_handlers/get_webstart_otp.ashx?SN={sn}&WebToken={account.webtoken}&SecretCode={secretCode}&ppppp=0&ServiceCode=610074&ServiceRegion=T9&ServiceAccount={gameAccount.Username}&CreateTime={createTime.Replace(" ", "%20")}&d={GetDateTime(DateTimeType.System)}");
+                try { res = client.SendAsync(req).Result; }
+                catch { return new OTPResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(OTP)" }; }
+                if (!res.IsSuccessStatusCode)
+                    return new OTPResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(OTP)" };
+                body = res.Content.ReadAsStringAsync().Result;
+                if (body.StartsWith("0;"))
+                    return new OTPResult { Status = LoginStatus.Denied, Message = body.Remove(0, 2) };
+                match = Regex.Match(body.Remove(0, 2), @"[^0-9A-F]");
+                if (!body.StartsWith("1;") || match != Match.Empty)
+                    return new OTPResult { Status = LoginStatus.Failed, Message = "不是預期的資料。(OTP)" };
+
                 req = new HttpRequestMessage(HttpMethod.Get, $"https://tw.beanfun.com/generic_handlers/get_result.ashx?meth=GetResultByLongPolling&key={sn}&_={GetDateTime(DateTimeType.UNIX)}");
                 req.Headers.Referrer = new Uri($"https://tw.beanfun.com/beanfun_block/game_zone/game_start_step2.aspx?service_code=610074&service_region=T9&sotp={gameAccount.Sotp}&dt={GetDateTime(DateTimeType.OTP)}");
                 try { res = client.SendAsync(req).Result; }
                 catch { return new OTPResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(get_result)" }; }
                 if (!res.IsSuccessStatusCode)
                     return new OTPResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(get_result)" };
-
-                req = new HttpRequestMessage(HttpMethod.Get, $"https://tw.beanfun.com/beanfun_block/generic_handlers/get_webstart_otp.ashx?SN={sn}&WebToken={account.webtoken}&SecretCode={secretCode}&ppppp=0&ServiceCode=610074&ServiceRegion=T9&ServiceAccount={gameAccount.Username}&CreateTime={createTime.Replace(" ", "%20")}&d={GetDateTime(DateTimeType.System)}");
-                req.Headers.Referrer = new Uri($"https://tw.beanfun.com/beanfun_block/game_zone/game_start_step2.aspx?service_code=610074&service_region=T9&sotp={gameAccount.Sotp}&dt={GetDateTime(DateTimeType.OTP)}");
-                try { res = client.SendAsync(req).Result; }
-                catch { return new OTPResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(OTP)" }; }
-                if (!res.IsSuccessStatusCode)
-                    return new OTPResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(OTP)" };
-                body = res.Content.ReadAsStringAsync().Result;
-                match = Regex.Match(body.Remove(0, 2), @"[^0-9A-F]");
-                if (!body.StartsWith("1;") || match != Match.Empty)
-                    return new OTPResult { Status = LoginStatus.Failed, Message = "不是預期的資料。(OTP)" };
 
                 //DES (ECB)
                 //ASCII: key, plain

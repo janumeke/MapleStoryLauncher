@@ -66,7 +66,7 @@ namespace MapleStoryLauncher
         public LoginResult Login(string username, string password)
         {
             if (account != default(BeanfunAccount))
-                return new LoginResult { Status = LoginStatus.Failed, Message = "介面與網路模組失去同步。請重開程式。" };
+                return new LoginResult { Status = LoginStatus.Failed, Message = "登入狀態不允許此操作。(一般登入)" };
 
             rwLock.EnterWriteLock();
             try
@@ -234,7 +234,7 @@ namespace MapleStoryLauncher
         public LoginResult CheckAppAuthentication()
         {
             if (account == default(BeanfunAccount))
-                return new LoginResult { Status = LoginStatus.Failed, Message = "介面與網路模組失去同步。請重開程式。" };
+                return new LoginResult { Status = LoginStatus.Failed, Message = "登入狀態不允許此操作。(檢查App授權)" };
 
             rwLock.EnterWriteLock();
             try
@@ -378,7 +378,7 @@ namespace MapleStoryLauncher
         public QRLoginResult GetQRCode()
         {
             if (account != default(BeanfunAccount))
-                return new QRLoginResult { Status = LoginStatus.Failed, Message = "介面與網路模組失去同步。請重開程式。" };
+                return new QRLoginResult { Status = LoginStatus.Failed, Message = "登入狀態不允許此操作。(取得 QRCode)" };
 
             rwLock.EnterWriteLock();
             try
@@ -480,7 +480,7 @@ namespace MapleStoryLauncher
         public LoginResult CheckQRCode()
         {
             if (account == default(BeanfunAccount))
-                return new LoginResult { Status = LoginStatus.Failed, Message = "介面與網路模組失去同步。請重開程式。" };
+                return new LoginResult { Status = LoginStatus.Failed, Message = "登入狀態不允許此操作。(檢查 QRCode)" };
 
             rwLock.EnterWriteLock();
             try
@@ -498,11 +498,11 @@ namespace MapleStoryLauncher
                 };
                 req.Content = new FormUrlEncodedContent(form);
                 try { res = client.SendAsync(req).Result; }
-                catch { return new LoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(檢查QRCode)" }; }
+                catch { return new LoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(檢查 QRCode)" }; }
                 if (!res.IsSuccessStatusCode)
                 {
                     account = default;
-                    return new LoginResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(檢查QRCode)" };
+                    return new LoginResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(檢查 QRCode)" };
                 }
                 CheckQRCodeResponse result = JsonConvert.DeserializeObject<CheckQRCodeResponse>(res.Content.ReadAsStringAsync().Result);
                 switch (result.Result)
@@ -513,10 +513,10 @@ namespace MapleStoryLauncher
                         if (result.ResultMessage == "Token Expired")
                         {
                             account = default;
-                            return new LoginResult { Status = LoginStatus.Expired, Message = "QRCode 過期。(檢查QRCode)" };
+                            return new LoginResult { Status = LoginStatus.Expired, Message = "QRCode 過期。(檢查 QRCode)" };
                         }
                         account = default;
-                        return new LoginResult { Status = LoginStatus.Failed, Message = "不是預期的資料。(檢查QRCode)" };
+                        return new LoginResult { Status = LoginStatus.Failed, Message = "不是預期的資料。(檢查 QRCode)" };
                     case 1:
                         #region Get akey, finalstep
                         req = new HttpRequestMessage(HttpMethod.Get, $"https://tw.newlogin.beanfun.com/login/qr_step2.aspx?skey={account.skey}");
@@ -607,7 +607,7 @@ namespace MapleStoryLauncher
                         return new LoginResult { Status = LoginStatus.Success };
                 }
                 account = default;
-                return new LoginResult { Status = LoginStatus.Failed, Message = "不是預期的資料。(檢查QRCode)" };
+                return new LoginResult { Status = LoginStatus.Failed, Message = "不是預期的資料。(檢查 QRCode)" };
             }
             finally
             {
@@ -727,7 +727,7 @@ namespace MapleStoryLauncher
         public LoginResult Ping()
         {
             if (account == default(BeanfunAccount))
-                return new LoginResult { Status = LoginStatus.Failed, Message = "介面與網路模組失去同步，請重開程式。" };
+                return new LoginResult { Status = LoginStatus.Failed, Message = "登入狀態不允許此操作。(Ping)" };
 
             rwLock.EnterWriteLock();
             try

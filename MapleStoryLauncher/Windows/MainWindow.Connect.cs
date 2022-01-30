@@ -24,8 +24,7 @@ namespace MapleStoryLauncher
         {
             Debug.WriteLine("loginWorker starting");
             Thread.CurrentThread.Name = "Login Worker";
-            if (pingWorker.IsBusy)
-                pingWorker.CancelAsync();
+
             if (accountInput.Text == "" && pwdInput.Text == "")
             {
                 QRCodeWindow qrcodeWindow = new(this);
@@ -65,25 +64,61 @@ namespace MapleStoryLauncher
         private void loginWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             Debug.WriteLine("loginWorker end");
+
             if (e.Cancelled)
-            {
                 ui.LoginFailed();
+            else
+                switch (((BeanfunBroker.LoginResult)e.Result).Status)
+                {
+                    case BeanfunBroker.LoginStatus.Success:
+                        status = LogInState.LoggedIn;
+                        pingTimer.Interval = pingTimeout;
+                        pingTimer.Start();
+                        ui.LoggedIn();
+                        break;
+                    default:
+                        ShowError((BeanfunBroker.LoginResult)e.Result);
+                        ui.LoginFailed();
+                        break;
+                }
+        }
+        #endregion
+
+        #region Ping
+        private const int pingTimeout = 10 * 60 * 1000; //10 mins
+        private int pingFailedTries = 0;
+        private void pingTimer_Tick(object sender, EventArgs e)
+        {
+            if (!pingTimer.Enabled)
                 return;
-            }
-            switch (((BeanfunBroker.LoginResult)e.Result).Status)
+
+            BeanfunBroker.LoginResult result = beanfun.Ping(); //beanfun has reader-writer lock
+            switch (result.Status)
             {
-                case BeanfunBroker.LoginStatus.Success:
-                    if (!pingWorker.IsBusy)
-                        pingWorker.RunWorkerAsync();
-                    status = LogInState.LoggedIn;
-                    ui.LoggedIn();
+                case BeanfunBroker.LoginStatus.Failed:
+                    pingTimer.Stop();
+                    ShowError(result);
                     break;
-                default:
-                    ShowError((BeanfunBroker.LoginResult)e.Result);
-                    ui.LoginFailed();
+                case BeanfunBroker.LoginStatus.ConnectionLost:
+                    pingTimer.Interval = 3;
+                    if (++pingFailedTries > 5)
+                    {
+                        pingTimer.Stop();
+                        ShowError(result);
+                        status = LogInState.LoggedOut;
+                        ui.LoggedOut();
+                    }
+                    break;
+                case BeanfunBroker.LoginStatus.LoginFirst:
+                    pingTimer.Stop();
+                    status = LogInState.LoggedOut;
+                    ui.LoggedOut();
+                    ShowError(result);
+                    break;
+                case BeanfunBroker.LoginStatus.Success:
+                    pingTimer.Interval = pingTimeout;
                     break;
             }
-            return;
         }
         #endregion
 
@@ -93,15 +128,21 @@ namespace MapleStoryLauncher
             Debug.WriteLine("getOtpWorker start");
             Thread.CurrentThread.Name = "GetOTP Worker";
 
+            BeanfunBroker.LoginResult ping = beanfun.Ping(); //beanfun has reader-writer lock
+            if (ping.Status != BeanfunBroker.LoginStatus.Success)
+            {
+                e.Result = ping;
+                return;
+            }
+
             BeanfunBroker.GameAccount gameAccount = (BeanfunBroker.GameAccount)e.Argument;
-            BeanfunBroker.OTPResult result = beanfun.GetOTP(gameAccount); //beanfun has reader-writer lock
-            e.Result = result;
+            e.Result = beanfun.GetOTP(gameAccount); //beanfun has reader-writer lock
         }
 
         private void getOtpWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             Debug.WriteLine("getOtpWorker end");
-            BeanfunBroker.OTPResult result = (BeanfunBroker.OTPResult)e.Result;
+            BeanfunBroker.LoginResult result = (BeanfunBroker.LoginResult)e.Result;
             switch (result.Status)
             {
                 case BeanfunBroker.LoginStatus.Success:
@@ -109,63 +150,19 @@ namespace MapleStoryLauncher
                         ui.OtpGot(result.Message);
                     else
                     {
-                        StartGame(result.Username, result.Message);
+                        StartGame(((BeanfunBroker.OTPResult)result).Username, result.Message);
                         ui.OtpGot("");
                     }
                     break;
+                case BeanfunBroker.LoginStatus.LoginFirst:
+                    ui.OtpGot("");
+                    ui.LoggedOut();
+                    ShowError((BeanfunBroker.LoginResult)e.Result);
+                    break;
                 default:
-                    ShowError((BeanfunBroker.OTPResult)e.Result);
+                    ShowError((BeanfunBroker.LoginResult)e.Result);
                     ui.OtpGot("");
                     break;
-            }
-        }
-        #endregion
-
-        #region Ping
-        private void pingWorker_DoWork(object sender, DoWorkEventArgs e)
-        {
-            Thread.CurrentThread.Name = "ping Worker";
-            Debug.WriteLine("pingWorker start");
-            const int PeriodSeconds = 600; //10 mins
-            int currentTimeout = PeriodSeconds;
-
-            while (true)
-            {
-                if (!pingWorker.CancellationPending)
-                {
-                    BeanfunBroker.LoginResult result = beanfun.Ping(); //beanfun has reader-writer lock
-                    switch (result.Status)
-                    {
-                        case BeanfunBroker.LoginStatus.Failed:
-                        case BeanfunBroker.LoginStatus.LoginFirst:
-                            e.Result = result;
-                            return;
-                        case BeanfunBroker.LoginStatus.ConnectionLost:
-                            currentTimeout = 3;
-                            break;
-                        case BeanfunBroker.LoginStatus.Success:
-                            currentTimeout = PeriodSeconds;
-                            break;
-                    }
-                }
-
-                for (int i = 1; i <= currentTimeout; ++i)
-                {
-                    if (pingWorker.CancellationPending)
-                        return;
-                    System.Threading.Thread.Sleep(1000 * 1);
-                }
-            }
-        }
-
-        private void pingWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            Debug.WriteLine("ping.done");
-
-            if (!e.Cancelled)
-            {
-                ShowError((BeanfunBroker.LoginResult)e.Result);
-                ui.LoggedOut();
             }
         }
         #endregion
@@ -215,13 +212,13 @@ namespace MapleStoryLauncher
         {
             switch (result.Status)
             {
-                case BeanfunBroker.LoginStatus.Denied:
                 case BeanfunBroker.LoginStatus.Expired:
+                case BeanfunBroker.LoginStatus.Denied:
                     MessageBox.Show(result.Message, "");
                     break;
                 case BeanfunBroker.LoginStatus.Failed:
                     if (MessageBox.Show(result.Message + "\n請回報給開發者。\n是否產生記錄檔?", "預期外的錯誤", MessageBoxButtons.YesNo, MessageBoxIcon.None, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
-                        File.WriteAllText(Environment.SpecialFolder.LocalApplicationData + "\\MaplestoryLauncher\\LastResponse.txt", beanfun.GetLastResponse().ToString());
+                        File.WriteAllText(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\MaplestoryLauncher\\LastResponse.txt", beanfun.GetLastResponse().ToString());
                     break;
                 case BeanfunBroker.LoginStatus.ConnectionLost:
                     MessageBox.Show(result.Message + "\n請稍後再試一次。", "網路錯誤");

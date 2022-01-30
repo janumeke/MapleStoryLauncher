@@ -74,23 +74,21 @@ namespace MapleStoryLauncher
                     loginWorker.RunWorkerAsync();
                     break;
                 case LogInState.LoggedIn:
-                    if (pingWorker.IsBusy)
-                        pingWorker.CancelAsync();
                     if(beanfun.Logout()) //beanfun has reader-writer lock
                     {
-                        status = LogInState.LoggedOut;
-                        if (e is not FormClosingEventArgs)
-                        {
-                            //Log out only
-                            Password.Delete();
-                        }
                         //Log out or close window
+                        pingTimer.Stop();
                         if (!autoSelect.Checked)
                         {
                             Properties.Settings.Default.autoSelectIndex = -1;
                             Properties.Settings.Default.Save();
                         }
                         ui.LoggedOut();
+                        //Log out only
+                        if (e is not FormClosingEventArgs)
+                        {
+                            status = LogInState.LoggedOut; //Closing preserves the status, because some modules need the last state for decisions
+                        }
                     }
                     else
                         MessageBox.Show("登出失敗，請重開程式。\n請回報開發者。", "預期外的錯誤");
@@ -225,6 +223,7 @@ namespace MapleStoryLauncher
             switch (status)
             {
                 case LogInState.LoggedIn:
+                    Properties.Settings.Default.autoLogin = autoLogin.Checked;
                     if (rememberAccount.Checked)
                         Properties.Settings.Default.accountID = accountInput.Text;
                     else
@@ -235,14 +234,13 @@ namespace MapleStoryLauncher
                         Password.Delete();
                     if (!autoSelect.Checked)
                         Properties.Settings.Default.autoSelectIndex = -1;
-                    Properties.Settings.Default.autoLogin = autoLogin.Checked;
                     break;
                 case LogInState.LoggedOut:
+                    Properties.Settings.Default.autoLogin = false;
                     if (!rememberAccount.Checked)
                         Properties.Settings.Default.accountID = "";
                     if (!rememberPwd.Checked)
                         Password.Delete();
-                    Properties.Settings.Default.autoLogin = false;
                     break;
             }
 
