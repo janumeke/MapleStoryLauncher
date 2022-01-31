@@ -11,6 +11,7 @@ using System.IO;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using Microsoft.Win32;
 
 namespace MapleStoryLauncher
 {
@@ -279,13 +280,15 @@ namespace MapleStoryLauncher
             {
                 if (Properties.Settings.Default.gamePath == "") //Use default value
                 {
-                    //TODO: use registry HKEY_LOCAL_MACHINE\SOFTWARE\GAMANIA\MapleStory
+                    object value = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\GAMANIA\MapleStory").GetValue("Path");
+                    if(value != null)
+                        Properties.Settings.Default.gamePath = value.ToString();
                     //For 32-bit client in 32-bit OS or 64-bit client in 64-bit OS
-                    if (File.Exists("C:\\Program Files\\Gamania\\MapleStory\\" + MainWindow.gameFileName))
-                        Properties.Settings.Default.gamePath = "C:\\Program Files\\Gamania\\MapleStory\\" + MainWindow.gameFileName;
+                    else if (File.Exists(@"C:\Program Files\Gamania\MapleStory\" + MainWindow.gameFileName))
+                        Properties.Settings.Default.gamePath = @"C:\Program Files\Gamania\MapleStory\" + MainWindow.gameFileName;
                     //For 32-bit client in 64-bit OS
-                    if (File.Exists("C:\\Program Files (x86)\\Gamania\\MapleStory\\" + MainWindow.gameFileName))
-                        Properties.Settings.Default.gamePath = "C:\\Program Files (x86)\\Gamania\\MapleStory\\" + MainWindow.gameFileName;
+                    else if (File.Exists(@"C:\Program Files (x86)\Gamania\MapleStory\" + MainWindow.gameFileName))
+                        Properties.Settings.Default.gamePath = @"C:\Program Files (x86)\Gamania\MapleStory\" + MainWindow.gameFileName;
                     Properties.Settings.Default.Save();
                 }
 

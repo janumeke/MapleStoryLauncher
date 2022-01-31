@@ -10,7 +10,7 @@ namespace MapleStoryLauncher
 {
     public static class Password
     {
-        static readonly string filePath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\MaplestoryLauncher\\UserState.dat";
+        static readonly string filePath = $"{Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)}\\{typeof(MainWindow).Namespace}\\UserState.dat";
 
         public static void Save(string password)
         {

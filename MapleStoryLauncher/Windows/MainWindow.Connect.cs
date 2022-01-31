@@ -218,7 +218,11 @@ namespace MapleStoryLauncher
                     break;
                 case BeanfunBroker.LoginStatus.Failed:
                     if (MessageBox.Show(result.Message + "\n請回報給開發者。\n是否產生記錄檔?", "預期外的錯誤", MessageBoxButtons.YesNo, MessageBoxIcon.None, MessageBoxDefaultButton.Button2) == DialogResult.Yes)
-                        File.WriteAllText(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\MaplestoryLauncher\\LastResponse.txt", beanfun.GetLastResponse().ToString());
+                    {
+                        string path = $"{Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)}\\{typeof(MainWindow).Namespace}\\LastResponse.txt";
+                        HttpResponseMessage res = beanfun.GetLastResponse();
+                        File.WriteAllText(path, res.ToString() + "\n\n" + res.Content.ReadAsStringAsync().Result);
+                    }
                     break;
                 case BeanfunBroker.LoginStatus.ConnectionLost:
                     MessageBox.Show(result.Message + "\n請稍後再試一次。", "網路錯誤");

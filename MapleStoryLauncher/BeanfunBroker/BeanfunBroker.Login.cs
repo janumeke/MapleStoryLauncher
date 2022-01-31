@@ -638,7 +638,7 @@ namespace MapleStoryLauncher
         }
 
         /**
-         * <summary>Check the login status of beanfun account.</summary>
+         * <summary>Log out the beanfun account.</summary>
          * <returns>
          * true: The process is finished completely.
          * false: Some steps of the process are not successful.

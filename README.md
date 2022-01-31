@@ -10,7 +10,7 @@ Modified from BeanfunLogin:
 
 ### License
 
-This project uses an [MIT license](LICENSE.md).
+This project is licensed under [GNU GPL v3 or later](COPYING).
 
 
 ## Changelog
