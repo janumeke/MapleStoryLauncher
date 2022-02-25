@@ -46,6 +46,7 @@ namespace MapleStoryLauncher
             switch(status)
             {
                 case LogInState.LoggedOut:
+                    ui.LoggingIn();
                     //Check formats of the account and password only when not using QRCode
                     if (accountInput.Text != String.Empty || pwdInput.Text != String.Empty)
                     {
@@ -55,9 +56,10 @@ namespace MapleStoryLauncher
                             catch
                             {
                                 MessageBox.Show("帳號或認證 Email 格式錯誤。\n" +
-                                                "帳號格式必須是：" +
+                                                "帳號格式必須是：\n" +
                                                 "1. 英文字母與數字\n" +
                                                 "2. 長度為 8 至 20", "錯誤");
+                                ui.LoginFailed();
                                 return;
                             }
                         }
@@ -66,11 +68,10 @@ namespace MapleStoryLauncher
                             MessageBox.Show("密碼格式錯誤，必須是：\n" +
                                             "1. 英文字母與數字\n" +
                                             "2. 長度為 8 至 20", "錯誤");
+                            ui.LoginFailed();
                             return;
                         }
                     }
-                    //Log in
-                    ui.LoggingIn();
                     loginWorker.RunWorkerAsync();
                     break;
                 case LogInState.LoggedIn:
@@ -214,37 +215,7 @@ namespace MapleStoryLauncher
 
         private void MainWindow_FormClosed(object sender, FormClosedEventArgs e)
         {
-
-            Properties.Settings.Default.rememberAccount = rememberAccount.Checked;
-            Properties.Settings.Default.rememberPwd = rememberPwd.Checked;
-            Properties.Settings.Default.autoSelect = autoSelect.Checked;
-            Properties.Settings.Default.autoLaunch = autoLaunch.Checked;
-
-            switch (status)
-            {
-                case LogInState.LoggedIn:
-                    Properties.Settings.Default.autoLogin = autoLogin.Checked;
-                    if (rememberAccount.Checked)
-                        Properties.Settings.Default.accountID = accountInput.Text;
-                    else
-                        Properties.Settings.Default.accountID = "";
-                    if (rememberPwd.Checked)
-                        Password.Save(pwdInput.Text);
-                    else
-                        Password.Delete();
-                    if (!autoSelect.Checked)
-                        Properties.Settings.Default.autoSelectIndex = -1;
-                    break;
-                case LogInState.LoggedOut:
-                    Properties.Settings.Default.autoLogin = false;
-                    if (!rememberAccount.Checked)
-                        Properties.Settings.Default.accountID = "";
-                    if (!rememberPwd.Checked)
-                        Password.Delete();
-                    break;
-            }
-
-            Properties.Settings.Default.Save();
+            ui.FormClosed();
         }
     }
 }

@@ -22,8 +22,8 @@ namespace MapleStoryLauncher
         private sealed class UI
         {
             readonly MainWindow MainWindow;
-            const int initialWindowHeight = 215;
-            const int loggedInHeight = 470;
+            const int initialWindowHeight = 220;
+            const int loggedInHeight = 475;
 
             public UI(MainWindow handle)
             {
@@ -71,6 +71,40 @@ namespace MapleStoryLauncher
                 UpdateGetOtpButton();
             }
 
+            public void FormClosed()
+            {
+                Properties.Settings.Default.rememberAccount = MainWindow.rememberAccount.Checked;
+                Properties.Settings.Default.rememberPwd = MainWindow.rememberPwd.Checked;
+                Properties.Settings.Default.autoSelect = MainWindow.autoSelect.Checked;
+                Properties.Settings.Default.autoLaunch = MainWindow.autoLaunch.Checked;
+
+                switch (MainWindow.status)
+                {
+                    case LogInState.LoggedIn:
+                        Properties.Settings.Default.autoLogin = MainWindow.autoLogin.Checked;
+                        if (MainWindow.rememberAccount.Checked)
+                            Properties.Settings.Default.accountID = MainWindow.accountInput.Text;
+                        else
+                            Properties.Settings.Default.accountID = "";
+                        if (MainWindow.rememberPwd.Checked)
+                            Password.Save(MainWindow.pwdInput.Text);
+                        else
+                            Password.Delete();
+                        if (!MainWindow.autoSelect.Checked)
+                            Properties.Settings.Default.autoSelectIndex = -1;
+                        break;
+                    case LogInState.LoggedOut:
+                        Properties.Settings.Default.autoLogin = false;
+                        if (!MainWindow.rememberAccount.Checked)
+                            Properties.Settings.Default.accountID = "";
+                        if (!MainWindow.rememberPwd.Checked)
+                            Password.Delete();
+                        break;
+                }
+
+                Properties.Settings.Default.Save();
+            }
+
             public void LoggingIn()
             {
                 MainWindow.accountInput.Enabled = false;
@@ -83,6 +117,7 @@ namespace MapleStoryLauncher
                     Properties.Settings.Default.accountID = MainWindow.accountInput.Text;
                 else
                     Properties.Settings.Default.accountID = "";
+                Password.Delete();
                 Properties.Settings.Default.Save();
             }
 
@@ -105,8 +140,6 @@ namespace MapleStoryLauncher
 
                 if (MainWindow.rememberPwd.Checked)
                     Password.Save(MainWindow.pwdInput.Text);
-                else
-                    Password.Delete();
 
                 if (!RedrawAccountListView())
                 {
@@ -228,8 +261,7 @@ namespace MapleStoryLauncher
                 if (sameProcesses.Any())
                 {
                     if (MessageBox.Show(
-                        "同時執行多份相同路徑的執行檔可能使設定檔儲存不正確。\n" +
-                        "你可以複製此執行檔成多個不同檔案位置或名稱的執行檔。\n" +
+                        "同時執行多份程式可能使設定檔儲存不正確。\n" +
                         "你確定仍要執行？",
                         "警告 - 偵測到多個實例",
                         MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2)

@@ -195,7 +195,8 @@ namespace MapleStoryLauncher
                 {
                     FileName = path,
                     Arguments = arg,
-                    WorkingDirectory = Path.GetDirectoryName(path)
+                    UseShellExecute = true,
+                    WorkingDirectory = Path.GetDirectoryName(path),
                 };
                 Process.Start(psInfo);
                 Debug.WriteLine("try open game done");
