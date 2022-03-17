@@ -42,23 +42,23 @@ namespace MapleStoryLauncher
                     };
                 else
                     os = win10;
-                string firefox95 = $"Mozilla/5.0 (Windows {os}; Win64; x64; rv:95.0) Gecko/20100101 Firefox/95.0";
-                string chrome97 = $"Mozilla/5.0 (Windows {os}; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36";
-                string edge97 = $"Mozilla/5.0 (Windows {os}; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36 Edg/97.0.1072.69";
+                string firefox = $"Mozilla/5.0 (Windows {os}; Win64; x64; rv:98.0) Gecko/20100101 Firefox/98.0";
+                string chrome = $"Mozilla/5.0 (Windows {os}; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.74 Safari/537.36";
+                string edge = $"Mozilla/5.0 (Windows {os}; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.74 Safari/537.36 Edg/99.0.1150.36";
                 using RegistryKey key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\Shell\Associations\UrlAssociations\https\UserChoice");
                 if (key == null)
-                    userAgent = edge97;
+                    userAgent = edge;
                 else
                 {
                     object progId = key.GetValue("ProgId");
                     if (progId == null)
-                        userAgent = edge97;
+                        userAgent = edge;
                     else
                         userAgent = progId.ToString() switch
                         {
-                            "FirefoxURL" => firefox95,
-                            "ChromeHTML" => chrome97,
-                            _ => edge97,
+                            "FirefoxURL" => firefox,
+                            "ChromeHTML" => chrome,
+                            _ => edge,
                         };
                 }
             }

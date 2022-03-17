@@ -460,7 +460,7 @@ namespace MapleStoryLauncher
         }
 
         /**
-         * <summary>Check if the app authentication is passed.</summary>
+         * <summary>Check if the QRCode has been used to login.</summary>
          * <returns>
          * Possible statuses (message):
          *   Failed (error description):

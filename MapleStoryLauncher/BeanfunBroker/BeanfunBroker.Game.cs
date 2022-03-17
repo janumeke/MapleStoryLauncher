@@ -15,7 +15,6 @@ namespace MapleStoryLauncher
             public string FriendlyName { get; set; }
             public string Username { get; set; }
             public string Sotp { get; set; }
-            public string CreateTime { get; set; }
         }
 
         public class GameAccountResult : LoginResult
