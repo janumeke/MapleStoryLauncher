@@ -20,7 +20,7 @@ namespace MapleStoryLauncher
 
         private class CustomHandler : DelegatingHandler
         {
-            public CookieContainer CookieContainer { get; set; }
+            public CookieContainer CookieContainer { get; }
 
             private readonly string userAgent;
 
@@ -46,38 +46,53 @@ namespace MapleStoryLauncher
                 string chrome = $"Mozilla/5.0 (Windows {os}; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.74 Safari/537.36";
                 string edge = $"Mozilla/5.0 (Windows {os}; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.74 Safari/537.36 Edg/99.0.1150.36";
                 using RegistryKey key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\Shell\Associations\UrlAssociations\https\UserChoice");
-                if (key == null)
-                    userAgent = edge;
-                else
+                if (key != null)
                 {
                     object progId = key.GetValue("ProgId");
-                    if (progId == null)
-                        userAgent = edge;
-                    else
+                    if (progId != null)
                         userAgent = progId.ToString() switch
                         {
                             "FirefoxURL" => firefox,
                             "ChromeHTML" => chrome,
                             _ => edge,
                         };
+                    else
+                        userAgent = edge;
                 }
+                else
+                    userAgent = edge;
             }
+
+            public bool SaveNextRequestUrlAsFurtherReferrer { get; set; } = false;
+
+            public bool SetNextRequestReferrer { get; set; } = false;
+
+            private Uri referrer = default;
 
             protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
             {
                 request.Headers.Add("User-Agent", userAgent);
+                if (SetNextRequestReferrer)
+                {
+                    request.Headers.Referrer = referrer;
+                    SetNextRequestReferrer = false;
+                }
+                if (SaveNextRequestUrlAsFurtherReferrer)
+                {
+                    referrer = request.RequestUri;
+                    SaveNextRequestUrlAsFurtherReferrer = false;
+                }
                 return base.SendAsync(request, cancellationToken);
             }
         }
 
         private HttpClient client = default;
-        private CookieContainer cookies = default;
+        private CustomHandler handler = default;
 
         public BeanfunBroker()
         {
-            CustomHandler customHandler = new();
-            client = new HttpClient(customHandler);
-            cookies = customHandler.CookieContainer;
+            handler = new();
+            client = new HttpClient(handler);
         }
 
         private class BeanfunAccount
@@ -113,9 +128,8 @@ namespace MapleStoryLauncher
          */
         public void ClearCookies()
         {
-            CustomHandler customHandler = new();
-            client = new HttpClient(customHandler);
-            cookies = customHandler.CookieContainer;
+            handler = new();
+            client = new HttpClient(handler);
         }
 
         private enum DateTimeType

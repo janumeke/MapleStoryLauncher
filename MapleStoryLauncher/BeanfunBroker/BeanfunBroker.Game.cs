@@ -49,13 +49,15 @@ namespace MapleStoryLauncher
 
                 req = new HttpRequestMessage(HttpMethod.Get, "https://tw.beanfun.com/game_zone/");
                 req.Headers.Referrer = new Uri("https://tw.beanfun.com/");
+                handler.SaveNextRequestUrlAsFurtherReferrer = true;
                 try { res = client.SendAsync(req).Result; }
                 catch { return new GameAccountResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(game zone)" }; }
                 if (!res.IsSuccessStatusCode)
                     return new GameAccountResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(game zone)" };
 
                 req = new HttpRequestMessage(HttpMethod.Get, $"https://tw.beanfun.com/beanfun_block/auth.aspx?channel=game_zone&page_and_query=game_start.aspx?service_code_and_region=610074_T9&web_token={account.webtoken}");
-                req.Headers.Referrer = new Uri("https://tw.beanfun.com/game_zone/");
+                //req.Headers.Referrer = new Uri("https://tw.beanfun.com/game_zone/");
+                handler.SetNextRequestReferrer = true;
                 try { res = client.SendAsync(req).Result; }
                 catch { return new GameAccountResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(game accounts)" }; }
                 if (!res.IsSuccessStatusCode)
@@ -116,6 +118,7 @@ namespace MapleStoryLauncher
 
                 req = new HttpRequestMessage(HttpMethod.Get, $"https://tw.beanfun.com/beanfun_block/game_zone/game_start_step2.aspx?service_code=610074&service_region=T9&sotp={gameAccount.Sotp}&dt={GetDateTime(DateTimeType.OTP)}");
                 req.Headers.Referrer = new Uri($"https://tw.beanfun.com/beanfun_block/game_zone/game_server_account_list.aspx?sc=610074&sr=T9&dt={GetDateTime(DateTimeType.Regular)}");
+                handler.SaveNextRequestUrlAsFurtherReferrer = true;
                 try { res = client.SendAsync(req).Result; }
                 catch { return new OTPResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(SN, CreateTime)" }; }
                 if (!res.IsSuccessStatusCode)
@@ -142,7 +145,8 @@ namespace MapleStoryLauncher
                 string secretCode = match.Groups[1].Value;
 
                 req = new HttpRequestMessage(HttpMethod.Post, "https://tw.beanfun.com/beanfun_block/generic_handlers/record_service_start.ashx");
-                req.Headers.Referrer = new Uri($"https://tw.beanfun.com/beanfun_block/game_zone/game_start_step2.aspx?service_code=610074&service_region=T9&sotp={gameAccount.Sotp}&dt={GetDateTime(DateTimeType.OTP)}");
+                //req.Headers.Referrer = new Uri($"https://tw.beanfun.com/beanfun_block/game_zone/game_start_step2.aspx?service_code=610074&service_region=T9&sotp={gameAccount.Sotp}&dt={GetDateTime(DateTimeType.OTP)}");
+                handler.SetNextRequestReferrer = true;
                 form = new Dictionary<string, string>
                 {
                     { "service_code", "610074" },
@@ -177,37 +181,45 @@ namespace MapleStoryLauncher
                     return new OTPResult { Status = LoginStatus.Failed, Message = "不是預期的資料。(OTP)" };
 
                 req = new HttpRequestMessage(HttpMethod.Get, $"https://tw.beanfun.com/generic_handlers/get_result.ashx?meth=GetResultByLongPolling&key={sn}&_={GetDateTime(DateTimeType.UNIX)}");
-                req.Headers.Referrer = new Uri($"https://tw.beanfun.com/beanfun_block/game_zone/game_start_step2.aspx?service_code=610074&service_region=T9&sotp={gameAccount.Sotp}&dt={GetDateTime(DateTimeType.OTP)}");
+                //req.Headers.Referrer = new Uri($"https://tw.beanfun.com/beanfun_block/game_zone/game_start_step2.aspx?service_code=610074&service_region=T9&sotp={gameAccount.Sotp}&dt={GetDateTime(DateTimeType.OTP)}");
+                handler.SetNextRequestReferrer = true;
                 try { res = client.SendAsync(req).Result; }
                 catch { return new OTPResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(get_result)" }; }
                 if (!res.IsSuccessStatusCode)
                     return new OTPResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(get_result)" };
 
-                //DES (ECB)
-                //ASCII: key, plain
-                //HEX: cypher
-                string key = body.Substring(2, 8);
-                DES des = DES.Create();
-                des.Key = Encoding.ASCII.GetBytes(key);
-                des.Mode = CipherMode.ECB;
-                des.Padding = PaddingMode.None;
                 string cypher = body[10..];
-                byte[] cypherBytes = new byte[cypher.Length / 2];
-                for (int i = 0; i < cypherBytes.Length; ++i)
-                    cypherBytes[i] = Convert.ToByte(cypher.Substring(i * 2, 2), 16);
-                MemoryStream output = new();
-                CryptoStream cryptoStream = new(output, des.CreateDecryptor(), CryptoStreamMode.Write);
-                cryptoStream.Write(cypherBytes, 0, cypherBytes.Length);
-                byte[] plainBytes = new byte[10];
-                output.Seek(0, SeekOrigin.Begin);
-                output.Read(plainBytes, 0, plainBytes.Length);
-                string plain = Encoding.ASCII.GetString(plainBytes);
+                string key = body.Substring(2, 8);
+                string plain = DESDecrypt(cypher, key);
                 return new OTPResult { Status = LoginStatus.Success, Message = plain, Username = gameAccount.Username };
             }
             finally
             {
                 rwLock.ExitWriteLock();
             }
+        }
+
+        //DES (ECB)
+        //HEX: cypher
+        //ASCII: key, plain
+        private string DESDecrypt(string cypher, string key)
+        {
+            DES des = DES.Create();
+            des.Mode = CipherMode.ECB;
+            des.Padding = PaddingMode.None;
+            des.Key = Encoding.ASCII.GetBytes(key);
+
+            byte[] cypherBytes = new byte[cypher.Length / 2];
+            for (int i = 0; i < cypherBytes.Length; ++i)
+                cypherBytes[i] = Convert.ToByte(cypher.Substring(i * 2, 2), 16);
+            MemoryStream output = new();
+            CryptoStream cryptoStream = new(output, des.CreateDecryptor(), CryptoStreamMode.Write);
+            cryptoStream.Write(cypherBytes, 0, cypherBytes.Length);
+
+            byte[] plainBytes = new byte[output.Length];
+            output.Seek(0, SeekOrigin.Begin);
+            output.Read(plainBytes, 0, plainBytes.Length);
+            return Encoding.ASCII.GetString(plainBytes).Trim('\0');
         }
     }
 }

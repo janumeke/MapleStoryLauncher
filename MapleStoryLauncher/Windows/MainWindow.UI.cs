@@ -50,8 +50,8 @@ namespace MapleStoryLauncher
                 MainWindow.autoSelect.Checked = Properties.Settings.Default.autoSelect;
                 MainWindow.autoLaunch.Checked = Properties.Settings.Default.autoLaunch;
 
-                MainWindow.Tip.SetToolTip(MainWindow.accountListView, "雙擊複製");
-                MainWindow.Tip.SetToolTip(MainWindow.otpDisplay, "點擊複製\n雙擊顯示/隱藏密碼");
+                MainWindow.Tip.SetToolTip(MainWindow.accountListView, "雙擊複製登入帳號");
+                MainWindow.Tip.SetToolTip(MainWindow.otpDisplay, "點擊複製密碼\n雙擊顯示/隱藏密碼");
 
 
                 if (MainWindow.accountInput.Text == "")
@@ -159,7 +159,6 @@ namespace MapleStoryLauncher
                     {
                         MainWindow.accountListView.SelectedItems.Clear();
                         MainWindow.accountListView.Items[Properties.Settings.Default.autoSelectIndex].Selected = true;
-                        UpdateGetOtpButton();
                     }
 
                 MainWindow.Size = new Size(MainWindow.Size.Width, loggedInHeight);
@@ -167,7 +166,7 @@ namespace MapleStoryLauncher
                 MainWindow.autoSelect.TabStop = true;
                 MainWindow.autoLaunch.TabStop = true;
                 MainWindow.getOtpButton.TabStop = true;
-                MainWindow.getOtpButton.Enabled = true;
+                UpdateGetOtpButton();
                 MainWindow.AcceptButton = MainWindow.getOtpButton;
                 MainWindow.UseWaitCursor = false;
 
@@ -370,6 +369,10 @@ namespace MapleStoryLauncher
                     ListViewItem listViewItem = new(row);
                     MainWindow.accountListView.Items.Add(listViewItem);
                 }
+                if (MainWindow.accountListView.Items.Count > 5)
+                    MainWindow.accountListView.Columns[1].Width = MainWindow.accountListView.Width - 5 - MainWindow.accountListView.Columns[0].Width - 16;
+                else
+                    MainWindow.accountListView.Columns[1].Width = MainWindow.accountListView.Width - 5 - MainWindow.accountListView.Columns[0].Width;
                 return true;
             }
 

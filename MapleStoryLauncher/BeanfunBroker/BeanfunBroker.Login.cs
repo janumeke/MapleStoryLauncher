@@ -95,6 +95,7 @@ namespace MapleStoryLauncher
                 #region Get viewstate, viewstateGenerator and eventvalidation
                 req = new HttpRequestMessage(HttpMethod.Get, $"https://tw.newlogin.beanfun.com/login/id-pass_form.aspx?skey={skey}&clientID=undefined");
                 req.Headers.Referrer = new Uri($"https://tw.newlogin.beanfun.com/checkin_step2.aspx?skey={skey}&display_mode=2");
+                handler.SaveNextRequestUrlAsFurtherReferrer = true;
                 try { res = client.SendAsync(req).Result; }
                 catch { return new LoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(viewstate, viewstateGenerator, eventvalidation)" }; }
                 if (!res.IsSuccessStatusCode)
@@ -116,7 +117,8 @@ namespace MapleStoryLauncher
 
                 #region Get akey and writeUrl
                 req = new HttpRequestMessage(HttpMethod.Post, $"https://tw.newlogin.beanfun.com/login/id-pass_form.aspx?skey={skey}&clientID=undefined");
-                req.Headers.Referrer = new Uri($"https://tw.newlogin.beanfun.com/login/id-pass_form.aspx?skey={skey}&clientID=undefined");
+                //req.Headers.Referrer = new Uri($"https://tw.newlogin.beanfun.com/login/id-pass_form.aspx?skey={skey}&clientID=undefined");
+                handler.SetNextRequestReferrer = true;
                 form = new Dictionary<string, string>
                 {
                     { "__EVENTTARGET", "" },
@@ -188,9 +190,9 @@ namespace MapleStoryLauncher
                 catch { return new LoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(bfWebToken)" }; }
                 if (!res.IsSuccessStatusCode)
                     return new LoginResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(bfWebToken)" };
-                if (cookies.GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"] == default(Cookie))
+                if (handler.CookieContainer.GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"] == default(Cookie))
                     return new LoginResult { Status = LoginStatus.Failed, Message = "找不到 bfWebToken。" };
-                string bfwebtoken = cookies.GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"].Value;
+                string bfwebtoken = handler.CookieContainer.GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"].Value;
                 #endregion
 
                 account = new BeanfunAccount
@@ -245,7 +247,8 @@ namespace MapleStoryLauncher
                 Match match;
 
                 req = new HttpRequestMessage(HttpMethod.Post, "https://tw.newlogin.beanfun.com/login/bfAPPAutoLogin.ashx");
-                req.Headers.Referrer = new Uri($"https://tw.newlogin.beanfun.com/login/id-pass_form.aspx?skey={account.skey}&clientID=undefined");
+                //req.Headers.Referrer = new Uri($"https://tw.newlogin.beanfun.com/login/id-pass_form.aspx?skey={account.skey}&clientID=undefined");
+                handler.SetNextRequestReferrer = true;
                 form = new Dictionary<string, string>
                 {
                     { "LT", account.lt }
@@ -272,7 +275,8 @@ namespace MapleStoryLauncher
                     case 2:
                         #region Get akey and writeUrl
                         req = new HttpRequestMessage(HttpMethod.Get, $"https://tw.newlogin.beanfun.com/login/{result.StrReslut}");
-                        req.Headers.Referrer = new Uri($"https://tw.newlogin.beanfun.com/login/id-pass_form.aspx?skey={account.skey}&clientID=undefined");
+                        //req.Headers.Referrer = new Uri($"https://tw.newlogin.beanfun.com/login/id-pass_form.aspx?skey={account.skey}&clientID=undefined");
+                        handler.SetNextRequestReferrer = true;
                         try { res = client.SendAsync(req).Result; }
                         catch { return new LoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(akey, writeUrl)" }; }
                         if (!res.IsSuccessStatusCode)
@@ -328,12 +332,12 @@ namespace MapleStoryLauncher
                             account = default;
                             return new LoginResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(bfWebToken)" };
                         }
-                        if (cookies.GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"] == default(Cookie))
+                        if (handler.CookieContainer.GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"] == default(Cookie))
                         {
                             account = default;
                             return new LoginResult { Status = LoginStatus.Failed, Message = "找不到 bfWebToken。" };
                         }
-                        string bfwebtoken = cookies.GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"].Value;
+                        string bfwebtoken = handler.CookieContainer.GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"].Value;
                         #endregion
 
                         account.webtoken = bfwebtoken;
@@ -396,6 +400,7 @@ namespace MapleStoryLauncher
                 #region Login page(QRCode)
                 req = new HttpRequestMessage(HttpMethod.Get, $"https://tw.newlogin.beanfun.com/loginform.aspx?skey={skey}&display_mode=2&region=qr");
                 req.Headers.Referrer = new Uri($"https://tw.newlogin.beanfun.com/loginform.aspx?skey={skey}&display_mode=2");
+                handler.SaveNextRequestUrlAsFurtherReferrer = true;
                 try { res = client.SendAsync(req).Result; }
                 catch { return new QRLoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(登入頁面(QRCode))" }; }
                 if (!res.IsSuccessStatusCode)
@@ -404,7 +409,9 @@ namespace MapleStoryLauncher
 
                 #region Get qrhandler
                 req = new HttpRequestMessage(HttpMethod.Get, $"https://tw.newlogin.beanfun.com/login/qr_form.aspx?skey={skey}&clientID=undefined");
-                req.Headers.Referrer = new Uri($"https://tw.newlogin.beanfun.com/loginform.aspx?skey={skey}&display_mode=2&region=qr");
+                //req.Headers.Referrer = new Uri($"https://tw.newlogin.beanfun.com/loginform.aspx?skey={skey}&display_mode=2&region=qr");
+                handler.SetNextRequestReferrer = true;
+                handler.SaveNextRequestUrlAsFurtherReferrer = true;
                 try { res = client.SendAsync(req).Result; }
                 catch { return new QRLoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(qrhandler)" }; }
                 if (!res.IsSuccessStatusCode)
@@ -417,7 +424,8 @@ namespace MapleStoryLauncher
 
                 #region Get encryptdata
                 req = new HttpRequestMessage(HttpMethod.Get, $"https://tw.newlogin.beanfun.com/generic_handlers/get_qrcodeData.ashx?skey={skey}&startGame=&clientID=");
-                req.Headers.Referrer = new Uri($"https://tw.newlogin.beanfun.com/login/qr_form.aspx?skey={skey}&clientID=undefined");
+                //req.Headers.Referrer = new Uri($"https://tw.newlogin.beanfun.com/login/qr_form.aspx?skey={skey}&clientID=undefined");
+                handler.SetNextRequestReferrer = true;
                 try { res = client.SendAsync(req).Result; }
                 catch { return new QRLoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(encryptdata)" }; }
                 if (!res.IsSuccessStatusCode)
@@ -432,7 +440,8 @@ namespace MapleStoryLauncher
 
                 #region Get QRCode picture
                 req = new HttpRequestMessage(HttpMethod.Get, $"https://tw.newlogin.beanfun.com/{qrhandler}{encryptdata}");
-                req.Headers.Referrer = new Uri($"https://tw.newlogin.beanfun.com/login/qr_form.aspx?skey={skey}&clientID=undefined");
+                //req.Headers.Referrer = new Uri($"https://tw.newlogin.beanfun.com/login/qr_form.aspx?skey={skey}&clientID=undefined");
+                handler.SetNextRequestReferrer = true;
                 try { res = client.SendAsync(req).Result; }
                 catch { return new QRLoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(QRcode圖片)" }; }
                 if (!res.IsSuccessStatusCode)
@@ -521,6 +530,7 @@ namespace MapleStoryLauncher
                         #region Get akey, finalstep
                         req = new HttpRequestMessage(HttpMethod.Get, $"https://tw.newlogin.beanfun.com/login/qr_step2.aspx?skey={account.skey}");
                         req.Headers.Referrer = new Uri($"https://tw.newlogin.beanfun.com/login/qr_form.aspx?skey={account.skey}&clientID=undefined");
+                        handler.SaveNextRequestUrlAsFurtherReferrer = true;
                         try { res = client.SendAsync(req).Result; }
                         catch { return new LoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(akey, finalstep)" }; }
                         if (!res.IsSuccessStatusCode)
@@ -547,7 +557,8 @@ namespace MapleStoryLauncher
 
                         #region Get writeUrl
                         req = new HttpRequestMessage(HttpMethod.Get, $"https://tw.newlogin.beanfun.com/login/{finalstep}");
-                        req.Headers.Referrer = new Uri($"https://tw.newlogin.beanfun.com/login/qr_step2.aspx?skey={account.skey}");
+                        //req.Headers.Referrer = new Uri($"https://tw.newlogin.beanfun.com/login/qr_step2.aspx?skey={account.skey}");
+                        handler.SetNextRequestReferrer = true;
                         try { res = client.SendAsync(req).Result; }
                         catch { return new LoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(writeUrl)" }; }
                         if (!res.IsSuccessStatusCode)
@@ -595,12 +606,12 @@ namespace MapleStoryLauncher
                             account = default;
                             return new LoginResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(bfWebToken)" };
                         }
-                        if (cookies.GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"] == default(Cookie))
+                        if (handler.CookieContainer.GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"] == default(Cookie))
                         {
                             account = default;
                             return new LoginResult { Status = LoginStatus.Failed, Message = "找不到 bfWebToken。" };
                         }
-                        string bfwebtoken = cookies.GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"].Value;
+                        string bfwebtoken = handler.CookieContainer.GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"].Value;
                         #endregion
 
                         account.webtoken = bfwebtoken;
@@ -671,20 +682,23 @@ namespace MapleStoryLauncher
 
                 req = new HttpRequestMessage(HttpMethod.Get, "https://tw.newlogin.beanfun.com/logout.aspx?service=999999_T0");
                 req.Headers.Referrer = new Uri("https://tw.beanfun.com/");
+                handler.SaveNextRequestUrlAsFurtherReferrer = true;
                 try { res = client.SendAsync(req).Result; }
                 catch { result = false; }
                 if (res != default && !res.IsSuccessStatusCode)
                     result = false;
 
                 req = new HttpRequestMessage(HttpMethod.Get, "https://tw.newlogin.beanfun.com/generic_handlers/erase_token.ashx");
-                req.Headers.Referrer = new Uri("https://tw.newlogin.beanfun.com/logout.aspx?service=999999_T0");
+                //req.Headers.Referrer = new Uri("https://tw.newlogin.beanfun.com/logout.aspx?service=999999_T0");
+                handler.SetNextRequestReferrer = true;
                 try { res = client.SendAsync(req).Result; }
                 catch { result = false; }
                 if (res != default && !res.IsSuccessStatusCode)
                     result = false;
 
                 req = new HttpRequestMessage(HttpMethod.Get, $"https://tw.newlogin.beanfun.com/logout.aspx?service=999999_T0&_={GetDateTime(DateTimeType.UNIX)}");
-                req.Headers.Referrer = new Uri("https://tw.newlogin.beanfun.com/logout.aspx?service=999999_T0");
+                //req.Headers.Referrer = new Uri("https://tw.newlogin.beanfun.com/logout.aspx?service=999999_T0");
+                handler.SetNextRequestReferrer = true;
                 try { res = client.SendAsync(req).Result; }
                 catch { result = false; }
                 if (res != default && !res.IsSuccessStatusCode)

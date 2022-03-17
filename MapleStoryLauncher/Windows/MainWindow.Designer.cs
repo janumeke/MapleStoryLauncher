@@ -262,7 +262,6 @@
             this.accountListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.CharName,
             this.Account});
-            this.accountListView.Cursor = System.Windows.Forms.Cursors.Arrow;
             this.accountListView.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.accountListView.FullRowSelect = true;
             this.accountListView.GridLines = true;
