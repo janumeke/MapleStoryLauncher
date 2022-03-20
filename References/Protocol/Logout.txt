@@ -1,0 +1,21 @@
+# comments
+→ redirects to
+B response body: line or block
+\ doesn't change onward referrers
+: x-www-form-urlencoded row
+R referrer of the next request
+
+R https://tw.beanfun.com/game_zone
+GET https://tw.beanfun.com/beanfun_block/bflogin/logout_confirm.aspx?service=999999_T0
+\ GET https://tw.beanfun.com/generic_handlers/remove_bflogin_session.ashx?d=20220318154635.622
+\ GET https://tw.beanfun.com/TW/data_provider/remove_bflogin_session.ashx?d=20220318154635.641
+R https://tw.beanfun.com/
+GET https://tw.newlogin.beanfun.com/logout.aspx?service=999999_T0
+R https://tw.newlogin.beanfun.com/
+\ GET https://tw.beanfun.com/beanfun_block/scripts/BeanFunBlockParams.ashx
+\ POST https://tw.newlogin.beanfun.com/generic_handlers/erase_token.ashx
+: web_token=1
+B {"intResult": 0, "strResult": "Token value error"}
+B {"intResult": 1, "strResult": "log out successfully"}
+B {"intResult": 2, "strResult": "Token is not a existence(RememberFlag)"}
+\ GET https://tw.newlogin.beanfun.com/logout.aspx?service=999999_T0&_=1647589595800

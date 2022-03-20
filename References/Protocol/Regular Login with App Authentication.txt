@@ -1,0 +1,77 @@
+# comments
+→ redirects to
+B response body: line or block
+\ doesn't change onward referrers
+: x-www-form-urlencoded row
+R referrer of the next request
+
+# comments
+→ redirect to
+B response body
+\ doesn't change referrer
+: x-www-form-urlencoded row
+R referrer of the next request
+
+R https://tw.beanfun.com/
+GET https://tw.beanfun.com/
+\ GET https://tw.beanfun.com/beanfun_block/loader.ashx?service_code=999999&service_region=T0&ssl=yes
+GET https://tw.beanfun.com/beanfun_block/bflogin/default.aspx?service=999999_T0&dt=20220318130314.843&url=https://tw.beanfun.com/
+→ https://tw.newlogin.beanfun.com/checkin.aspx?skey=...&display_mode=0
+→ https://tw.newlogin.beanfun.com/checkin_step2.aspx?skey=...&display_mode=2
+B var strSessionKey = "...";var strClientID = "";var strDisplayMode = "2";
+R https://tw.newlogin.beanfun.com/
+\ GET https://tw.beanfun.com/beanfun_block/scripts/BeanFunBlockParams.ashx
+\ GET https://tw.newlogin.beanfun.com/checkin_step2.aspx?skey=...&display_mode=2&_=1647583815845
+GET https://tw.newlogin.beanfun.com/loginform.aspx?skey=...&display_mode=2
+\ GET https://tw.newlogin.beanfun.com/loginform.aspx?skey=...&display_mode=2&_=1647579796357
+GET https://tw.newlogin.beanfun.com/login/id-pass_form.aspx?skey=...&clientID=undefined
+B
+<input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET" value="" />
+<input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT" value="" />
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="..." />
+B
+<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="..." />
+<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="..." />
+B <script src="/WebResource.axd?d=...&amp;t=..." type="text/javascript"></script>
+B <script src="/WebResource.axd?d=...&amp;t=..." type="text/javascript"></script>
+\ GET https://tw.newlogin.beanfun.com/WebResource.axd?d=...&t=...
+\ GET https://tw.newlogin.beanfun.com/WebResource.axd?d=...&t=...
+POST https://tw.newlogin.beanfun.com/login/id-pass_form.aspx?skey=...&clientID=undefined
+: __EVENTTARGET=
+: __EVENTARGUMENT=
+: __VIEWSTATE=...
+: __VIEWSTATEGENERATOR=...
+: __EVENTVALIDATION=...
+: t_AccountID=...
+: t_Password=...
+: btn_login=登入
+B pollRequest("bfAPPAutoLogin.ashx","...","2,Success_UnknowDevice");
+
+# Check app authentication
+loop
+  \ POST https://tw.newlogin.beanfun.com/login/bfAPPAutoLogin.ashx
+  : LT=...
+  B {"IntResult":1,"StrReslut":"LoginNotAuthorized"} # Pending
+  B {"IntResult":-1,"StrReslut":"InvalidToken"} # Expired
+  B {"IntResult":-3,"StrReslut":null} # Denied
+  B {"IntResult":2,"StrReslut":"final_step.aspx?akey=...&bfapp=1"} # Successful
+
+# Successful
+GET https://tw.newlogin.beanfun.com/login/final_step.aspx?akey=...&bfapp=1
+C bfWebToken=...; domain=.beanfun.com; path=/; secure; HttpOnly
+B var bfSecretCode = "...";
+B var strWriteUrl = "https://tw.beanfun.com/beanfun_block/bflogin/handle_writecookie.ashx?t=...&d=...";
+B
+parent.document.forms["frmGoBack"].AuthKey.value = "...";parent.document.forms["frmGoBack"].SessionKey.value = "...";parent.document.forms["frmGoBack"].ServiceCode.value = "";parent.document.forms["frmGoBack"].ServiceRegion.value = "";parent.document.forms["frmGoBack"].ServiceAccountSN.value = "0";parent.document.forms["frmGoBack"].action = "https://tw.beanfun.com/beanfun_block/bflogin/return.aspx";parent.document.forms["frmGoBack"].submit();
+R https://tw.newlogin.beanfun.com/
+GET https://tw.beanfun.com/beanfun_block/bflogin/handle_writecookie.ashx?t=...&d=...&callback=jQuery...&_=1647580942369
+B jQuery...({ "Result":1,"ResultMessage":"呼叫成功"})
+R https://tw.newlogin.beanfun.com/
+POST https://tw.beanfun.com/beanfun_block/bflogin/return.aspx
+: SessionKey=...
+: AuthKey=...
+: ServiceCode=
+: ServiceRegion=
+: ServiceAccountSN=0
+→ https://tw.beanfun.com/
+\ GET https://tw.beanfun.com/beanfun_block/loader.ashx?service_code=999999&service_region=T0&ssl=yes

@@ -31,8 +31,9 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainWindow));
             this.panel1 = new System.Windows.Forms.Panel();
-            this.pictureBox2 = new System.Windows.Forms.PictureBox();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.pointsLabel = new System.Windows.Forms.Label();
+            this.maplePictureBox = new System.Windows.Forms.PictureBox();
+            this.beanfunPictureBox = new System.Windows.Forms.PictureBox();
             this.groupBoxBeanfun = new System.Windows.Forms.GroupBox();
             this.accountLabel = new System.Windows.Forms.Label();
             this.loginButton = new System.Windows.Forms.Button();
@@ -55,15 +56,16 @@
             this.Notification = new System.Windows.Forms.ToolTip(this.components);
             this.pingTimer = new System.Windows.Forms.Timer(this.components);
             this.panel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.maplePictureBox)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.beanfunPictureBox)).BeginInit();
             this.groupBoxBeanfun.SuspendLayout();
             this.SuspendLayout();
             // 
             // panel1
             // 
-            this.panel1.Controls.Add(this.pictureBox2);
-            this.panel1.Controls.Add(this.pictureBox1);
+            this.panel1.Controls.Add(this.pointsLabel);
+            this.panel1.Controls.Add(this.maplePictureBox);
+            this.panel1.Controls.Add(this.beanfunPictureBox);
             this.panel1.Controls.Add(this.groupBoxBeanfun);
             this.panel1.Controls.Add(this.autoSelect);
             this.panel1.Controls.Add(this.autoLaunch);
@@ -73,28 +75,41 @@
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(340, 446);
+            this.panel1.Size = new System.Drawing.Size(341, 456);
             this.panel1.TabIndex = 0;
             // 
-            // pictureBox2
+            // pointsLabel
             // 
-            this.pictureBox2.Image = global::MapleStoryLauncher.Properties.Resources.maple;
-            this.pictureBox2.Location = new System.Drawing.Point(17, 195);
-            this.pictureBox2.Name = "pictureBox2";
-            this.pictureBox2.Size = new System.Drawing.Size(18, 18);
-            this.pictureBox2.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
-            this.pictureBox2.TabIndex = 101;
-            this.pictureBox2.TabStop = false;
+            this.pointsLabel.AutoSize = true;
+            this.pointsLabel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.pointsLabel.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.pointsLabel.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.pointsLabel.Location = new System.Drawing.Point(292, 192);
+            this.pointsLabel.Name = "pointsLabel";
+            this.pointsLabel.Size = new System.Drawing.Size(33, 19);
+            this.pointsLabel.TabIndex = 11;
+            this.pointsLabel.Text = "0 點";
+            this.pointsLabel.Click += new System.EventHandler(this.pointsLabel_Click);
             // 
-            // pictureBox1
+            // maplePictureBox
             // 
-            this.pictureBox1.Image = global::MapleStoryLauncher.Properties.Resources.beanfun;
-            this.pictureBox1.Location = new System.Drawing.Point(15, 15);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(18, 18);
-            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
-            this.pictureBox1.TabIndex = 29;
-            this.pictureBox1.TabStop = false;
+            this.maplePictureBox.Image = global::MapleStoryLauncher.Properties.Resources.maple;
+            this.maplePictureBox.Location = new System.Drawing.Point(16, 192);
+            this.maplePictureBox.Name = "maplePictureBox";
+            this.maplePictureBox.Size = new System.Drawing.Size(18, 18);
+            this.maplePictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.maplePictureBox.TabIndex = 101;
+            this.maplePictureBox.TabStop = false;
+            // 
+            // beanfunPictureBox
+            // 
+            this.beanfunPictureBox.Image = global::MapleStoryLauncher.Properties.Resources.beanfun;
+            this.beanfunPictureBox.Location = new System.Drawing.Point(11, 13);
+            this.beanfunPictureBox.Name = "beanfunPictureBox";
+            this.beanfunPictureBox.Size = new System.Drawing.Size(18, 18);
+            this.beanfunPictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.beanfunPictureBox.TabIndex = 29;
+            this.beanfunPictureBox.TabStop = false;
             // 
             // groupBoxBeanfun
             // 
@@ -107,16 +122,16 @@
             this.groupBoxBeanfun.Controls.Add(this.rememberPwd);
             this.groupBoxBeanfun.Controls.Add(this.autoLogin);
             this.groupBoxBeanfun.Font = new System.Drawing.Font("Microsoft YaHei UI Light", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.groupBoxBeanfun.Location = new System.Drawing.Point(13, 4);
+            this.groupBoxBeanfun.Location = new System.Drawing.Point(10, 3);
             this.groupBoxBeanfun.Name = "groupBoxBeanfun";
-            this.groupBoxBeanfun.Size = new System.Drawing.Size(315, 175);
+            this.groupBoxBeanfun.Size = new System.Drawing.Size(321, 175);
             this.groupBoxBeanfun.TabIndex = 100;
             this.groupBoxBeanfun.TabStop = false;
             // 
             // accountLabel
             // 
             this.accountLabel.Font = new System.Drawing.Font("Microsoft YaHei UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.accountLabel.Location = new System.Drawing.Point(10, 35);
+            this.accountLabel.Location = new System.Drawing.Point(14, 33);
             this.accountLabel.Name = "accountLabel";
             this.accountLabel.Size = new System.Drawing.Size(50, 23);
             this.accountLabel.TabIndex = 101;
@@ -125,11 +140,12 @@
             // 
             // loginButton
             // 
+            this.loginButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.loginButton.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.loginButton.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.loginButton.Location = new System.Drawing.Point(19, 130);
+            this.loginButton.Location = new System.Drawing.Point(23, 124);
             this.loginButton.Name = "loginButton";
-            this.loginButton.Size = new System.Drawing.Size(145, 31);
+            this.loginButton.Size = new System.Drawing.Size(148, 31);
             this.loginButton.TabIndex = 5;
             this.loginButton.Text = "登入";
             this.loginButton.UseVisualStyleBackColor = true;
@@ -139,16 +155,16 @@
             // 
             this.accountInput.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.accountInput.ImeMode = System.Windows.Forms.ImeMode.Disable;
-            this.accountInput.Location = new System.Drawing.Point(65, 35);
+            this.accountInput.Location = new System.Drawing.Point(66, 33);
             this.accountInput.Name = "accountInput";
-            this.accountInput.Size = new System.Drawing.Size(145, 23);
+            this.accountInput.Size = new System.Drawing.Size(148, 23);
             this.accountInput.TabIndex = 0;
             this.accountInput.TextChanged += new System.EventHandler(this.Input_TextChanged);
             // 
             // passLabel
             // 
             this.passLabel.Font = new System.Drawing.Font("Microsoft YaHei UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.passLabel.Location = new System.Drawing.Point(10, 75);
+            this.passLabel.Location = new System.Drawing.Point(14, 74);
             this.passLabel.Name = "passLabel";
             this.passLabel.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.passLabel.Size = new System.Drawing.Size(50, 23);
@@ -158,9 +174,10 @@
             // 
             // rememberAccount
             // 
+            this.rememberAccount.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.rememberAccount.AutoSize = true;
             this.rememberAccount.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.rememberAccount.Location = new System.Drawing.Point(230, 38);
+            this.rememberAccount.Location = new System.Drawing.Point(236, 36);
             this.rememberAccount.Name = "rememberAccount";
             this.rememberAccount.Size = new System.Drawing.Size(75, 21);
             this.rememberAccount.TabIndex = 2;
@@ -172,18 +189,19 @@
             // 
             this.pwdInput.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.pwdInput.ImeMode = System.Windows.Forms.ImeMode.Disable;
-            this.pwdInput.Location = new System.Drawing.Point(65, 75);
+            this.pwdInput.Location = new System.Drawing.Point(66, 74);
             this.pwdInput.Name = "pwdInput";
             this.pwdInput.PasswordChar = '*';
-            this.pwdInput.Size = new System.Drawing.Size(145, 23);
+            this.pwdInput.Size = new System.Drawing.Size(148, 23);
             this.pwdInput.TabIndex = 1;
             this.pwdInput.TextChanged += new System.EventHandler(this.Input_TextChanged);
             // 
             // rememberPwd
             // 
+            this.rememberPwd.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.rememberPwd.AutoSize = true;
             this.rememberPwd.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.rememberPwd.Location = new System.Drawing.Point(230, 78);
+            this.rememberPwd.Location = new System.Drawing.Point(236, 77);
             this.rememberPwd.Name = "rememberPwd";
             this.rememberPwd.Size = new System.Drawing.Size(75, 21);
             this.rememberPwd.TabIndex = 3;
@@ -193,9 +211,10 @@
             // 
             // autoLogin
             // 
+            this.autoLogin.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.autoLogin.AutoSize = true;
             this.autoLogin.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.autoLogin.Location = new System.Drawing.Point(195, 136);
+            this.autoLogin.Location = new System.Drawing.Point(201, 130);
             this.autoLogin.Name = "autoLogin";
             this.autoLogin.Size = new System.Drawing.Size(111, 21);
             this.autoLogin.TabIndex = 4;
@@ -207,7 +226,7 @@
             // 
             this.autoSelect.AutoSize = true;
             this.autoSelect.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.autoSelect.Location = new System.Drawing.Point(33, 370);
+            this.autoSelect.Location = new System.Drawing.Point(38, 376);
             this.autoSelect.Name = "autoSelect";
             this.autoSelect.Size = new System.Drawing.Size(75, 21);
             this.autoSelect.TabIndex = 7;
@@ -220,7 +239,7 @@
             // 
             this.autoLaunch.AutoSize = true;
             this.autoLaunch.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.autoLaunch.Location = new System.Drawing.Point(128, 370);
+            this.autoLaunch.Location = new System.Drawing.Point(143, 376);
             this.autoLaunch.Name = "autoLaunch";
             this.autoLaunch.Size = new System.Drawing.Size(99, 21);
             this.autoLaunch.TabIndex = 8;
@@ -233,9 +252,9 @@
             this.getOtpButton.Enabled = false;
             this.getOtpButton.FlatStyle = System.Windows.Forms.FlatStyle.System;
             this.getOtpButton.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.getOtpButton.Location = new System.Drawing.Point(18, 400);
+            this.getOtpButton.Location = new System.Drawing.Point(14, 407);
             this.getOtpButton.Name = "getOtpButton";
-            this.getOtpButton.Size = new System.Drawing.Size(145, 29);
+            this.getOtpButton.Size = new System.Drawing.Size(148, 29);
             this.getOtpButton.TabIndex = 9;
             this.getOtpButton.TabStop = false;
             this.getOtpButton.Text = "啟動遊戲";
@@ -244,8 +263,9 @@
             // 
             // otpDisplay
             // 
+            this.otpDisplay.Cursor = System.Windows.Forms.Cursors.Hand;
             this.otpDisplay.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.otpDisplay.Location = new System.Drawing.Point(198, 403);
+            this.otpDisplay.Location = new System.Drawing.Point(201, 410);
             this.otpDisplay.Name = "otpDisplay";
             this.otpDisplay.PasswordChar = '*';
             this.otpDisplay.ReadOnly = true;
@@ -266,10 +286,10 @@
             this.accountListView.FullRowSelect = true;
             this.accountListView.GridLines = true;
             this.accountListView.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
-            this.accountListView.Location = new System.Drawing.Point(18, 220);
+            this.accountListView.Location = new System.Drawing.Point(15, 218);
             this.accountListView.MultiSelect = false;
             this.accountListView.Name = "accountListView";
-            this.accountListView.Size = new System.Drawing.Size(305, 138);
+            this.accountListView.Size = new System.Drawing.Size(311, 144);
             this.accountListView.TabIndex = 6;
             this.accountListView.TabStop = false;
             this.accountListView.UseCompatibleStateImageBehavior = false;
@@ -280,12 +300,12 @@
             // CharName
             // 
             this.CharName.Text = "遊戲帳號";
-            this.CharName.Width = 185;
+            this.CharName.Width = 184;
             // 
             // Account
             // 
             this.Account.Text = "登入帳號";
-            this.Account.Width = 115;
+            this.Account.Width = 123;
             // 
             // getOtpWorker
             // 
@@ -322,21 +342,21 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
-            this.ClientSize = new System.Drawing.Size(340, 446);
+            this.ClientSize = new System.Drawing.Size(341, 456);
             this.Controls.Add(this.panel1);
             this.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.Name = "MainWindow";
-            this.Text = "BeanfunLogin - By Kai";
+            this.Text = "新楓之谷啟動器";
             this.Activated += new System.EventHandler(this.MainWindow_Activated);
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainWindow_FormClosing);
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.MainWindow_FormClosed);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.maplePictureBox)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.beanfunPictureBox)).EndInit();
             this.groupBoxBeanfun.ResumeLayout(false);
             this.groupBoxBeanfun.PerformLayout();
             this.ResumeLayout(false);
@@ -366,9 +386,10 @@
         private System.Windows.Forms.CheckBox autoLaunch;
         private System.Windows.Forms.CheckBox autoSelect;
         private System.Windows.Forms.GroupBox groupBoxBeanfun;
-        private System.Windows.Forms.PictureBox pictureBox1;
-        private System.Windows.Forms.PictureBox pictureBox2;
+        private System.Windows.Forms.PictureBox beanfunPictureBox;
+        private System.Windows.Forms.PictureBox maplePictureBox;
         private System.Windows.Forms.Timer pingTimer;
+        private Label pointsLabel;
     }
 }
 

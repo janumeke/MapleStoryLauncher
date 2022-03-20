@@ -46,36 +46,42 @@ namespace MapleStoryLauncher
             switch(status)
             {
                 case LogInState.LoggedOut:
-                    ui.LoggingIn();
                     //Check formats of the account and password only when not using QRCode
                     if (accountInput.Text != String.Empty || pwdInput.Text != String.Empty)
                     {
+                        bool checkAccount = true, checkPassword = true;
                         if (!Regex.Match(accountInput.Text, "^[0-9A-Za-z]{8,20}$").Success)
-                        {
                             try { new MailAddress(accountInput.Text); }
-                            catch
-                            {
-                                MessageBox.Show("帳號或認證 Email 格式錯誤。\n" +
-                                                "帳號格式必須是：\n" +
-                                                "1. 英文字母與數字\n" +
-                                                "2. 長度為 8 至 20", "錯誤");
-                                ui.LoginFailed();
-                                return;
-                            }
-                        }
+                            catch { checkAccount = false; }
                         if (!Regex.Match(pwdInput.Text, "^[0-9A-Za-z]{8,20}$").Success)
+                            checkPassword = false;
+                        if(!checkAccount || !checkPassword)
                         {
-                            MessageBox.Show("密碼格式錯誤，必須是：\n" +
-                                            "1. 英文字母與數字\n" +
-                                            "2. 長度為 8 至 20", "錯誤");
-                            ui.LoginFailed();
+                            string message = "";
+
+                            if (!checkAccount)
+                                message += "帳號或認證 Email 格式錯誤。\n";
+                            if (!checkPassword)
+                                message += "密碼格式錯誤。\n";
+
+                            message += "\n";
+                            message += $"{(!checkAccount ? "帳號" : "")}" +
+                                       $"{(!checkAccount && !checkPassword ? "與" : "")}" +
+                                       $"{(!checkPassword ? "密碼" : "")}";
+                            message += "格式必須是：\n" +
+                                       "1. 英文字母與數字\n" +
+                                       "2. 長度為 8 至 20";
+
+                            ShowError(new BeanfunBroker.TransactionResult { Status = BeanfunBroker.TransactionResultStatus.Denied, Message = message });
                             return;
                         }
                     }
+                    ui.LoggingIn();
                     loginWorker.RunWorkerAsync();
                     break;
                 case LogInState.LoggedIn:
-                    if(beanfun.Logout()) //beanfun has reader-writer lock
+                    //beanfun has reader-writer lock
+                    if (beanfun.Logout())
                     {
                         //Log out or close window
                         pingTimer.Stop();
@@ -92,7 +98,7 @@ namespace MapleStoryLauncher
                         }
                     }
                     else
-                        MessageBox.Show("登出失敗，請重開程式。\n請回報開發者。", "預期外的錯誤");
+                        ShowError(new BeanfunBroker.TransactionResult { Status = BeanfunBroker.TransactionResultStatus.Failed, Message = "登出失敗，請重開程式。" });
                     break;
             }
         }
@@ -151,12 +157,25 @@ namespace MapleStoryLauncher
         }
         #endregion
 
+        private void pointsLabel_Click(object sender, EventArgs e)
+        {
+            int rightX = pointsLabel.Location.X + pointsLabel.Width;
+
+            int points = beanfun.GetRemainingPoints();
+            if (points < 0)
+                pointsLabel.Text = "-- 點";
+            else
+                pointsLabel.Text = $"{points} 點";
+
+            pointsLabel.Location = new Point(rightX - pointsLabel.Width, pointsLabel.Location.Y);
+        }
+
         //Copy on click
         private void accountListView_DoubleClick(object sender, EventArgs e)
         {
             if (accountListView.SelectedItems.Count == 1)
             {
-                try { Clipboard.SetText(gameAccounts[accountListView.SelectedIndices[0]].Username); }
+                try { Clipboard.SetText(gameAccounts[accountListView.SelectedIndices[0]].username); }
                 catch { }
             }
         }

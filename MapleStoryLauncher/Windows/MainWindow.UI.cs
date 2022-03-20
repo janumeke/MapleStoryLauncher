@@ -23,7 +23,7 @@ namespace MapleStoryLauncher
         {
             readonly MainWindow MainWindow;
             const int initialWindowHeight = 220;
-            const int loggedInHeight = 475;
+            const int loggedInHeight = 485;
 
             public UI(MainWindow handle)
             {
@@ -35,7 +35,6 @@ namespace MapleStoryLauncher
             {
                 MainWindow.Size = new Size(MainWindow.Size.Width, initialWindowHeight);
 
-                MainWindow.Text = $"新楓之谷啟動器";
                 Version version = Assembly.GetExecutingAssembly().GetName().Version;
                 MainWindow.Text += $" v{version.Major}.{version.Minor}";
                 if (version.Build != 0)
@@ -50,6 +49,7 @@ namespace MapleStoryLauncher
                 MainWindow.autoSelect.Checked = Properties.Settings.Default.autoSelect;
                 MainWindow.autoLaunch.Checked = Properties.Settings.Default.autoLaunch;
 
+                MainWindow.Tip.SetToolTip(MainWindow.pointsLabel, "點擊更新點數");
                 MainWindow.Tip.SetToolTip(MainWindow.accountListView, "雙擊複製登入帳號");
                 MainWindow.Tip.SetToolTip(MainWindow.otpDisplay, "點擊複製密碼\n雙擊顯示/隱藏密碼");
 
@@ -143,9 +143,9 @@ namespace MapleStoryLauncher
 
                 if (!RedrawAccountListView())
                 {
-                    MessageBox.Show("更新帳號列表失敗。\n請回報開發者。", "預期外的錯誤");
+                    MainWindow.ShowError(new BeanfunBroker.TransactionResult { Status = BeanfunBroker.TransactionResultStatus.Failed, Message = "更新遊戲帳號列表失敗。" });
                     if(!MainWindow.beanfun.Logout())
-                        MessageBox.Show("自動登出失敗，請重開程式。\n請回報開發者。", "預期外的錯誤");
+                        MainWindow.ShowError(new BeanfunBroker.TransactionResult { Status = BeanfunBroker.TransactionResultStatus.Failed, Message = "自動登出失敗，請重開程式。" });
                     LoginFailed();
                     return;
                 }
@@ -162,6 +162,7 @@ namespace MapleStoryLauncher
                     }
 
                 MainWindow.Size = new Size(MainWindow.Size.Width, loggedInHeight);
+                MainWindow.pointsLabel_Click(null, null);
                 MainWindow.accountListView.TabStop = true;
                 MainWindow.autoSelect.TabStop = true;
                 MainWindow.autoLaunch.TabStop = true;
@@ -323,10 +324,10 @@ namespace MapleStoryLauncher
                     Properties.Settings.Default.Save();
                 }
 
-                bool pathOK;
-                if (!File.Exists(Properties.Settings.Default.gamePath) ||
-                    !Properties.Settings.Default.gamePath.EndsWith(MainWindow.gameFileName))
+                if (!Properties.Settings.Default.gamePath.EndsWith(MainWindow.gameFileName) ||
+                    !File.Exists(Properties.Settings.Default.gamePath))
                 {
+                    bool pathOK;
                     do
                     {
                         if (!RequestGamePath())
@@ -358,21 +359,23 @@ namespace MapleStoryLauncher
 
             private bool RedrawAccountListView()
             {
-                if (MainWindow.gameAccounts == default(List<BeanfunBroker.GameAccount>))
+                if (MainWindow.gameAccounts == default)
                     return false;
 
                 MainWindow.accountListView.SelectedItems.Clear();
                 MainWindow.accountListView.Items.Clear();
                 foreach (BeanfunBroker.GameAccount account in MainWindow.gameAccounts)
                 {
-                    string[] row = { account.FriendlyName, account.Username };
+                    string[] row = { account.friendlyName, account.username };
                     ListViewItem listViewItem = new(row);
                     MainWindow.accountListView.Items.Add(listViewItem);
                 }
+
                 if (MainWindow.accountListView.Items.Count > 5)
-                    MainWindow.accountListView.Columns[1].Width = MainWindow.accountListView.Width - 5 - MainWindow.accountListView.Columns[0].Width - 16;
+                    MainWindow.accountListView.Columns[1].Width = MainWindow.accountListView.Width - 4 - MainWindow.accountListView.Columns[0].Width - 16;
                 else
-                    MainWindow.accountListView.Columns[1].Width = MainWindow.accountListView.Width - 5 - MainWindow.accountListView.Columns[0].Width;
+                    MainWindow.accountListView.Columns[1].Width = MainWindow.accountListView.Width - 4 - MainWindow.accountListView.Columns[0].Width;
+
                 return true;
             }
 

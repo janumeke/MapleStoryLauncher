@@ -1,0 +1,17 @@
+# comments
+→ redirects to
+B response body: line or block
+\ doesn't change onward referrers
+: x-www-form-urlencoded row
+R referrer of the next request
+
+loop every 10 mins
+  R https://tw.beanfun.com/game_zone
+  GET https://tw.beanfun.com/beanfun_block/generic_handlers/echo_token.ashx?webtoken=1&noCacheIE=20220318133222.839
+  B BeanFunBlock.EchoTokenResult({ResultCode:1, ResultDesc: "User is logged in.", MainAccountID : "..." });
+  B BeanFunBlock.EchoTokenResult({ResultCode:0, ResultDesc: "User is logged out.", MainAccountID : "..." });
+
+# Logged out
+R https://tw.beanfun.com/
+GET https://tw.beanfun.com/
+\ GET https://tw.beanfun.com/beanfun_block/loader.ashx?service_code=999999&service_region=T0&ssl=yes

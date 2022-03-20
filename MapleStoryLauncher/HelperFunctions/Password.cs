@@ -12,47 +12,66 @@ namespace MapleStoryLauncher
     {
         static readonly string filePath = $"{Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)}\\{typeof(MainWindow).Namespace}\\UserState.dat";
 
-        public static void Save(string password)
+        public static bool Save(string password)
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(filePath));
-            using BinaryWriter writer = new(File.Open(filePath, FileMode.Create));
-            // Create random entropy of 8 characters.
-            var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            var random = new Random();
-            string entropy = new(Enumerable.Repeat(chars, 8).Select(s => s[random.Next(s.Length)]).ToArray());
-            Properties.Settings.Default.entropy = entropy;
-            Properties.Settings.Default.Save();
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(filePath));
 
-            // Building ciphertext by 3DES.
-            byte[] ciphertext = ProtectedData.Protect(Encoding.UTF8.GetBytes(password), Encoding.UTF8.GetBytes(entropy), DataProtectionScope.CurrentUser);
-            writer.Write(ciphertext);
+                // Create entropy of 8 random characters.
+                string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+                Random random = new();
+                StringBuilder entropy = new(8);
+                for (int i = 1; i <= 8; ++i)
+                {
+                    entropy.Append(chars[random.Next(chars.Length)]);
+                }
+                Properties.Settings.Default.entropy = entropy.ToString();
+                Properties.Settings.Default.Save();
+
+                byte[] cipher = ProtectedData.Protect(Encoding.UTF8.GetBytes(password), Encoding.UTF8.GetBytes(entropy.ToString()), DataProtectionScope.CurrentUser);
+                File.WriteAllBytes(filePath, cipher);
+            }
+            catch
+            {
+                Delete();
+                return false;
+            }
+            return true;
         }
 
         public static string Load()
         {
-            if (File.Exists(filePath))
+            if (!File.Exists(filePath))
+                return String.Empty;
+
+            try
             {
-                try
-                {
-                    Byte[] cipher = File.ReadAllBytes(filePath);
-                    string entropy = Properties.Settings.Default.entropy;
-                    byte[] plaintext = ProtectedData.Unprotect(cipher, Encoding.UTF8.GetBytes(entropy), DataProtectionScope.CurrentUser);
-                    return Encoding.UTF8.GetString(plaintext);
-                }
-                catch
-                {
-                    
-                }
+                Byte[] cipher = File.ReadAllBytes(filePath);
+                string entropy = Properties.Settings.Default.entropy;
+                byte[] plaintext = ProtectedData.Unprotect(cipher, Encoding.UTF8.GetBytes(entropy), DataProtectionScope.CurrentUser);
+                return Encoding.UTF8.GetString(plaintext);
             }
-            return String.Empty;
+            catch
+            {
+                return String.Empty;
+            }
         }
 
-        public static void Delete()
+        public static bool Delete()
         {
-            if (File.Exists(filePath))
-                File.Delete(filePath);
-            Properties.Settings.Default.entropy = "";
-            Properties.Settings.Default.Save();
+            try
+            {
+                if (File.Exists(filePath))
+                    File.Delete(filePath);
+                Properties.Settings.Default.entropy = "";
+                Properties.Settings.Default.Save();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }

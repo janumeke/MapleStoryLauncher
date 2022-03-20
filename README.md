@@ -1,6 +1,20 @@
-﻿# MapleStoryLauncher
+﻿功能
 
-A program that launches and logs in MapleStory by Beanfun accounts.
+> 支援 Beanfun (台灣)帳密登入與進階防護 (App 允許登入)或 QR Code 登入。    
+> 取得新楓之谷登入帳號與一次性密碼。
+> 
+> **需要先安裝 [.NET 6 Desktop Runtime x64](https://dotnet.microsoft.com/en-us/download/dotnet/6.0/runtime)。**
+
+與豬頭差異
+
+1. 不支援楓之谷以外的遊戲
+2. 沒有多帳號管理、自動檢查更新和 Google Analytics
+3. 有進階防護和剩餘點數
+4. 重新設計的介面
+
+# MapleStoryLauncher
+
+A program that launches and logs in TW MapleStory by Beanfun TW accounts.
 
 Modified from BeanfunLogin:
 > 
@@ -10,24 +24,24 @@ Modified from BeanfunLogin:
 
 ### License
 
-This project is licensed under [GNU GPL v3 or later](COPYING).
-
+This project is licensed under [GNU GPL v3 or later](COPYING), if not licensed seperately.
 
 ## Changelog
 
+v1.3.1
+1. Now able to see remaining points.
+2. Refined protocol.
+3. Fixes.
+
 v1.3
 1. Rewrote network code and its interactions with the UI.
-2. Now supports App authentication to log in.
+2. Now supports app authentication to log in.
 3. Now possible to save the last response when unexpected errors have happened.
-4. Adjusted UI behaviours and appearance.
-5. Now warns running multiple instances of the program.
+4. Adjusted UI appearance and behaviours.
+5. Now warns of running multiple instances of the program.
 
-v1.2.2  
-v1.2.1
-1. Adjusted UI behaviours and fixed UI-related bugs.
-
-v1.2
-1. Adjusted UI behaviours and appearance.
+v1.2 ~ v1.2.2
+1. Adjusted UI appearance and behaviours and fixed UI-related bugs.
 
 v1.1.1
 1. Merged upstream and fixed a protocol issue.

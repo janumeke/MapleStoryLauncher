@@ -33,16 +33,16 @@ namespace MapleStoryLauncher
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AppAuthWindow));
             this.labelMessage = new System.Windows.Forms.Label();
             this.labelWaiting = new System.Windows.Forms.Label();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
+            this.pictureBoxWaiting = new System.Windows.Forms.PictureBox();
             this.checkAppAuthStatusTimer = new System.Windows.Forms.Timer(this.components);
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxWaiting)).BeginInit();
             this.SuspendLayout();
             // 
             // labelMessage
             // 
             this.labelMessage.AutoSize = true;
             this.labelMessage.Font = new System.Drawing.Font("Microsoft YaHei UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.labelMessage.Location = new System.Drawing.Point(40, 20);
+            this.labelMessage.Location = new System.Drawing.Point(46, 18);
             this.labelMessage.Name = "labelMessage";
             this.labelMessage.Size = new System.Drawing.Size(231, 38);
             this.labelMessage.TabIndex = 0;
@@ -53,21 +53,21 @@ namespace MapleStoryLauncher
             // 
             this.labelWaiting.AutoSize = true;
             this.labelWaiting.Font = new System.Drawing.Font("Microsoft YaHei UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.labelWaiting.Location = new System.Drawing.Point(125, 75);
+            this.labelWaiting.Location = new System.Drawing.Point(134, 75);
             this.labelWaiting.Name = "labelWaiting";
             this.labelWaiting.Size = new System.Drawing.Size(87, 19);
             this.labelWaiting.TabIndex = 1;
             this.labelWaiting.Text = "等待回應中 ...";
             // 
-            // pictureBox1
+            // pictureBoxWaiting
             // 
-            this.pictureBox1.Image = global::MapleStoryLauncher.Properties.Resources.loading;
-            this.pictureBox1.Location = new System.Drawing.Point(95, 75);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(20, 20);
-            this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
-            this.pictureBox1.TabIndex = 2;
-            this.pictureBox1.TabStop = false;
+            this.pictureBoxWaiting.Image = global::MapleStoryLauncher.Properties.Resources.loading;
+            this.pictureBoxWaiting.Location = new System.Drawing.Point(103, 75);
+            this.pictureBoxWaiting.Name = "pictureBoxWaiting";
+            this.pictureBoxWaiting.Size = new System.Drawing.Size(20, 20);
+            this.pictureBoxWaiting.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.pictureBoxWaiting.TabIndex = 2;
+            this.pictureBoxWaiting.TabStop = false;
             // 
             // checkAppAuthStatusTimer
             // 
@@ -79,8 +79,8 @@ namespace MapleStoryLauncher
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
-            this.ClientSize = new System.Drawing.Size(305, 111);
-            this.Controls.Add(this.pictureBox1);
+            this.ClientSize = new System.Drawing.Size(310, 114);
+            this.Controls.Add(this.pictureBoxWaiting);
             this.Controls.Add(this.labelWaiting);
             this.Controls.Add(this.labelMessage);
             this.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
@@ -89,9 +89,9 @@ namespace MapleStoryLauncher
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "AppAuthWindow";
-            this.Text = "兩階段驗證";
+            this.Text = "雙重驗證";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.AppAuthWindow_FormClosing);
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxWaiting)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -101,7 +101,7 @@ namespace MapleStoryLauncher
 
         private System.Windows.Forms.Label labelMessage;
         private System.Windows.Forms.Label labelWaiting;
-        private System.Windows.Forms.PictureBox pictureBox1;
+        private System.Windows.Forms.PictureBox pictureBoxWaiting;
         private System.Windows.Forms.Timer checkAppAuthStatusTimer;
     }
 }

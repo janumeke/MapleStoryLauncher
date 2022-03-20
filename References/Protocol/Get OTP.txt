@@ -1,0 +1,49 @@
+# comments
+→ redirects to
+B response body: line or block
+\ doesn't change onward referrers
+: x-www-form-urlencoded row
+R referrer of the next request
+
+GET https://tw.beanfun.com/beanfun_block/game_zone/game_start_step2.aspx?service_code=610074&service_region=T9&sotp=...&dt=12221815457769
+B var MyAccountData = {ServiceCode: "610074", ServiceRegion: "T9", ServiceAccountID: "...", ServiceAccountSN: "...", ServiceAccountDisplayName: "...", ServiceAccountAuthType: "N", ServiceAccountCreateTime: "...", RemovedServiceFriendlyRemindersCookieName: "...", HasFormContract: false, IfShowServiceFriendlyReminder: false, IfShowCheckIP: false, GamePrepareUrl: "/beanfun_block/game_zone/game_prepare.aspx?service_code=610074&service_region=T9" };
+B url: location.protocol + "//" + location.host + "/" + "generic_handlers/get_result.ashx?meth=GetResultByLongPolling&key=..."
+B
+var strFormData = "service_code=" + MyAccountData.ServiceCode + "&service_region=" + MyAccountData.ServiceRegion +
+                "&service_account_id=" + MyAccountData.ServiceAccountID + "&sotp=" + MyAccountData.ServiceAccountSN +
+                "&service_account_display_name=" + MyAccountData.ServiceAccountDisplayName + "&service_account_create_time=" + MyAccountData.ServiceAccountCreateTime + "&...=...";
+B $("body").append('<iframe src="beanfun://Region=TW;Production&&&&SN=...&&&&Cmd=06004&&&&WebToken=...&&&&SecretCode=' + m_strSecretCode + '&&&&Data=..." width="0%" height="0%" style="display:none"></iframe>');
+\ GET https://tw.beanfun.com/beanfun_block/scripts/BeanFunBlockParams.ashx
+R https://tw.beanfun.com/
+\ GET https://tw.newlogin.beanfun.com/generic_handlers/get_cookies.ashx
+B var m_strSecretCode = '...';
+\ POST https://tw.beanfun.com/beanfun_block/generic_handlers/record_service_start.ashx
+: service_code=610074
+: service_region=T9
+: service_account_id=...
+: sotp=...
+: service_account_display_name=...
+: service_account_create_time=...
+: ...=...
+B { 'intResult': 1,  'strOutstring': 'Success' }
+R 
+\ beanfun://Region=TW;Production&&&&SN=...&&&&Cmd=06004&&&&WebToken=...&&&&SecretCode=...&&&&Data=...
+\ GET https://tw.beanfun.com/generic_handlers/get_result.ashx?meth=GetResultByLongPolling&key=...&_=1647587098047
+B { "intResult": 1,  "objResult": "1", "strOutstring": "Success" }
+B { "intResult": 0,  "strOutstring": "請先登入." }
+
+# Beanfun WebStart
+R 
+\ GET https://tw.beanfun.com/generic_handlers/CheckVersion.ashx
+B {"url": "...", "version": "..."}
+R 
+\ GET https://tw.beanfun.com/generic_handlers/adapter.ashx?cmd=01003&service_code=610074&service_region=T9&d=21774609
+B exe=MapleStory.exe tw.login.maplestory.gamania.com 8484 BeanFun %s %s
+B dir_reg=HKEY_LOCAL_MACHINE\SOFTWARE\GAMANIA\MapleStory
+B dir_value_name=Path
+R 
+\ GET https://tw.beanfun.com/generic_handlers/adapter.ashx?cmd=06002&sn=...&result=1&d=21774656
+R 
+\ GET https://tw.beanfun.com/beanfun_block/generic_handlers/get_webstart_otp.ashx?SN=...&WebToken=...&SecretCode=...&ppppp=...&ServiceCode=610074&ServiceRegion=T9&ServiceAccount=...&CreateTime=...&d=21774703
+B 1;...
+B 0;beanfun! 閒置過久，請嘗試重新登入。

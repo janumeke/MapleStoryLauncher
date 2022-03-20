@@ -20,29 +20,42 @@ namespace MapleStoryLauncher
             InitializeComponent();
         }
 
-        public BeanfunBroker.LoginResult result = default;
+        private BeanfunBroker.TransactionResult result = default;
 
+        public BeanfunBroker.TransactionResult GetResult()
+        {
+            lock (this)
+            {
+                return result;
+            }
+        }
+
+        private const int maxFailedTries = 3;
         private int failedTries = 0;
 
         private void checkAppAuthStatusTimer_Tick(object sender, EventArgs e)
         {
-            BeanfunBroker.LoginResult checkResult = MainWindow.beanfun.CheckAppAuthentication();
+            BeanfunBroker.TransactionResult checkResult = MainWindow.beanfun.CheckAppAuthentication();
             switch (checkResult.Status)
             {
-                case BeanfunBroker.LoginStatus.RequireAppAuthentication:
+                case BeanfunBroker.TransactionResultStatus.RequireAppAuthentication:
                     failedTries = 0;
                     break;
-                case BeanfunBroker.LoginStatus.ConnectionLost:
-                    if (++failedTries >= 3)
+                case BeanfunBroker.TransactionResultStatus.ConnectionLost:
+                    if (++failedTries >= maxFailedTries)
                     {
-                        checkAppAuthStatusTimer.Enabled = false;
-                        result = checkResult;
+                        lock (this)
+                        {
+                            result = checkResult;
+                        }
                         Close();
                     }
                     break;
                 default:
-                    checkAppAuthStatusTimer.Enabled = false;
-                    result = checkResult;
+                    lock (this)
+                    {
+                        result = checkResult;
+                    }
                     Close();
                     break;
             }
@@ -50,9 +63,9 @@ namespace MapleStoryLauncher
 
         private void AppAuthWindow_FormClosing(object sender, FormClosingEventArgs e)
         {
-            checkAppAuthStatusTimer.Enabled = false; //for manual closing
-            if (result == default(BeanfunBroker.LoginResult) || //manual closing while pending
-                result.Status == BeanfunBroker.LoginStatus.ConnectionLost)
+            checkAppAuthStatusTimer.Enabled = false;
+            if (result == default || //manual closing while pending
+                result.Status == BeanfunBroker.TransactionResultStatus.ConnectionLost)
                 MainWindow.beanfun.LocalLogout();
         }
     }

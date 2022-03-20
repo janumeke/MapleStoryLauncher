@@ -20,7 +20,15 @@ namespace MapleStoryLauncher
             InitializeComponent();
         }
 
-        public BeanfunBroker.LoginResult result = default;
+        private BeanfunBroker.TransactionResult result = default;
+
+        public BeanfunBroker.TransactionResult GetResult()
+        {
+            lock (this)
+            {
+                return result;
+            }
+        }
 
         private void QRCodeWindow_Shown(object sender, EventArgs e)
         {
@@ -36,50 +44,60 @@ namespace MapleStoryLauncher
 
         private void getQRCodeWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            BeanfunBroker.QRLoginResult result = (BeanfunBroker.QRLoginResult)e.Result;
-            switch (result.Status)
+            BeanfunBroker.QRCodeResult getResult = (BeanfunBroker.QRCodeResult)e.Result;
+            switch (getResult.Status)
             {
-                case BeanfunBroker.LoginStatus.Success:
-                    progressReport.Visible = false;
-                    qrcodeDisplay.Image = result.Picture;
+                case BeanfunBroker.TransactionResultStatus.Success:
+                    labelProgress.Visible = false;
+                    qrcodeDisplay.Image = getResult.Picture;
                     qrcodeDisplay.Visible = true;
                     FormBorderStyle = FormBorderStyle.Sizable;
-                    checkQRCodeStatusTimer.Enabled = true;
+                    if (Visible)
+                        checkQRCodeStatusTimer.Enabled = true;
                     break;
                 default:
-                    this.result = result;
+                    lock (this)
+                    {
+                        result = getResult;
+                    }
                     Close();
                     break;
             }
         }
 
+        private const int maxFailedTries = 3;
         private int failedTries = 0;
 
         private void checkQRCodeStatusTimer_Tick(object sender, EventArgs e)
         {
-            BeanfunBroker.LoginResult checkResult = MainWindow.beanfun.CheckQRCode();
+            BeanfunBroker.TransactionResult checkResult = MainWindow.beanfun.CheckQRCode();
             switch (checkResult.Status)
             {
-                case BeanfunBroker.LoginStatus.RequireQRCode:
+                case BeanfunBroker.TransactionResultStatus.RequireQRCode:
                     failedTries = 0;
                     break;
-                case BeanfunBroker.LoginStatus.Expired:
+                case BeanfunBroker.TransactionResultStatus.Expired:
                     failedTries = 0;
                     checkQRCodeStatusTimer.Enabled = false;
                     Waiting();
-                    getQRCodeWorker.RunWorkerAsync();
+                    if (Visible)
+                        getQRCodeWorker.RunWorkerAsync();
                     break;
-                case BeanfunBroker.LoginStatus.ConnectionLost:
-                    if (++failedTries >= 3)
+                case BeanfunBroker.TransactionResultStatus.ConnectionLost:
+                    if (++failedTries >= maxFailedTries)
                     {
-                        result = checkResult;
-                        checkQRCodeStatusTimer.Enabled = false;
+                        lock (this)
+                        {
+                            result = checkResult;
+                        }
                         Close();
                     }
                     break;
                 default:
-                    checkQRCodeStatusTimer.Enabled = false;
-                    result = checkResult;
+                    lock (this)
+                    {
+                        result = checkResult;
+                    }
                     Close();
                     break;
             }
@@ -87,9 +105,9 @@ namespace MapleStoryLauncher
 
         private void QRCodeWindow_FormClosing(object sender, FormClosingEventArgs e)
         {
-            checkQRCodeStatusTimer.Enabled = false; //for manual closing
-            if (result == default(BeanfunBroker.LoginResult) || //manual closing while pending
-                result.Status == BeanfunBroker.LoginStatus.ConnectionLost)
+            checkQRCodeStatusTimer.Enabled = false;
+            if (result == default || //manual closing while pending
+                result.Status == BeanfunBroker.TransactionResultStatus.ConnectionLost)
                 MainWindow.beanfun.LocalLogout();
         }
 
@@ -97,23 +115,12 @@ namespace MapleStoryLauncher
         {
             qrcodeDisplay.Visible = false;
             FormBorderStyle = FormBorderStyle.FixedSingle;
-            progressReport.Text = "取得中...";
-            CenterAlignLabel(progressReport);
-            progressReport.Visible = true;
-        }
-
-        private void Error()
-        {
-            qrcodeDisplay.Visible = false;
-            FormBorderStyle = FormBorderStyle.FixedSingle;
-            progressReport.Text = "取得失敗！\n請關閉視窗後再試一次。";
-            CenterAlignLabel(progressReport);
-            progressReport.Visible = true;
-        }
-
-        private void CenterAlignLabel(Label label)
-        {
-            label.Location = new Point(((Size.Width - 10) - label.Size.Width) / 2, ((Size.Height - 29) - label.Size.Height) / 2);
+            labelProgress.Text = "取得中...";
+            labelProgress.Location = new Point(
+                qrcodeDisplay.Location.X + (qrcodeDisplay.Width - labelProgress.Size.Width) / 2,
+                qrcodeDisplay.Location.Y + (qrcodeDisplay.Height - labelProgress.Size.Height) / 2
+            );
+            labelProgress.Visible = true;
         }
     }
 }

@@ -6,43 +6,111 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
+using System.Web;
 
 namespace MapleStoryLauncher
 {
     public partial class BeanfunBroker
     {
-        public enum LoginStatus
+        private TransactionResult Step_FrontPage()
         {
-            Success,
-            RequireAppAuthentication,
-            RequireQRCode,
-            Expired,
-            Denied,
-            Failed,
-            ConnectionLost,
-            LoginFirst,
+            string url = "https://tw.beanfun.com/";
+            string referrer = "https://tw.beanfun.com/";
+            res = client.HttpGet(url, referrer, new BeanfunClient.HandlerConfiguration
+            {
+                saveResponseUrlAsReferrer = true
+            });
+            if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                return new TransactionResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("首頁", res.Status) };
+
+            TransactionResult loader = Step_Loader();
+            if (loader.Status != TransactionResultStatus.Success)
+                return loader;
+
+            return new TransactionResult { Status = TransactionResultStatus.Success };
         }
 
-        public class LoginResult
+        private TransactionResult Step_GetSkey()
         {
-            public LoginStatus Status { get; set; }
-            public string Message { get; set; }
-        }
-
-        private LoginResult GetSkey()
-        {
-            HttpRequestMessage req;
+            string url, referrer;
             Match match;
 
-            req = new HttpRequestMessage(HttpMethod.Get, $"https://tw.beanfun.com/beanfun_block/bflogin/default.aspx?service=999999_T0&dt={GetDateTime(DateTimeType.Skey)}&url=https://tw.beanfun.com/");
-            try { res = client.SendAsync(req).Result; }
-            catch { return new LoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(skey)" }; }
-            if (!res.IsSuccessStatusCode)
-                return new LoginResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(skey)" };
-            match = Regex.Match(res.Content.ReadAsStringAsync().Result, @"strSessionKey = ""([^""]*)""");
+            TransactionResult frontpage = Step_FrontPage();
+            if (frontpage.Status != TransactionResultStatus.Success)
+                return frontpage;
+
+            #region skey
+            url = $"https://tw.beanfun.com/beanfun_block/bflogin/default.aspx?service=999999_T0&dt={GetDateTime(DateTimeType.Skey)}&url=https://tw.beanfun.com/";
+            res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+            {
+                setReferrer = true,
+                saveResponseUrlAsReferrer = true
+            });
+            if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                return new TransactionResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("skey", res.Status) };
+
+            match = Regex.Match(res.Message.Content.ReadAsStringAsync().Result, @"strSessionKey = ""([^""]*)""");
             if (match == Match.Empty)
-                return new LoginResult { Status = LoginStatus.Failed, Message = "找不到 skey。" };
-            return new LoginResult { Status = LoginStatus.Success, Message = match.Groups[1].Value };
+                return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "找不到 skey。" };
+            string skey = match.Groups[1].Value;
+            #endregion
+
+            #region Params
+            url = "https://tw.beanfun.com/beanfun_block/scripts/BeanFunBlockParams.ashx";
+            referrer = "https://tw.newlogin.beanfun.com/";
+            res = client.HttpGet(url, referrer);
+            if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                return new TransactionResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("Params", res.Status) };
+            #endregion
+
+            #region checking_step2
+            url = $"https://tw.newlogin.beanfun.com/checkin_step2.aspx?skey={skey}&display_mode=2&_={GetDateTime(DateTimeType.UNIX)}";
+            res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+            {
+                setReferrer = true
+            });
+            if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                return new TransactionResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("checking_step2", res.Status) };
+            #endregion
+
+            return new TransactionResult { Status = TransactionResultStatus.Success, Message = skey };
+        }
+
+        private TransactionResult Step_Final(string writeUrl, string skey, string akey)
+        {
+            string url, referrer;
+
+            #region writecookie
+            url = $"{writeUrl}&_={GetDateTime(DateTimeType.UNIX)}";
+            referrer = "https://tw.newlogin.beanfun.com/";
+            res = client.HttpGet(url, referrer);
+            if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                return new TransactionResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("writecookie", res.Status) };
+            #endregion
+
+            #region return
+            url = "https://tw.beanfun.com/beanfun_block/bflogin/return.aspx";
+            referrer = "https://tw.newlogin.beanfun.com/";
+            res = client.HttpPost(url, new Dictionary<string, string>
+                {
+                    { "SessionKey", skey },
+                    { "AuthKey", akey },
+                    { "ServiceCode", "" },
+                    { "ServiceRegion", "" },
+                    { "ServiceAccountSN", "0" }
+                }, referrer, new BeanfunClient.HandlerConfiguration
+                {
+                    saveResponseUrlAsReferrer = true
+                });
+            if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                return new TransactionResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("return", res.Status) };
+            #endregion
+
+            TransactionResult loader = Step_Loader();
+            if (loader.Status != TransactionResultStatus.Success)
+                return loader;
+
+            return new TransactionResult { Status = TransactionResultStatus.Success };
         }
 
         /**
@@ -63,143 +131,149 @@ namespace MapleStoryLauncher
          *     The account is logged in.
          * </returns>
          */
-        public LoginResult Login(string username, string password)
+        public TransactionResult Login(string username, string password)
         {
             if (account != default(BeanfunAccount))
-                return new LoginResult { Status = LoginStatus.Failed, Message = "登入狀態不允許此操作。(一般登入)" };
+                return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "登入狀態不允許此操作。(一般登入)" };
 
             rwLock.EnterWriteLock();
             try
             {
-                HttpRequestMessage req;
-                Dictionary<string, string> form;
+                string skey;
+                TransactionResult getskey = Step_GetSkey();
+                if (getskey.Status != TransactionResultStatus.Success)
+                    return getskey;
+                else
+                    skey = getskey.Message;
+
+                string url;
                 string body;
                 Match match;
 
-                string skey;
-                LoginResult getskey = GetSkey();
-                if (getskey.Status == LoginStatus.Success)
-                    skey = getskey.Message;
-                else
-                    return getskey;
-
                 #region Login page(Regular)
-                req = new HttpRequestMessage(HttpMethod.Get, $"https://tw.newlogin.beanfun.com/loginform.aspx?skey={skey}&display_mode=2");
-                req.Headers.Referrer = new Uri($"https://tw.newlogin.beanfun.com/checkin_step2.aspx?skey={skey}&display_mode=2");
-                try { res = client.SendAsync(req).Result; }
-                catch { return new LoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(登入頁面(一般))" }; }
-                if (!res.IsSuccessStatusCode)
-                    return new LoginResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(登入頁面(一般))" };
+                url = $"https://tw.newlogin.beanfun.com/loginform.aspx?skey={skey}&display_mode=2";
+                res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+                {
+                    setReferrer= true,
+                    saveResponseUrlAsReferrer = true
+                });
+                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                    return new TransactionResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("登入頁面(一般)", res.Status) };
                 #endregion
 
-                #region Get viewstate, viewstateGenerator and eventvalidation
-                req = new HttpRequestMessage(HttpMethod.Get, $"https://tw.newlogin.beanfun.com/login/id-pass_form.aspx?skey={skey}&clientID=undefined");
-                req.Headers.Referrer = new Uri($"https://tw.newlogin.beanfun.com/checkin_step2.aspx?skey={skey}&display_mode=2");
-                handler.SaveNextRequestUrlAsFurtherReferrer = true;
-                try { res = client.SendAsync(req).Result; }
-                catch { return new LoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(viewstate, viewstateGenerator, eventvalidation)" }; }
-                if (!res.IsSuccessStatusCode)
-                    return new LoginResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(viewstate, viewstateGenerator, eventvalidation)" };
-                body = res.Content.ReadAsStringAsync().Result;
+                #region loginform
+                url = $"https://tw.newlogin.beanfun.com/loginform.aspx?skey={skey}&display_mode=2&_={GetDateTime(DateTimeType.UNIX)}";
+                res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+                {
+                    setReferrer = true
+                });
+                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                    return new TransactionResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("loginform", res.Status) };
+                #endregion
+
+                #region Get viewState, viewStateGenerator and eventValidation
+                url = $"https://tw.newlogin.beanfun.com/login/id-pass_form.aspx?skey={skey}&clientID=undefined";
+                res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+                {
+                    setReferrer = true,
+                    saveResponseUrlAsReferrer = true
+                });
+                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                    return new TransactionResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("viewState, viewStateGenerator, eventValidation", res.Status) };
+
+                body = res.Message.Content.ReadAsStringAsync().Result;
                 match = Regex.Match(body, @"<input type=""hidden"" name=""__VIEWSTATE"" id=""__VIEWSTATE"" value=""([^""]*)"" />");
                 if (match == Match.Empty)
-                    return new LoginResult { Status = LoginStatus.Failed, Message = "找不到 viewstate。" };
-                string viewstate = match.Groups[1].Value;
+                    return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "找不到 viewState。" };
+                string viewState = match.Groups[1].Value;
                 match = Regex.Match(body, @"<input type=""hidden"" name=""__VIEWSTATEGENERATOR"" id=""__VIEWSTATEGENERATOR"" value=""([^""]*)"" />");
                 if (match == Match.Empty)
-                    return new LoginResult { Status = LoginStatus.Failed, Message = "找不到 viewstategenerator。" };
-                string viewstateGenerator = match.Groups[1].Value;
+                    return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "找不到 viewStateGenerator。" };
+                string viewStateGenerator = match.Groups[1].Value;
                 match = Regex.Match(body, @"<input type=""hidden"" name=""__EVENTVALIDATION"" id=""__EVENTVALIDATION"" value=""([^""]*)"" />");
                 if (match == Match.Empty)
-                    return new LoginResult { Status = LoginStatus.Failed, Message = "找不到 eventvalidation。" };
-                string eventvalidation = match.Groups[1].Value;
+                    return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "找不到 eventValidation。" };
+                string eventValidation = match.Groups[1].Value;
+
+                MatchCollection matches = Regex.Matches(body, @"<script src=""\/WebResource\.axd\?([^""]*)"" type=""text\/javascript""><\/script>");
+                foreach(Match m in matches)
+                {
+                    url = $"https://tw.newlogin.beanfun.com/WebResource.axd?{HttpUtility.HtmlDecode(m.Groups[1].Value)}";
+                    res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+                    {
+                        setReferrer = true
+                    });
+                    if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                        return new TransactionResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("WebResource", res.Status) };
+                }
                 #endregion
 
-                #region Get akey and writeUrl
-                req = new HttpRequestMessage(HttpMethod.Post, $"https://tw.newlogin.beanfun.com/login/id-pass_form.aspx?skey={skey}&clientID=undefined");
-                //req.Headers.Referrer = new Uri($"https://tw.newlogin.beanfun.com/login/id-pass_form.aspx?skey={skey}&clientID=undefined");
-                handler.SetNextRequestReferrer = true;
-                form = new Dictionary<string, string>
+                #region Get bfWebToken, writeUrl and akey
+                url = $"https://tw.newlogin.beanfun.com/login/id-pass_form.aspx?skey={skey}&clientID=undefined";
+                res = client.HttpPost(url, new Dictionary<string, string>
                 {
                     { "__EVENTTARGET", "" },
                     { "__EVENTARGUMENT", "" },
-                    { "__VIEWSTATE", viewstate },
-                    { "__VIEWSTATEGENERATOR", viewstateGenerator },
-                    { "__EVENTVALIDATION", eventvalidation },
+                    { "__VIEWSTATE", viewState },
+                    { "__VIEWSTATEGENERATOR", viewStateGenerator },
+                    { "__EVENTVALIDATION", eventValidation },
                     { "t_AccountID", username },
                     { "t_Password", password },
                     { "btn_login", "登入" }
-                };
-                req.Content = new FormUrlEncodedContent(form);
-                try { res = client.SendAsync(req).Result; }
-                catch { return new LoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(akey, writeUrl)" }; }
-                if (!res.IsSuccessStatusCode)
-                    return new LoginResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(akey, writeUrl)" };
-                body = res.Content.ReadAsStringAsync().Result;
-                //Require app authenticaiotn
-                match = Regex.Match(body, @"pollRequest\(""bfAPPAutoLogin\.ashx"",""([^""]*)"",""[^""]*""\);");
-                if (match != Match.Empty)
+                }, null, new BeanfunClient.HandlerConfiguration
                 {
-                    account = new BeanfunAccount
-                    {
-                        skey = skey,
-                        lt = match.Groups[1].Value
-                    };
-                    return new LoginResult { Status = LoginStatus.RequireAppAuthentication };
-                }
+                    setReferrer = true,
+                    saveResponseUrlAsReferrer = true
+                });
+                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                    return new TransactionResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("bfWebToken, writeUrl, akey", res.Status) };
+
+                body = res.Message.Content.ReadAsStringAsync().Result;
                 //Check for errors
-                match = Regex.Match(body, @"<div id=""pnlMsg"">.*<script type=""text\/javascript"">\$\(function\(\)\{MsgBox\.Show\('(.*)'\);\}\);<\/script>.*<\/div>", RegexOptions.Singleline);
-                if (match != Match.Empty)
+                if(res.Message.RequestMessage.RequestUri.ToString() == url) //No redirection
                 {
-                    ClearCookies();
-                    return new LoginResult { Status = LoginStatus.Denied, Message = match.Groups[1].Value.Replace("<br />", "\n") };
+                    //Requiring app authenticaiotn
+                    match = Regex.Match(body, @"pollRequest\(""bfAPPAutoLogin\.ashx"",""([^""]*)"",""[^""]*""\);");
+                    if (match != Match.Empty)
+                    {
+                        account = new BeanfunAccount
+                        {
+                            skey = skey,
+                            lt = match.Groups[1].Value
+                        };
+                        return new TransactionResult { Status = TransactionResultStatus.RequireAppAuthentication };
+                    }
+                    //Denied
+                    match = Regex.Match(body, @"<div id=""pnlMsg"">.*<script type=""text\/javascript"">\$\(function\(\)\{MsgBox\.Show\('([^']*)'\);\}\);<\/script>.*<\/div>", RegexOptions.Singleline);
+                    if (match != Match.Empty)
+                    {
+                        client.ClearCookies();
+                        return new TransactionResult { Status = TransactionResultStatus.Denied, Message = match.Groups[1].Value.Replace("<br />", "\n") };
+                    }
                 }
                 //Retrieve info
-                match = Regex.Match(body, @"AuthKey.value = ""([^""]*)"";");
-                if (match == Match.Empty)
-                    return new LoginResult { Status = LoginStatus.Failed, Message = "找不到 akey。" };
-                string akey = match.Groups[1].Value;
+                if (client.GetCookies().GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"] == default)
+                    return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "找不到 bfWebToken。" };
+                string bfwebtoken = client.GetCookies().GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"].Value;
                 match = Regex.Match(body, @"var strWriteUrl = ""([^""]*)"";");
                 if (match == Match.Empty)
-                    return new LoginResult { Status = LoginStatus.Failed, Message = "找不到 writeUrl。" };
+                    return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "找不到 writeUrl。" };
                 string writeUrl = match.Groups[1].Value;
+                match = Regex.Match(body, @"AuthKey.value = ""([^""]*)"";");
+                if (match == Match.Empty)
+                    return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "找不到 akey。" };
+                string akey = match.Groups[1].Value;
                 #endregion
 
-                #region Writecookie
-                req = new HttpRequestMessage(HttpMethod.Get, writeUrl);
-                req.Headers.Referrer = new Uri("https://tw.newlogin.beanfun.com/");
-                try { res = client.SendAsync(req).Result; }
-                catch { return new LoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(writecookie)" }; }
-                if (!res.IsSuccessStatusCode)
-                    return new LoginResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(writecookie)" };
-                #endregion
-
-                #region Get bfwebtoken
-                req = new HttpRequestMessage(HttpMethod.Post, $"https://tw.beanfun.com/beanfun_block/bflogin/return.aspx");
-                req.Headers.Referrer = new Uri("https://tw.newlogin.beanfun.com/");
-                form = new Dictionary<string, string>
-                {
-                    { "SessionKey", skey },
-                    { "AuthKey", akey },
-                    { "ServiceCode", "" },
-                    { "ServiceRegion", "" },
-                    { "ServiceAccountSN", "0" }
-                };
-                req.Content = new FormUrlEncodedContent(form);
-                try { res = client.SendAsync(req).Result; }
-                catch { return new LoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(bfWebToken)" }; }
-                if (!res.IsSuccessStatusCode)
-                    return new LoginResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(bfWebToken)" };
-                if (handler.CookieContainer.GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"] == default(Cookie))
-                    return new LoginResult { Status = LoginStatus.Failed, Message = "找不到 bfWebToken。" };
-                string bfwebtoken = handler.CookieContainer.GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"].Value;
-                #endregion
+                TransactionResult final = Step_Final(writeUrl, skey, akey);
+                if (final.Status != TransactionResultStatus.Success)
+                    return final;
 
                 account = new BeanfunAccount
                 {
-                    webtoken = bfwebtoken
+                    webToken = bfwebtoken
                 };
-                return new LoginResult { Status = LoginStatus.Success };
+                return new TransactionResult { Status = TransactionResultStatus.Success };
             }
             finally
             {
@@ -209,8 +283,8 @@ namespace MapleStoryLauncher
 
         private class CheckAppAuthResponse
         {
-            public int IntResult = default;
-            public string StrReslut = default; //this name is decided by the protocol
+            public int IntResult { get; set; }
+            public string StrReslut { get; set; } //this name is decided by the protocol
         }
 
         /**
@@ -233,118 +307,92 @@ namespace MapleStoryLauncher
          *     The account is logged in.
          * </returns>
          */
-        public LoginResult CheckAppAuthentication()
+        public TransactionResult CheckAppAuthentication()
         {
             if (account == default(BeanfunAccount))
-                return new LoginResult { Status = LoginStatus.Failed, Message = "登入狀態不允許此操作。(檢查App授權)" };
+                return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "登入狀態不允許此操作。(檢查 App 授權)" };
 
             rwLock.EnterWriteLock();
             try
             {
-                HttpRequestMessage req;
-                Dictionary<string, string> form;
+                string url;
                 string body;
                 Match match;
 
-                req = new HttpRequestMessage(HttpMethod.Post, "https://tw.newlogin.beanfun.com/login/bfAPPAutoLogin.ashx");
-                //req.Headers.Referrer = new Uri($"https://tw.newlogin.beanfun.com/login/id-pass_form.aspx?skey={account.skey}&clientID=undefined");
-                handler.SetNextRequestReferrer = true;
-                form = new Dictionary<string, string>
+                url = "https://tw.newlogin.beanfun.com/login/bfAPPAutoLogin.ashx";
+                res = client.HttpPost(url, new Dictionary<string, string>
                 {
                     { "LT", account.lt }
-                };
-                req.Content = new FormUrlEncodedContent(form);
-                try { res = client.SendAsync(req).Result; }
-                catch { return new LoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(檢查App授權)" }; }
-                if (!res.IsSuccessStatusCode)
+                }, null, new BeanfunClient.HandlerConfiguration
+                {
+                    setReferrer = true
+                });
+                if (res.Status == BeanfunClient.HttpResponseStatus.Unsuccessful)
+                    account = default;
+                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                    return new TransactionResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("檢查 App 授權", res.Status) };
+
+                CheckAppAuthResponse result = JsonConvert.DeserializeObject<CheckAppAuthResponse>(res.Message.Content.ReadAsStringAsync().Result);
+                if (result == null)
                 {
                     account = default;
-                    return new LoginResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(檢查App授權)" };
+                    return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "不是預期的資料。(檢查 App 授權)" };
                 }
-                CheckAppAuthResponse result = JsonConvert.DeserializeObject<CheckAppAuthResponse>(res.Content.ReadAsStringAsync().Result);
                 switch (result.IntResult)
                 {
                     case -3:
                         account = default;
-                        return new LoginResult { Status = LoginStatus.Denied, Message = "登入要求已被 App 拒絕。" };
+                        return new TransactionResult { Status = TransactionResultStatus.Denied, Message = "登入要求已被 App 拒絕。" };
                     case -1:
                         account = default;
-                        return new LoginResult { Status = LoginStatus.Expired, Message = "登入階段過期。(檢查App授權)" };
+                        return new TransactionResult { Status = TransactionResultStatus.Expired, Message = "登入階段過期。(檢查 App 授權)" };
                     case 1:
-                        return new LoginResult { Status = LoginStatus.RequireAppAuthentication };
+                        return new TransactionResult { Status = TransactionResultStatus.RequireAppAuthentication };
                     case 2:
-                        #region Get akey and writeUrl
-                        req = new HttpRequestMessage(HttpMethod.Get, $"https://tw.newlogin.beanfun.com/login/{result.StrReslut}");
-                        //req.Headers.Referrer = new Uri($"https://tw.newlogin.beanfun.com/login/id-pass_form.aspx?skey={account.skey}&clientID=undefined");
-                        handler.SetNextRequestReferrer = true;
-                        try { res = client.SendAsync(req).Result; }
-                        catch { return new LoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(akey, writeUrl)" }; }
-                        if (!res.IsSuccessStatusCode)
+                        #region Get bfWebToken, writeUrl and akey
+                        url = $"https://tw.newlogin.beanfun.com/login/{result.StrReslut}";
+                        res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+                        {
+                            setReferrer = true,
+                            saveResponseUrlAsReferrer = true
+                        });
+                        if (res.Status == BeanfunClient.HttpResponseStatus.Unsuccessful)
+                            account = default;
+                        if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                            return new TransactionResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("bfWebToken, writeUrl, akey", res.Status) };
+
+                        if (client.GetCookies().GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"] == default)
                         {
                             account = default;
-                            return new LoginResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(akey, writeUrl)" };
+                            return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "找不到 bfWebToken。" };
                         }
-                        body = res.Content.ReadAsStringAsync().Result;
-                        match = Regex.Match(body, @"AuthKey.value = ""([^""]*)"";");
-                        if (match == Match.Empty)
-                        {
-                            account = default;
-                            return new LoginResult { Status = LoginStatus.Failed, Message = "找不到 akey。" };
-                        }
-                        string akey = match.Groups[1].Value;
+                        string bfwebtoken = client.GetCookies().GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"].Value;
+                        body = res.Message.Content.ReadAsStringAsync().Result;
                         match = Regex.Match(body, @"var strWriteUrl = ""([^""]*)"";");
                         if (match == Match.Empty)
                         {
                             account = default;
-                            return new LoginResult { Status = LoginStatus.Failed, Message = "找不到 writeUrl。" };
+                            return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "找不到 writeUrl。" };
                         }
                         string writeUrl = match.Groups[1].Value;
-                        #endregion
-
-                        #region Writecookie
-                        req = new HttpRequestMessage(HttpMethod.Get, writeUrl);
-                        req.Headers.Referrer = new Uri("https://tw.newlogin.beanfun.com/");
-                        try { res = client.SendAsync(req).Result; }
-                        catch { return new LoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(writecookie)" }; }
-                        if (!res.IsSuccessStatusCode)
+                        match = Regex.Match(body, @"AuthKey.value = ""([^""]*)"";");
+                        if (match == Match.Empty)
                         {
                             account = default;
-                            return new LoginResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(writecookie)" };
+                            return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "找不到 akey。" };
                         }
+                        string akey = match.Groups[1].Value;
                         #endregion
 
-                        #region Get bfwebtoken
-                        req = new HttpRequestMessage(HttpMethod.Post, $"https://tw.beanfun.com/beanfun_block/bflogin/return.aspx");
-                        req.Headers.Referrer = new Uri("https://tw.newlogin.beanfun.com/");
-                        form = new Dictionary<string, string>
-                        {
-                            { "SessionKey", account.skey },
-                            { "AuthKey", akey },
-                            { "ServiceCode", "" },
-                            { "ServiceRegion", "" },
-                            { "ServiceAccountSN", "0" }
-                        };
-                        req.Content = new FormUrlEncodedContent(form);
-                        try { res = client.SendAsync(req).Result; }
-                        catch { return new LoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(bfWebToken)" }; }
-                        if (!res.IsSuccessStatusCode)
-                        {
-                            account = default;
-                            return new LoginResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(bfWebToken)" };
-                        }
-                        if (handler.CookieContainer.GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"] == default(Cookie))
-                        {
-                            account = default;
-                            return new LoginResult { Status = LoginStatus.Failed, Message = "找不到 bfWebToken。" };
-                        }
-                        string bfwebtoken = handler.CookieContainer.GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"].Value;
-                        #endregion
+                        TransactionResult final = Step_Final(writeUrl, account.skey, akey);
+                        if (final.Status != TransactionResultStatus.Success)
+                            return final;
 
-                        account.webtoken = bfwebtoken;
-                        return new LoginResult { Status = LoginStatus.Success };
+                        account.webToken = bfwebtoken;
+                        return new TransactionResult { Status = TransactionResultStatus.Success };
                 }
                 account = default;
-                return new LoginResult { Status = LoginStatus.Failed, Message = "不是預期的資料。(檢查App授權)" };
+                return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "不是預期的資料。(檢查 App 授權)" };
             }
             finally
             {
@@ -352,17 +400,17 @@ namespace MapleStoryLauncher
             }
         }
 
-        public class QRLoginResult : LoginResult
+        public class QRCodeResult : TransactionResult
         {
             public Bitmap Picture { get; set; }
         }
 
         private class GetQRCodeResponse
         {
-            public int intResult = default;
-            public string strResult = default;
-            public string strEncryptData = default;
-            public string strEncryptBCDOData = default;
+            public int intResult { get; set; }
+            public string strResult { get; set; }
+            public string strEncryptData { get; set; }
+            public string strEncryptBCDOData { get; set; }
         }
 
         /**
@@ -379,82 +427,157 @@ namespace MapleStoryLauncher
          *     QRCode was gotten. An incomplete account has been created.(See '<see cref="LocalLogout"/>'.)
          * </returns>
          */
-        public QRLoginResult GetQRCode()
+        public QRCodeResult GetQRCode()
         {
             if (account != default(BeanfunAccount))
-                return new QRLoginResult { Status = LoginStatus.Failed, Message = "登入狀態不允許此操作。(取得 QRCode)" };
+                return new QRCodeResult { Status = TransactionResultStatus.Failed, Message = "登入狀態不允許此操作。(取得 QRCode)" };
 
             rwLock.EnterWriteLock();
             try
             {
-                HttpRequestMessage req;
+                string url;
+                string body;
                 Match match;
 
                 string skey;
-                LoginResult getskey = GetSkey();
-                if (getskey.Status == LoginStatus.Success)
-                    skey = getskey.Message;
+                TransactionResult getskey = Step_GetSkey();
+                if (getskey.Status != TransactionResultStatus.Success)
+                    return new QRCodeResult { Status = getskey.Status, Message = getskey.Message };
                 else
-                    return new QRLoginResult { Status = getskey.Status, Message = getskey.Message };
+                    skey = getskey.Message;
+
+                #region Get viewState, viewStateGenerator
+                url = $"https://tw.newlogin.beanfun.com/loginform.aspx?skey={skey}&display_mode=2";
+                res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+                {
+                    setReferrer = true,
+                    saveResponseUrlAsReferrer = true
+                });
+                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                    return new QRCodeResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("viewState, viewStateGenerator", res.Status) };
+
+                body = res.Message.Content.ReadAsStringAsync().Result;
+                match = Regex.Match(body, @"<input type=""hidden"" name=""__VIEWSTATE"" id=""__VIEWSTATE"" value=""([^""]*)"" />");
+                if (match == Match.Empty)
+                    return new QRCodeResult { Status = TransactionResultStatus.Failed, Message = "找不到 viewState。" };
+                string viewState = match.Groups[1].Value;
+                match = Regex.Match(body, @"<input type=""hidden"" name=""__VIEWSTATEGENERATOR"" id=""__VIEWSTATEGENERATOR"" value=""([^""]*)"" />");
+                if (match == Match.Empty)
+                    return new QRCodeResult { Status = TransactionResultStatus.Failed, Message = "找不到 viewStateGenerator。" };
+                string viewStateGenerator = match.Groups[1].Value;
+                #endregion
+
+                #region loginform
+                url = $"https://tw.newlogin.beanfun.com/loginform.aspx?skey={skey}&display_mode=2&_={GetDateTime(DateTimeType.UNIX)}";
+                res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+                {
+                    setReferrer = true
+                });
+                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                    return new QRCodeResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("loginform", res.Status) };
+                #endregion
+
+                #region Login page(Regular)
+                url = $"https://tw.newlogin.beanfun.com/login/id-pass_form.aspx?skey={skey}&clientID=undefined";
+                res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+                {
+                    setReferrer = true
+                });
+                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                    return new QRCodeResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("登入頁面(一般)", res.Status) };
+
+                MatchCollection matches = Regex.Matches(body, @"<script src=""\/WebResource\.axd\?([^""]*)"" type=""text\/javascript""><\/script>");
+                foreach (Match m in matches)
+                {
+                    url = $"https://tw.newlogin.beanfun.com/WebResource.axd?{HttpUtility.HtmlDecode(m.Groups[1].Value)}";
+                    res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+                    {
+                        setReferrer = true
+                    });
+                    if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                        return new QRCodeResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("WebResource", res.Status) };
+                }
+                #endregion
 
                 #region Login page(QRCode)
-                req = new HttpRequestMessage(HttpMethod.Get, $"https://tw.newlogin.beanfun.com/loginform.aspx?skey={skey}&display_mode=2&region=qr");
-                req.Headers.Referrer = new Uri($"https://tw.newlogin.beanfun.com/loginform.aspx?skey={skey}&display_mode=2");
-                handler.SaveNextRequestUrlAsFurtherReferrer = true;
-                try { res = client.SendAsync(req).Result; }
-                catch { return new QRLoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(登入頁面(QRCode))" }; }
-                if (!res.IsSuccessStatusCode)
-                    return new QRLoginResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(登入頁面(QRCode))" };
+                url = $"https://tw.newlogin.beanfun.com/loginform.aspx?skey={skey}&display_mode=2";
+                res = client.HttpPost(url, new Dictionary<string, string>
+                {
+                    { "__EVENTTARGET", "__Page" },
+                    { "__EVENTARGUMENT", "SwitchToLocalAreaQR" },
+                    { "__VIEWSTATE", viewState },
+                    { "__VIEWSTATEGENERATOR", viewStateGenerator },
+                    { "ddlAuthType", "1" }
+                }, null, new BeanfunClient.HandlerConfiguration
+                {
+                    setReferrer= true,
+                    saveResponseUrlAsReferrer = true
+                });
+                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                    return new QRCodeResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("登入頁面(QRCode)", res.Status) };
                 #endregion
 
-                #region Get qrhandler
-                req = new HttpRequestMessage(HttpMethod.Get, $"https://tw.newlogin.beanfun.com/login/qr_form.aspx?skey={skey}&clientID=undefined");
-                //req.Headers.Referrer = new Uri($"https://tw.newlogin.beanfun.com/loginform.aspx?skey={skey}&display_mode=2&region=qr");
-                handler.SetNextRequestReferrer = true;
-                handler.SaveNextRequestUrlAsFurtherReferrer = true;
-                try { res = client.SendAsync(req).Result; }
-                catch { return new QRLoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(qrhandler)" }; }
-                if (!res.IsSuccessStatusCode)
-                    return new QRLoginResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(qrhandler)" };
-                match = Regex.Match(res.Content.ReadAsStringAsync().Result, @"\$\(""#theQrCodeImg""\)\.attr\(""src"", ""\.\.\/([^""]*)""");
+                #region loginform(qr)
+                url = $"https://tw.newlogin.beanfun.com/loginform.aspx?skey={skey}&display_mode=2&region=qr&_={GetDateTime(DateTimeType.UNIX)}";
+                res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+                {
+                    setReferrer = true
+                });
+                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                    return new QRCodeResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("loginform(qr)", res.Status) };
+                #endregion
+
+                #region baseUrl
+                url = $"https://tw.newlogin.beanfun.com/login/qr_form.aspx?skey={skey}&clientID=undefined";
+                res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+                {
+                    setReferrer = true,
+                    saveResponseUrlAsReferrer = true
+                });
+                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                    return new QRCodeResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("baseUrl", res.Status) };
+
+                match = Regex.Match(res.Message.Content.ReadAsStringAsync().Result, @"\$\(""#theQrCodeImg""\)\.attr\(""src"", ""([^""]*)""[^\)]*\);");
                 if (match == Match.Empty)
-                    return new QRLoginResult { Status = LoginStatus.Failed, Message = "找不到 qrhandler。" };
-                string qrhandler = match.Groups[1].Value;
+                    return new QRCodeResult { Status = TransactionResultStatus.Failed, Message = "找不到 baseUrl。" };
+                string baseUrl = $"https://tw.newlogin.beanfun.com/login/{match.Groups[1].Value}";
                 #endregion
 
-                #region Get encryptdata
-                req = new HttpRequestMessage(HttpMethod.Get, $"https://tw.newlogin.beanfun.com/generic_handlers/get_qrcodeData.ashx?skey={skey}&startGame=&clientID=");
-                //req.Headers.Referrer = new Uri($"https://tw.newlogin.beanfun.com/login/qr_form.aspx?skey={skey}&clientID=undefined");
-                handler.SetNextRequestReferrer = true;
-                try { res = client.SendAsync(req).Result; }
-                catch { return new QRLoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(encryptdata)" }; }
-                if (!res.IsSuccessStatusCode)
-                    return new QRLoginResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(encryptdata)" };
-                GetQRCodeResponse qrdata = JsonConvert.DeserializeObject<GetQRCodeResponse>(res.Content.ReadAsStringAsync().Result);
-                string encryptdata;
-                if (qrdata.strEncryptData != default)
-                    encryptdata = qrdata.strEncryptData;
+                #region encryptData
+                url = $"https://tw.newlogin.beanfun.com/generic_handlers/get_qrcodeData.ashx?skey={skey}&startGame=&clientID=";
+                res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+                {
+                    setReferrer = true
+                });
+                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                    return new QRCodeResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("encryptData", res.Status) };
+
+                GetQRCodeResponse result = JsonConvert.DeserializeObject<GetQRCodeResponse>(res.Message.Content.ReadAsStringAsync().Result);
+                string encryptData;
+                if (result == null || result.strEncryptData == default)
+                    return new QRCodeResult { Status = TransactionResultStatus.Failed, Message = "找不到 encryptData。" };
                 else
-                    return new QRLoginResult { Status = LoginStatus.Failed, Message = "找不到 encryptdata。" };
+                    encryptData = result.strEncryptData;
                 #endregion
 
-                #region Get QRCode picture
-                req = new HttpRequestMessage(HttpMethod.Get, $"https://tw.newlogin.beanfun.com/{qrhandler}{encryptdata}");
-                //req.Headers.Referrer = new Uri($"https://tw.newlogin.beanfun.com/login/qr_form.aspx?skey={skey}&clientID=undefined");
-                handler.SetNextRequestReferrer = true;
-                try { res = client.SendAsync(req).Result; }
-                catch { return new QRLoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(QRcode圖片)" }; }
-                if (!res.IsSuccessStatusCode)
-                    return new QRLoginResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(QRcode圖片)" };
-                Bitmap qrPic = new(res.Content.ReadAsStreamAsync().Result);
+                #region QRCode picture
+                url = $"{baseUrl}{encryptData}";
+                res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+                {
+                    setReferrer= true
+                });
+                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                    return new QRCodeResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("QRcode 圖片", res.Status) };
+
+                Bitmap qrPic = new(res.Message.Content.ReadAsStreamAsync().Result);
                 #endregion
 
                 account = new BeanfunAccount
                 {
                     skey = skey,
-                    encryptdata = encryptdata
+                    encryptData = encryptData
                 };
-                return new QRLoginResult { Status = LoginStatus.Success, Picture = qrPic };
+                return new QRCodeResult { Status = TransactionResultStatus.Success, Picture = qrPic };
             }
             finally
             {
@@ -464,8 +587,8 @@ namespace MapleStoryLauncher
 
         private class CheckQRCodeResponse
         {
-            public int Result = default;
-            public string ResultMessage = default;
+            public int Result { get; set; }
+            public string ResultMessage { get; set; }
         }
 
         /**
@@ -486,139 +609,115 @@ namespace MapleStoryLauncher
          *     The account is logged in.
          * </returns>
          */
-        public LoginResult CheckQRCode()
+        public TransactionResult CheckQRCode()
         {
             if (account == default(BeanfunAccount))
-                return new LoginResult { Status = LoginStatus.Failed, Message = "登入狀態不允許此操作。(檢查 QRCode)" };
+                return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "登入狀態不允許此操作。(檢查 QRCode)" };
 
             rwLock.EnterWriteLock();
             try
             {
-                HttpRequestMessage req;
-                Dictionary<string, string> form;
+                string url;
                 string body;
                 Match match;
 
-                req = new HttpRequestMessage(HttpMethod.Post, "https://tw.newlogin.beanfun.com/generic_handlers/CheckLoginStatus.ashx");
-                req.Headers.Referrer = new Uri($"https://tw.newlogin.beanfun.com/login/qr_form.aspx?skey={account.skey}&clientID=undefined");
-                form = new Dictionary<string, string>
+                url = "https://tw.newlogin.beanfun.com/generic_handlers/CheckLoginStatus.ashx";
+                res = client.HttpPost(url, new Dictionary<string, string>
                 {
-                    { "status", account.encryptdata }
-                };
-                req.Content = new FormUrlEncodedContent(form);
-                try { res = client.SendAsync(req).Result; }
-                catch { return new LoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(檢查 QRCode)" }; }
-                if (!res.IsSuccessStatusCode)
+                    { "status", account.encryptData }
+                }, null, new BeanfunClient.HandlerConfiguration
+                {
+                    setReferrer = true
+                });
+                if (res.Status == BeanfunClient.HttpResponseStatus.Unsuccessful)
+                    account = default;
+                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                    return new TransactionResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("檢查 QRCode", res.Status) };
+                
+                CheckQRCodeResponse result = JsonConvert.DeserializeObject<CheckQRCodeResponse>(res.Message.Content.ReadAsStringAsync().Result);
+                if (result == null)
                 {
                     account = default;
-                    return new LoginResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(檢查 QRCode)" };
+                    return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "不是預期的資料。(檢查 QRCode)" };
                 }
-                CheckQRCodeResponse result = JsonConvert.DeserializeObject<CheckQRCodeResponse>(res.Content.ReadAsStringAsync().Result);
                 switch (result.Result)
                 {
                     case 0:
                         if (result.ResultMessage == "Failed")
-                            return new LoginResult { Status = LoginStatus.RequireQRCode };
+                            return new TransactionResult { Status = TransactionResultStatus.RequireQRCode };
                         if (result.ResultMessage == "Token Expired")
                         {
                             account = default;
-                            return new LoginResult { Status = LoginStatus.Expired, Message = "QRCode 過期。(檢查 QRCode)" };
+                            return new TransactionResult { Status = TransactionResultStatus.Expired, Message = "QRCode 過期。(檢查 QRCode)" };
                         }
                         account = default;
-                        return new LoginResult { Status = LoginStatus.Failed, Message = "不是預期的資料。(檢查 QRCode)" };
+                        return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "不是預期的資料。(檢查 QRCode)" };
                     case 1:
-                        #region Get akey, finalstep
-                        req = new HttpRequestMessage(HttpMethod.Get, $"https://tw.newlogin.beanfun.com/login/qr_step2.aspx?skey={account.skey}");
-                        req.Headers.Referrer = new Uri($"https://tw.newlogin.beanfun.com/login/qr_form.aspx?skey={account.skey}&clientID=undefined");
-                        handler.SaveNextRequestUrlAsFurtherReferrer = true;
-                        try { res = client.SendAsync(req).Result; }
-                        catch { return new LoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(akey, finalstep)" }; }
-                        if (!res.IsSuccessStatusCode)
+                        #region final_step
+                        url = $"https://tw.newlogin.beanfun.com/login/qr_step2.aspx?skey={account.skey}";
+                        res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
                         {
+                            setReferrer = true,
+                            saveResponseUrlAsReferrer = true
+                        });
+                        if (res.Status == BeanfunClient.HttpResponseStatus.Unsuccessful)
                             account = default;
-                            return new LoginResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(akey, finalstep)" };
-                        }
-                        body = res.Content.ReadAsStringAsync().Result;
-                        match = Regex.Match(body, @"RedirectPage\("""",""\.\/([^""]*)""\)");
+                        if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                            return new TransactionResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("final_step", res.Status) };
+
+                        match = Regex.Match(res.Message.Content.ReadAsStringAsync().Result, @"RedirectPage\("""",""([^""]*)""\)");
                         if (match == Match.Empty)
                         {
                             account = default;
-                            return new LoginResult { Status = LoginStatus.Failed, Message = "找不到 final_step。" };
+                            return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "找不到 final_step。" };
                         }
-                        string finalstep = match.Groups[1].Value;
-                        match = Regex.Match(finalstep, @"akey=([^&]*)&");
+                        string final_step = match.Groups[1].Value;
+                        #endregion
+
+                        #region Get bfWebToken, writeUrl and akey
+                        url = $"https://tw.newlogin.beanfun.com/login/{final_step}";
+                        res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+                        {
+                            setReferrer = true,
+                            saveResponseUrlAsReferrer= true
+                        });
+                        if (res.Status == BeanfunClient.HttpResponseStatus.Unsuccessful)
+                            account = default;
+                        if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                            return new TransactionResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("bfWebToken, writeUrl, akey", res.Status) };
+
+                        if (client.GetCookies().GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"] == default)
+                        {
+                            account = default;
+                            return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "找不到 bfWebToken。" };
+                        }
+                        string bfwebtoken = client.GetCookies().GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"].Value;
+                        body = res.Message.Content.ReadAsStringAsync().Result;
+                        match = Regex.Match(body, @"var strWriteUrl = ""([^""]*)"";");
                         if (match == Match.Empty)
                         {
                             account = default;
-                            return new LoginResult { Status = LoginStatus.Failed, Message = "找不到 akey。" };
+                            return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "找不到 writeUrl。" };
+                        }
+                        string writeUrl = match.Groups[1].Value;
+                        match = Regex.Match(body, @"AuthKey.value = ""([^""]*)"";");
+                        if (match == Match.Empty)
+                        {
+                            account = default;
+                            return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "找不到 akey。" };
                         }
                         string akey = match.Groups[1].Value;
                         #endregion
 
-                        #region Get writeUrl
-                        req = new HttpRequestMessage(HttpMethod.Get, $"https://tw.newlogin.beanfun.com/login/{finalstep}");
-                        //req.Headers.Referrer = new Uri($"https://tw.newlogin.beanfun.com/login/qr_step2.aspx?skey={account.skey}");
-                        handler.SetNextRequestReferrer = true;
-                        try { res = client.SendAsync(req).Result; }
-                        catch { return new LoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(writeUrl)" }; }
-                        if (!res.IsSuccessStatusCode)
-                        {
-                            account = default;
-                            return new LoginResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(writeUrl)" };
-                        }
-                        match = Regex.Match(res.Content.ReadAsStringAsync().Result, @"var strWriteUrl = ""([^""]*)"";");
-                        if (match == Match.Empty)
-                        {
-                            account = default;
-                            return new LoginResult { Status = LoginStatus.Failed, Message = "找不到 writeUrl。" };
-                        }
-                        string writeUrl = match.Groups[1].Value;
-                        #endregion
+                        TransactionResult final = Step_Final(writeUrl, account.skey, akey);
+                        if (final.Status != TransactionResultStatus.Success)
+                            return final;
 
-                        #region Writecookie
-                        req = new HttpRequestMessage(HttpMethod.Get, writeUrl);
-                        req.Headers.Referrer = new Uri("https://tw.newlogin.beanfun.com/");
-                        try { res = client.SendAsync(req).Result; }
-                        catch { return new LoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(Writecookie)" }; }
-                        if (!res.IsSuccessStatusCode)
-                        {
-                            account = default;
-                            return new LoginResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(Writecookie)" };
-                        }
-                        #endregion
-
-                        #region Get bfwebtoken
-                        req = new HttpRequestMessage(HttpMethod.Post, $"https://tw.beanfun.com/beanfun_block/bflogin/return.aspx");
-                        req.Headers.Referrer = new Uri("https://tw.newlogin.beanfun.com/");
-                        form = new Dictionary<string, string>
-                        {
-                            { "SessionKey", account.skey },
-                            { "AuthKey", akey },
-                            { "ServiceCode", "" },
-                            { "ServiceRegion", "" },
-                            { "ServiceAccountSN", "0" }
-                        };
-                        req.Content = new FormUrlEncodedContent(form);
-                        try { res = client.SendAsync(req).Result; }
-                        catch { return new LoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(bfWebToken)" }; }
-                        if (!res.IsSuccessStatusCode)
-                        {
-                            account = default;
-                            return new LoginResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(bfWebToken)" };
-                        }
-                        if (handler.CookieContainer.GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"] == default(Cookie))
-                        {
-                            account = default;
-                            return new LoginResult { Status = LoginStatus.Failed, Message = "找不到 bfWebToken。" };
-                        }
-                        string bfwebtoken = handler.CookieContainer.GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"].Value;
-                        #endregion
-
-                        account.webtoken = bfwebtoken;
-                        return new LoginResult { Status = LoginStatus.Success };
+                        account.webToken = bfwebtoken;
+                        return new TransactionResult { Status = TransactionResultStatus.Success };
                 }
                 account = default;
-                return new LoginResult { Status = LoginStatus.Failed, Message = "不是預期的資料。(檢查 QRCode)" };
+                return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "不是預期的資料。(檢查 QRCode)" };
             }
             finally
             {
@@ -651,8 +750,10 @@ namespace MapleStoryLauncher
         /**
          * <summary>Log out the beanfun account.</summary>
          * <returns>
-         * true: The process is finished completely.
-         * false: Some steps of the process are not successful.
+         * true: The process finished completely.
+         * false:
+         *   1. The account is not logged in.
+         *   2. Some steps of the process are not successful.
          * </returns>
          */
         public bool Logout()
@@ -663,108 +764,77 @@ namespace MapleStoryLauncher
             rwLock.EnterWriteLock();
             try
             {
-                bool result = true;
-                HttpRequestMessage req;
+                bool success = true;
+                string url, referrer;
 
-                req = new HttpRequestMessage(HttpMethod.Get, $"https://tw.beanfun.com/generic_handlers/remove_bflogin_session.ashx?d={GetDateTime(DateTimeType.Logout)}");
-                req.Headers.Referrer = new Uri("https://tw.beanfun.com/beanfun_block/bflogin/logout_confirm.aspx?service=999999_T0");
-                try { res = client.SendAsync(req).Result; }
-                catch { result = false; }
-                if (res != default && !res.IsSuccessStatusCode)
-                    result = false;
+                url = "https://tw.beanfun.com/beanfun_block/bflogin/logout_confirm.aspx?service=999999_T0";
+                referrer = "https://tw.beanfun.com/game_zones";
+                res = client.HttpGet(url, referrer, new BeanfunClient.HandlerConfiguration
+                {
+                    saveResponseUrlAsReferrer = true
+                });
+                if(res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                    success = false;
 
-                req = new HttpRequestMessage(HttpMethod.Get, $"https://tw.beanfun.com/TW/data_provider/remove_bflogin_session.ashx?d={GetDateTime(DateTimeType.Logout)}");
-                req.Headers.Referrer = new Uri("https://tw.beanfun.com/beanfun_block/bflogin/logout_confirm.aspx?service=999999_T0");
-                try { res = client.SendAsync(req).Result; }
-                catch { result = false; }
-                if (res != default && !res.IsSuccessStatusCode)
-                    result = false;
+                url = $"https://tw.beanfun.com/generic_handlers/remove_bflogin_session.ashx?d={GetDateTime(DateTimeType.Logout)}";
+                res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+                {
+                    setReferrer = true
+                });
+                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                    success = false;
 
-                req = new HttpRequestMessage(HttpMethod.Get, "https://tw.newlogin.beanfun.com/logout.aspx?service=999999_T0");
-                req.Headers.Referrer = new Uri("https://tw.beanfun.com/");
-                handler.SaveNextRequestUrlAsFurtherReferrer = true;
-                try { res = client.SendAsync(req).Result; }
-                catch { result = false; }
-                if (res != default && !res.IsSuccessStatusCode)
-                    result = false;
+                url = $"https://tw.beanfun.com/TW/data_provider/remove_bflogin_session.ashx?d={GetDateTime(DateTimeType.Logout)}";
+                res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+                {
+                    setReferrer = true
+                });
+                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                    success = false;
 
-                req = new HttpRequestMessage(HttpMethod.Get, "https://tw.newlogin.beanfun.com/generic_handlers/erase_token.ashx");
-                //req.Headers.Referrer = new Uri("https://tw.newlogin.beanfun.com/logout.aspx?service=999999_T0");
-                handler.SetNextRequestReferrer = true;
-                try { res = client.SendAsync(req).Result; }
-                catch { result = false; }
-                if (res != default && !res.IsSuccessStatusCode)
-                    result = false;
+                url = "https://tw.newlogin.beanfun.com/logout.aspx?service=999999_T0";
+                referrer = "https://tw.beanfun.com/";
+                res = client.HttpGet(url, referrer, new BeanfunClient.HandlerConfiguration
+                {
+                    saveResponseUrlAsReferrer = true
+                });
+                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                    success = false;
 
-                req = new HttpRequestMessage(HttpMethod.Get, $"https://tw.newlogin.beanfun.com/logout.aspx?service=999999_T0&_={GetDateTime(DateTimeType.UNIX)}");
-                //req.Headers.Referrer = new Uri("https://tw.newlogin.beanfun.com/logout.aspx?service=999999_T0");
-                handler.SetNextRequestReferrer = true;
-                try { res = client.SendAsync(req).Result; }
-                catch { result = false; }
-                if (res != default && !res.IsSuccessStatusCode)
-                    result = false;
+                url = "https://tw.beanfun.com/beanfun_block/scripts/BeanFunBlockParams.ashx";
+                referrer = "https://tw.newlogin.beanfun.com/";
+                res = client.HttpGet(url, referrer);
+                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                    success = false;
 
-                if (result)
+                url = "https://tw.newlogin.beanfun.com/generic_handlers/erase_token.ashx";
+                res = client.HttpPost(url, new Dictionary<string, string>
+                {
+                    { "web_token", "1" }
+                }, referrer, new BeanfunClient.HandlerConfiguration
+                {
+                    setReferrer = true
+                });
+                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                    success = false;
+
+                GeneralResponse result = JsonConvert.DeserializeObject<GeneralResponse>(res.Message.Content.ReadAsStringAsync().Result);
+                if (result == null || 
+                    (result.intResult != 0 && result.intResult != 1 && result.intResult != 2))
+                    success = false;
+
+                url = $"https://tw.newlogin.beanfun.com/logout.aspx?service=999999_T0&_={GetDateTime(DateTimeType.UNIX)}";
+                res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+                {
+                    setReferrer = true
+                });
+                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                    success = false;
+
+                if (success)
                     account = default;
 
-                return result;
-            }
-            finally
-            {
-                rwLock.ExitWriteLock();
-            }
-        }
-
-        private class PingResponse
-        {
-            public int ResultCode { get; set; }
-            public string ResultDesc { get; set; }
-            public string MainAccountID { get; set; }
-        }
-
-        /**
-         * <summary>Check the login status of beanfun account.</summary>
-         * <returns>
-         * Possible statuses (message):
-         *   Failed (error description):
-         *     1. This beanfun account is currently not logged in.
-         *     2. Requests to beanfun returns a non-success http code.
-         *     3. Returned messages don't have the expected contents.
-         *   ConnectionLost (description):
-         *     Any connection failed.
-         *   LoginFirst (none):
-         *     The account is logged out.
-         *   Success (username of this beanfun account): 
-         *     The account is still logged in.
-         * </returns>
-         */
-        public LoginResult Ping()
-        {
-            if (account == default(BeanfunAccount))
-                return new LoginResult { Status = LoginStatus.Failed, Message = "登入狀態不允許此操作。(Ping)" };
-
-            rwLock.EnterWriteLock();
-            try
-            {
-                HttpRequestMessage req;
-                Match match;
-
-                req = new HttpRequestMessage(HttpMethod.Get, $"https://tw.beanfun.com/beanfun_block/generic_handlers/echo_token.ashx?webtoken=1&noCacheIE={GetDateTime(DateTimeType.Ping)}");
-                req.Headers.Referrer = new Uri("https://tw.beanfun.com/");
-                try { res = client.SendAsync(req).Result; }
-                catch { return new LoginResult { Status = LoginStatus.ConnectionLost, Message = "連線中斷。(ping)" }; }
-                if (!res.IsSuccessStatusCode)
-                    return new LoginResult { Status = LoginStatus.Failed, Message = "不是成功的回應代碼。(ping)" };
-                match = Regex.Match(res.Content.ReadAsStringAsync().Result, @"(\{[^\{\}]*\})");
-                if (match == Match.Empty)
-                    return new LoginResult { Status = LoginStatus.Failed, Message = "不是預期的結果。(ping)" };
-                PingResponse result = JsonConvert.DeserializeObject<PingResponse>(match.Groups[1].Value);
-                return result.ResultCode switch
-                {
-                    0 => new LoginResult { Status = LoginStatus.LoginFirst },
-                    1 => new LoginResult { Status = LoginStatus.Success, Message = result.MainAccountID },
-                    _ => new LoginResult { Status = LoginStatus.Failed, Message = "不是預期的結果。(ping)" },
-                };
+                return success;
             }
             finally
             {

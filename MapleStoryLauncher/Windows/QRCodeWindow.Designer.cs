@@ -34,7 +34,7 @@ namespace MapleStoryLauncher
             this.qrcodeDisplay = new System.Windows.Forms.PictureBox();
             this.getQRCodeWorker = new System.ComponentModel.BackgroundWorker();
             this.checkQRCodeStatusTimer = new System.Windows.Forms.Timer(this.components);
-            this.progressReport = new System.Windows.Forms.Label();
+            this.labelProgress = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.qrcodeDisplay)).BeginInit();
             this.SuspendLayout();
             // 
@@ -62,24 +62,24 @@ namespace MapleStoryLauncher
             this.checkQRCodeStatusTimer.Interval = 3000;
             this.checkQRCodeStatusTimer.Tick += new System.EventHandler(this.checkQRCodeStatusTimer_Tick);
             // 
-            // progressReport
+            // labelProgress
             // 
-            this.progressReport.AutoSize = true;
-            this.progressReport.Font = new System.Drawing.Font("Microsoft YaHei UI", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.progressReport.Location = new System.Drawing.Point(14, 13);
-            this.progressReport.Name = "progressReport";
-            this.progressReport.Size = new System.Drawing.Size(84, 25);
-            this.progressReport.TabIndex = 1;
-            this.progressReport.Text = "取得中...";
-            this.progressReport.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.progressReport.Visible = false;
+            this.labelProgress.AutoSize = true;
+            this.labelProgress.Font = new System.Drawing.Font("Microsoft YaHei UI", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.labelProgress.Location = new System.Drawing.Point(17, 15);
+            this.labelProgress.Name = "labelProgress";
+            this.labelProgress.Size = new System.Drawing.Size(84, 25);
+            this.labelProgress.TabIndex = 1;
+            this.labelProgress.Text = "取得中...";
+            this.labelProgress.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.labelProgress.Visible = false;
             // 
             // QRCodeWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.ClientSize = new System.Drawing.Size(270, 271);
-            this.Controls.Add(this.progressReport);
+            this.Controls.Add(this.labelProgress);
             this.Controls.Add(this.qrcodeDisplay);
             this.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -103,6 +103,6 @@ namespace MapleStoryLauncher
         private System.Windows.Forms.PictureBox qrcodeDisplay;
         private System.ComponentModel.BackgroundWorker getQRCodeWorker;
         private System.Windows.Forms.Timer checkQRCodeStatusTimer;
-        private System.Windows.Forms.Label progressReport;
+        private System.Windows.Forms.Label labelProgress;
     }
 }

@@ -1,0 +1,11 @@
+# comments
+→ redirects to
+B response body: line or block
+\ doesn't change onward referrers
+: x-www-form-urlencoded row
+R referrer of the next request
+
+R https://tw.beanfun.com/
+GET https://tw.beanfun.com/beanfun_block/generic_handlers/get_remain_point.ashx?webtoken=1&noCacheIE=20220318153616.855
+B BeanFunBlock.GetRemainPointResult({"ResultCode":0, "ResultDesc":"Success", "RemainPoint" : "..." });
+B BeanFunBlock.GetRemainPointResult({"ResultCode":1, "ResultDesc":"Token is invalid", "RemainPoint" : "-1" });
