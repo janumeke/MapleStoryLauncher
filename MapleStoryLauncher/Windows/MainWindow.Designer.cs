@@ -35,12 +35,12 @@
             this.maplePictureBox = new System.Windows.Forms.PictureBox();
             this.beanfunPictureBox = new System.Windows.Forms.PictureBox();
             this.groupBoxBeanfun = new System.Windows.Forms.GroupBox();
+            this.AddRemoveAccount = new System.Windows.Forms.PictureBox();
+            this.accountInput = new System.Windows.Forms.ComboBox();
             this.accountLabel = new System.Windows.Forms.Label();
             this.loginButton = new System.Windows.Forms.Button();
-            this.accountInput = new System.Windows.Forms.TextBox();
             this.passLabel = new System.Windows.Forms.Label();
-            this.rememberAccount = new System.Windows.Forms.CheckBox();
-            this.pwdInput = new System.Windows.Forms.TextBox();
+            this.passwordInput = new System.Windows.Forms.TextBox();
             this.rememberPwd = new System.Windows.Forms.CheckBox();
             this.autoLogin = new System.Windows.Forms.CheckBox();
             this.autoSelect = new System.Windows.Forms.CheckBox();
@@ -59,6 +59,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.maplePictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.beanfunPictureBox)).BeginInit();
             this.groupBoxBeanfun.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.AddRemoveAccount)).BeginInit();
             this.SuspendLayout();
             // 
             // panel1
@@ -113,12 +114,12 @@
             // 
             // groupBoxBeanfun
             // 
+            this.groupBoxBeanfun.Controls.Add(this.AddRemoveAccount);
+            this.groupBoxBeanfun.Controls.Add(this.accountInput);
             this.groupBoxBeanfun.Controls.Add(this.accountLabel);
             this.groupBoxBeanfun.Controls.Add(this.loginButton);
-            this.groupBoxBeanfun.Controls.Add(this.accountInput);
             this.groupBoxBeanfun.Controls.Add(this.passLabel);
-            this.groupBoxBeanfun.Controls.Add(this.rememberAccount);
-            this.groupBoxBeanfun.Controls.Add(this.pwdInput);
+            this.groupBoxBeanfun.Controls.Add(this.passwordInput);
             this.groupBoxBeanfun.Controls.Add(this.rememberPwd);
             this.groupBoxBeanfun.Controls.Add(this.autoLogin);
             this.groupBoxBeanfun.Font = new System.Drawing.Font("Microsoft YaHei UI Light", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
@@ -127,6 +128,30 @@
             this.groupBoxBeanfun.Size = new System.Drawing.Size(321, 175);
             this.groupBoxBeanfun.TabIndex = 100;
             this.groupBoxBeanfun.TabStop = false;
+            // 
+            // AddRemoveAccount
+            // 
+            this.AddRemoveAccount.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.AddRemoveAccount.Location = new System.Drawing.Point(249, 34);
+            this.AddRemoveAccount.Name = "AddRemoveAccount";
+            this.AddRemoveAccount.Size = new System.Drawing.Size(43, 21);
+            this.AddRemoveAccount.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.AddRemoveAccount.TabIndex = 104;
+            this.AddRemoveAccount.TabStop = false;
+            this.AddRemoveAccount.Click += new System.EventHandler(this.AddRemoveAccount_Click);
+            // 
+            // accountInput
+            // 
+            this.accountInput.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest;
+            this.accountInput.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.ListItems;
+            this.accountInput.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.accountInput.Location = new System.Drawing.Point(66, 32);
+            this.accountInput.Name = "accountInput";
+            this.accountInput.Size = new System.Drawing.Size(164, 25);
+            this.accountInput.Sorted = true;
+            this.accountInput.TabIndex = 0;
+            this.accountInput.SelectionChangeCommitted += new System.EventHandler(this.accountInput_SelectionChangeCommitted);
+            this.accountInput.TextChanged += new System.EventHandler(this.accountInput_TextChanged);
             // 
             // accountLabel
             // 
@@ -151,16 +176,6 @@
             this.loginButton.UseVisualStyleBackColor = true;
             this.loginButton.Click += new System.EventHandler(this.loginButton_Click);
             // 
-            // accountInput
-            // 
-            this.accountInput.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.accountInput.ImeMode = System.Windows.Forms.ImeMode.Disable;
-            this.accountInput.Location = new System.Drawing.Point(66, 33);
-            this.accountInput.Name = "accountInput";
-            this.accountInput.Size = new System.Drawing.Size(148, 23);
-            this.accountInput.TabIndex = 0;
-            this.accountInput.TextChanged += new System.EventHandler(this.Input_TextChanged);
-            // 
             // passLabel
             // 
             this.passLabel.Font = new System.Drawing.Font("Microsoft YaHei UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
@@ -172,29 +187,16 @@
             this.passLabel.Text = "密碼";
             this.passLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // rememberAccount
+            // passwordInput
             // 
-            this.rememberAccount.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.rememberAccount.AutoSize = true;
-            this.rememberAccount.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.rememberAccount.Location = new System.Drawing.Point(236, 36);
-            this.rememberAccount.Name = "rememberAccount";
-            this.rememberAccount.Size = new System.Drawing.Size(75, 21);
-            this.rememberAccount.TabIndex = 2;
-            this.rememberAccount.Text = "記住帳號";
-            this.rememberAccount.UseVisualStyleBackColor = true;
-            this.rememberAccount.CheckedChanged += new System.EventHandler(this.rememberAccount_CheckedChanged);
-            // 
-            // pwdInput
-            // 
-            this.pwdInput.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.pwdInput.ImeMode = System.Windows.Forms.ImeMode.Disable;
-            this.pwdInput.Location = new System.Drawing.Point(66, 74);
-            this.pwdInput.Name = "pwdInput";
-            this.pwdInput.PasswordChar = '*';
-            this.pwdInput.Size = new System.Drawing.Size(148, 23);
-            this.pwdInput.TabIndex = 1;
-            this.pwdInput.TextChanged += new System.EventHandler(this.Input_TextChanged);
+            this.passwordInput.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
+            this.passwordInput.ImeMode = System.Windows.Forms.ImeMode.Disable;
+            this.passwordInput.Location = new System.Drawing.Point(66, 74);
+            this.passwordInput.Name = "passwordInput";
+            this.passwordInput.PasswordChar = '*';
+            this.passwordInput.Size = new System.Drawing.Size(148, 23);
+            this.passwordInput.TabIndex = 1;
+            this.passwordInput.TextChanged += new System.EventHandler(this.passwordInput_TextChanged);
             // 
             // rememberPwd
             // 
@@ -218,7 +220,7 @@
             this.autoLogin.Name = "autoLogin";
             this.autoLogin.Size = new System.Drawing.Size(111, 21);
             this.autoLogin.TabIndex = 4;
-            this.autoLogin.Text = "啟動時自動登入";
+            this.autoLogin.Text = "選取時自動登入";
             this.autoLogin.UseVisualStyleBackColor = true;
             this.autoLogin.CheckedChanged += new System.EventHandler(this.autoLogin_CheckedChanged);
             // 
@@ -352,13 +354,13 @@
             this.Text = "新楓之谷啟動器";
             this.Activated += new System.EventHandler(this.MainWindow_Activated);
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainWindow_FormClosing);
-            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.MainWindow_FormClosed);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.maplePictureBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.beanfunPictureBox)).EndInit();
             this.groupBoxBeanfun.ResumeLayout(false);
             this.groupBoxBeanfun.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.AddRemoveAccount)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -371,11 +373,9 @@
         private System.Windows.Forms.ColumnHeader Account;
         private System.Windows.Forms.CheckBox autoLogin;
         private System.Windows.Forms.CheckBox rememberPwd;
-        private System.Windows.Forms.CheckBox rememberAccount;
-        private System.Windows.Forms.TextBox pwdInput;
+        private System.Windows.Forms.TextBox passwordInput;
         private System.Windows.Forms.Label passLabel;
         private System.Windows.Forms.Label accountLabel;
-        private System.Windows.Forms.TextBox accountInput;
         private System.Windows.Forms.Button loginButton;
         private System.Windows.Forms.TextBox otpDisplay;
         private System.Windows.Forms.Button getOtpButton;
@@ -390,6 +390,8 @@
         private System.Windows.Forms.PictureBox maplePictureBox;
         private System.Windows.Forms.Timer pingTimer;
         private Label pointsLabel;
+        private ComboBox accountInput;
+        private PictureBox AddRemoveAccount;
     }
 }
 

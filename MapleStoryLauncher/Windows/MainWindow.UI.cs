@@ -40,106 +40,122 @@ namespace MapleStoryLauncher
                 if (version.Build != 0)
                     MainWindow.Text += $".{version.Build}";
 
-                MainWindow.accountInput.Text = Properties.Settings.Default.accountID;
-                MainWindow.pwdInput.Text = Password.Load();
-                UpdateLoginButtonText();
-                MainWindow.rememberAccount.Checked = Properties.Settings.Default.rememberAccount;
-                MainWindow.rememberPwd.Checked = Properties.Settings.Default.rememberPwd;
-                MainWindow.autoLogin.Checked = Properties.Settings.Default.autoLogin;
-                MainWindow.autoSelect.Checked = Properties.Settings.Default.autoSelect;
-                MainWindow.autoLaunch.Checked = Properties.Settings.Default.autoLaunch;
-
                 MainWindow.Tip.SetToolTip(MainWindow.pointsLabel, "點擊更新點數");
                 MainWindow.Tip.SetToolTip(MainWindow.accountListView, "雙擊複製登入帳號");
                 MainWindow.Tip.SetToolTip(MainWindow.otpDisplay, "點擊複製密碼\n雙擊顯示/隱藏密碼");
-
-
-                if (MainWindow.accountInput.Text == "")
-                    MainWindow.ActiveControl = MainWindow.accountInput;
-                else if (MainWindow.pwdInput.Text == "")
-                    MainWindow.ActiveControl = MainWindow.pwdInput;
-                else
-                    MainWindow.ActiveControl = MainWindow.loginButton;
+                
+                MainWindow.ActiveControl = MainWindow.accountInput;
                 MainWindow.AcceptButton = MainWindow.loginButton;
 
-                if (MainWindow.autoLogin.Checked && MainWindow.loginButton.Enabled)
-                    MainWindow.loginButton_Click(null, null);
+                MainWindow.accountInput.Items.Clear();
+                MainWindow.accountInput.Items.AddRange(MainWindow.accountManager.GetListOfUsernames().ToArray());
+                MainWindow.accountInput.Text = "";
+                UpdateAddRemoveAccount();
+                MainWindow.passwordInput.Text = "";
+                UpdateLoginButtonText();
+                if(MainWindow.accountManager.Contains(MainWindow.accountInput.Text))
+                    MainWindow.accountInput_SelectionChangeCommitted(this, null);
             }
 
             public void FormFocused()
             {
-                UpdateGetOtpButton();
+                if(MainWindow.status.loggedIn)
+                    UpdateGetOtpButton();
             }
 
-            public void FormClosed()
+            public void AccountOpened()
             {
-                Properties.Settings.Default.rememberAccount = MainWindow.rememberAccount.Checked;
-                Properties.Settings.Default.rememberPwd = MainWindow.rememberPwd.Checked;
-                Properties.Settings.Default.autoSelect = MainWindow.autoSelect.Checked;
-                Properties.Settings.Default.autoLaunch = MainWindow.autoLaunch.Checked;
+                if (!MainWindow.accountManager.Contains(MainWindow.accountInput.Text))
+                    return;
 
-                switch (MainWindow.status)
+                MainWindow.passwordInput.Text = MainWindow.accountManager.GetPassword(MainWindow.accountInput.Text);
+                UpdateLoginButtonText();
+                AccountManager.Settings settings = MainWindow.accountManager.GetSettings(MainWindow.accountInput.Text);
+                MainWindow.rememberPwd.Checked = settings.rememberPwd;
+                MainWindow.autoLogin.Checked = settings.autoLogin;
+                MainWindow.autoSelect.Checked = settings.autoSelect;
+                MainWindow.autoLaunch.Checked = settings.autoLaunch;
+            }
+
+            public void AccountClosed()
+            {
+                //Use status.username instead of accountInput.Text, since accountInput.Text will be the account being logged in when switching accounts
+                if (!MainWindow.accountManager.Contains(MainWindow.status.username))
+                    return;
+
+                AccountManager.Settings settings = MainWindow.accountManager.GetSettings(MainWindow.status.username);
+                settings.rememberPwd = MainWindow.rememberPwd.Checked;
+                settings.autoSelect = MainWindow.autoSelect.Checked;
+                settings.autoLaunch = MainWindow.autoLaunch.Checked;
+
+                if (MainWindow.status.loggedIn)
                 {
-                    case LogInState.LoggedIn:
-                        Properties.Settings.Default.autoLogin = MainWindow.autoLogin.Checked;
-                        if (MainWindow.rememberAccount.Checked)
-                            Properties.Settings.Default.accountID = MainWindow.accountInput.Text;
-                        else
-                            Properties.Settings.Default.accountID = "";
-                        if (MainWindow.rememberPwd.Checked)
-                            Password.Save(MainWindow.pwdInput.Text);
-                        else
-                            Password.Delete();
-                        if (!MainWindow.autoSelect.Checked)
-                            Properties.Settings.Default.autoSelectIndex = -1;
-                        break;
-                    case LogInState.LoggedOut:
-                        Properties.Settings.Default.autoLogin = false;
-                        if (!MainWindow.rememberAccount.Checked)
-                            Properties.Settings.Default.accountID = "";
-                        if (!MainWindow.rememberPwd.Checked)
-                            Password.Delete();
-                        break;
+                    settings.autoLogin = MainWindow.autoLogin.Checked;
+                    if (MainWindow.rememberPwd.Checked)
+                        MainWindow.accountManager.SavePassword(MainWindow.status.username, MainWindow.passwordInput.Text);
+                    else
+                        MainWindow.accountManager.SavePassword(MainWindow.status.username, "");
+                    if (!MainWindow.autoSelect.Checked)
+                        settings.autoSelectAccount = default;
+                }
+                else
+                {
+                    settings.autoLogin = false;
+                    if (!MainWindow.rememberPwd.Checked)
+                        MainWindow.accountManager.SavePassword(MainWindow.status.username, "");
                 }
 
-                Properties.Settings.Default.Save();
+                MainWindow.accountManager.SaveSettings(MainWindow.status.username, settings);
+                MainWindow.accountManager.SaveToFile();
             }
 
             public void LoggingIn()
             {
-                MainWindow.accountInput.Enabled = false;
-                MainWindow.pwdInput.Enabled = false;
+                MainWindow.passwordInput.Enabled = false;
                 MainWindow.loginButton.Enabled = false;
                 MainWindow.loginButton.Text = "請稍候...";
                 MainWindow.UseWaitCursor = true;
 
-                if (MainWindow.rememberAccount.Checked)
-                    Properties.Settings.Default.accountID = MainWindow.accountInput.Text;
-                else
-                    Properties.Settings.Default.accountID = "";
-                Password.Delete();
-                Properties.Settings.Default.Save();
+                if (MainWindow.accountManager.Contains(MainWindow.accountInput.Text))
+                {
+                    MainWindow.accountManager.SavePassword(MainWindow.accountInput.Text, "");
+                    MainWindow.accountManager.SaveToFile();
+                }
             }
 
             public void LoginFailed()
             {
-                MainWindow.accountInput.Enabled = true;
-                MainWindow.pwdInput.Enabled = true;
+                MainWindow.passwordInput.Enabled = true;
                 UpdateLoginButtonText();
                 MainWindow.loginButton.Enabled = true;
+                UpdateAddRemoveAccount();
                 MainWindow.UseWaitCursor = false;
             }
 
             public void LoggedIn()
             {
-                MainWindow.accountInput.Enabled = false;
-                MainWindow.pwdInput.Enabled = false;
+                if(!MainWindow.accountInput.Items.Contains(MainWindow.accountInput.Text))
+                    MainWindow.accountInput.Items.Add(MainWindow.accountInput.Text);
+                MainWindow.accountInput.SelectedItem = MainWindow.accountInput.Text;
+                MainWindow.accountInput.DropDownStyle = ComboBoxStyle.DropDownList;
+                MainWindow.passwordInput.Enabled = false;
                 MainWindow.loginButton.Text = "登出";
                 MainWindow.loginButton.Enabled = true;
                 MainWindow.otpDisplay.Text = "";
 
-                if (MainWindow.rememberPwd.Checked)
-                    Password.Save(MainWindow.pwdInput.Text);
+                MainWindow.status.username = MainWindow.accountInput.Text;
+                MainWindow.status.loggedIn = true;
+
+                if (MainWindow.accountManager.Contains(MainWindow.accountInput.Text))
+                {
+                    if (MainWindow.rememberPwd.Checked)
+                    {
+                        MainWindow.accountManager.SavePassword(MainWindow.accountInput.Text, MainWindow.passwordInput.Text);
+                        MainWindow.accountManager.SaveToFile();
+                    }
+                    AccountManager.Settings settings = MainWindow.accountManager.GetSettings(MainWindow.accountInput.Text);
+                    MainWindow.status.autoSelectAccount = settings.autoSelectAccount;
+                }
 
                 if (!RedrawAccountListView())
                 {
@@ -151,23 +167,31 @@ namespace MapleStoryLauncher
                 }
                 EmboldenAutoSelection(MainWindow.autoSelect.Checked);
 
-                //Auto-select
-                if (MainWindow.autoSelect.Checked
-                    && Properties.Settings.Default.autoSelectIndex >= 0 //There is selection
-                    && Properties.Settings.Default.autoSelectIndex < MainWindow.accountListView.Items.Count) //Selection is within the range of the list
-                    if (MainWindow.accountListView.Enabled)
-                    {
-                        MainWindow.accountListView.SelectedItems.Clear();
-                        MainWindow.accountListView.Items[Properties.Settings.Default.autoSelectIndex].Selected = true;
-                    }
-
                 MainWindow.Size = new Size(MainWindow.Size.Width, loggedInHeight);
-                MainWindow.pointsLabel_Click(null, null);
                 MainWindow.accountListView.TabStop = true;
                 MainWindow.autoSelect.TabStop = true;
                 MainWindow.autoLaunch.TabStop = true;
                 MainWindow.getOtpButton.TabStop = true;
                 UpdateGetOtpButton();
+
+                MainWindow.pointsLabel_Click(null, null);
+                //Auto-select
+                if (MainWindow.autoSelect.Checked
+                    && MainWindow.status.autoSelectAccount != default) //There is selection
+                    if (MainWindow.accountListView.Enabled)
+                    {
+                        MainWindow.accountListView.SelectedItems.Clear();
+                        ListViewItem item = (
+                                from ListViewItem itemE in MainWindow.accountListView.Items
+                                where itemE.SubItems[0].Text == MainWindow.status.autoSelectAccount
+                                select itemE
+                            ).FirstOrDefault();
+                        if (item != default)
+                            item.Selected = true;
+                        UpdateGetOtpButton();
+                    }
+
+                UpdateAddRemoveAccount();
                 MainWindow.AcceptButton = MainWindow.getOtpButton;
                 MainWindow.UseWaitCursor = false;
 
@@ -179,6 +203,7 @@ namespace MapleStoryLauncher
 
             public void LoggedOut()
             {
+                //Use status.username instead of accountInput.Text, since accountInput.Text will be the account being logged in when switching accounts
                 MainWindow.accountListView.TabStop = false;
                 MainWindow.autoSelect.TabStop = false;
                 MainWindow.autoLaunch.TabStop = false;
@@ -186,16 +211,32 @@ namespace MapleStoryLauncher
                 MainWindow.getOtpButton.Enabled = false;
                 MainWindow.Size = new Size(MainWindow.Size.Width, initialWindowHeight);
 
-                if (!MainWindow.autoSelect.Checked)
+                if (MainWindow.accountManager.Contains(MainWindow.status.username))
                 {
-                    Properties.Settings.Default.autoSelectIndex = -1;
-                    Properties.Settings.Default.Save();
+                    if (!MainWindow.autoSelect.Checked)
+                    {
+                        AccountManager.Settings settings = MainWindow.accountManager.GetSettings(MainWindow.status.username);
+                        settings.autoSelectAccount = default;
+                        MainWindow.accountManager.SaveSettings(MainWindow.status.username, settings);
+                        MainWindow.accountManager.SaveToFile();
+                    }
                 }
 
-                MainWindow.accountInput.Enabled = true;
-                MainWindow.pwdInput.Enabled = true;
+                MainWindow.accountInput.DropDownStyle = ComboBoxStyle.DropDown;
+                if (!MainWindow.accountManager.Contains(MainWindow.status.username))
+                {
+                    MainWindow.accountInput.Items.Remove(MainWindow.status.username);
+                    MainWindow.accountInput.Text = MainWindow.status.username;
+                }
+
+                MainWindow.status.username = default;
+                MainWindow.status.loggedIn = false;
+                MainWindow.status.autoSelectAccount = default;
+
+                MainWindow.passwordInput.Enabled = true;
                 UpdateLoginButtonText();
                 MainWindow.loginButton.Enabled = true;
+                UpdateAddRemoveAccount();
                 MainWindow.AcceptButton = MainWindow.loginButton;
                 MainWindow.UseWaitCursor = false;
             }
@@ -209,10 +250,14 @@ namespace MapleStoryLauncher
                 if (MainWindow.autoSelect.Checked)
                 {
                     EmboldenAutoSelection(false);
-                    Properties.Settings.Default.autoSelectIndex = MainWindow.accountListView.SelectedItems[0].Index;
-                    Properties.Settings.Default.Save();
+                    MainWindow.status.autoSelectAccount = MainWindow.accountListView.SelectedItems[0].SubItems[0].Text;
                     EmboldenAutoSelection();
                     UpdateAutoLaunchCheckBoxText();
+
+                    AccountManager.Settings settings = MainWindow.accountManager.GetSettings(MainWindow.accountInput.Text);
+                    settings.autoSelectAccount = MainWindow.status.autoSelectAccount;
+                    MainWindow.accountManager.SaveSettings(MainWindow.accountInput.Text, settings);
+                    MainWindow.accountManager.SaveToFile();
                 }
 
                 if (MainWindow.IsGameRunning())
@@ -273,17 +318,28 @@ namespace MapleStoryLauncher
                 }
             }
 
+            public void UpdateAddRemoveAccount()
+            {
+                if (MainWindow.accountManager.Contains(MainWindow.accountInput.Text))
+                    MainWindow.AddRemoveAccount.Image = Properties.Resources.minus;
+                else
+                    MainWindow.AddRemoveAccount.Image = Properties.Resources.plus;
+            }
+
             public void UpdateLoginButtonText()
             {
-                if (MainWindow.accountInput.Text == "" && MainWindow.pwdInput.Text == "")
-                    MainWindow.loginButton.Text = "顯示 QRCode";
+                if(MainWindow.status.loggedIn)
+                    MainWindow.loginButton.Text = "登出";
                 else
-                    MainWindow.loginButton.Text = "登入";
+                    if (MainWindow.accountInput.Text == "" && MainWindow.passwordInput.Text == "")
+                        MainWindow.loginButton.Text = "顯示 QRCode";
+                    else
+                        MainWindow.loginButton.Text = "登入";
             }
 
             public void UpdateAutoLaunchCheckBoxText()
             {
-                if (MainWindow.autoSelect.Checked && Properties.Settings.Default.autoSelectIndex >= 0)
+                if (MainWindow.autoSelect.Checked && MainWindow.status.autoSelectAccount != default)
                     MainWindow.autoLaunch.Text = "自動啟動遊戲並登入";
                 else
                     MainWindow.autoLaunch.Text = "自動啟動遊戲";
@@ -347,12 +403,18 @@ namespace MapleStoryLauncher
 
             public void EmboldenAutoSelection(bool toggle = true)
             {
-                if (Properties.Settings.Default.autoSelectIndex >= 0
-                   && Properties.Settings.Default.autoSelectIndex < MainWindow.accountListView.Items.Count)
+                if (MainWindow.status.autoSelectAccount != default)
                 {
-                    MainWindow.accountListView.Items[Properties.Settings.Default.autoSelectIndex].Font
-                    = new Font(MainWindow.accountListView.Items[Properties.Settings.Default.autoSelectIndex].Font,
-                               toggle ? FontStyle.Bold : FontStyle.Regular);
+                    ListViewItem item = (
+                            from ListViewItem itemE in MainWindow.accountListView.Items
+                            where itemE.SubItems[0].Text == MainWindow.status.autoSelectAccount
+                            select itemE
+                        ).FirstOrDefault();
+                    if (item != default)
+                        item.Font = new Font(
+                            item.Font,
+                            toggle ? FontStyle.Bold : FontStyle.Regular
+                        );
                 }
             }
             #endregion

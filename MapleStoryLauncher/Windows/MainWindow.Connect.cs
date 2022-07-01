@@ -20,7 +20,7 @@ namespace MapleStoryLauncher
         # region Login
         private void loginWorker_DoWork(object sender, DoWorkEventArgs e)
         {
-            if (accountInput.Text == "" && pwdInput.Text == "")
+            if (accountInput.Text == String.Empty && passwordInput.Text == String.Empty)
             {
                 QRCodeWindow qrcodeWindow = new(this);
                 qrcodeWindow.ShowDialog();
@@ -30,7 +30,7 @@ namespace MapleStoryLauncher
             }
             else
             {
-                BeanfunBroker.TransactionResult result = beanfun.Login(accountInput.Text, pwdInput.Text);
+                BeanfunBroker.TransactionResult result = beanfun.Login(accountInput.Text, passwordInput.Text);
                 switch (result.Status)
                 {
                     case BeanfunBroker.TransactionResultStatus.RequireAppAuthentication:
@@ -64,7 +64,6 @@ namespace MapleStoryLauncher
                 switch (((BeanfunBroker.TransactionResult)e.Result).Status)
                 {
                     case BeanfunBroker.TransactionResultStatus.Success:
-                        status = LogInState.LoggedIn;
                         pingTimer.Interval = pingTimeout;
                         pingTimer.Start();
                         ui.LoggedIn();
@@ -94,7 +93,6 @@ namespace MapleStoryLauncher
                     pingTimer.Stop();
                     beanfun.Logout();
                     ShowError(result);
-                    status = LogInState.LoggedOut;
                     ui.LoggedOut();
                     break;
                 case BeanfunBroker.TransactionResultStatus.ConnectionLost:
@@ -104,14 +102,12 @@ namespace MapleStoryLauncher
                         pingTimer.Stop();
                         beanfun.Logout();
                         ShowError(result);
-                        status = LogInState.LoggedOut;
                         ui.LoggedOut();
                     }
                     break;
                 case BeanfunBroker.TransactionResultStatus.LoginFirst:
                     pingTimer.Stop();
                     ShowError(result);
-                    status = LogInState.LoggedOut;
                     ui.LoggedOut();
                     break;
                 case BeanfunBroker.TransactionResultStatus.Success:
@@ -153,7 +149,6 @@ namespace MapleStoryLauncher
                     pingTimer.Stop();
                     ShowError(result);
                     ui.OtpGot("");
-                    status = LogInState.LoggedOut;
                     ui.LoggedOut();
                     break;
                 default:
@@ -187,7 +182,6 @@ namespace MapleStoryLauncher
         {
             try
             {
-                Debug.WriteLine("try open game");
                 ProcessStartInfo psInfo = new()
                 {
                     FileName = path,
@@ -196,7 +190,6 @@ namespace MapleStoryLauncher
                     WorkingDirectory = Path.GetDirectoryName(path),
                 };
                 Process.Start(psInfo);
-                Debug.WriteLine("try open game done");
                 return true;
             }
             catch

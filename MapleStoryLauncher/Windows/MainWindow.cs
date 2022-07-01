@@ -19,87 +19,116 @@ namespace MapleStoryLauncher
         private readonly string gameName = "新楓之谷";
 
         private readonly string gameFileName = "MapleStory.exe";
-        
-        enum LogInState
-        {
-            LoggedOut,
-            LoggedIn
-        }
-        
-        private LogInState status = LogInState.LoggedOut;
 
-        readonly UI ui;
+        class State
+        {
+            public string username { get; set; } = default;
+            public bool loggedIn { get; set; } = false;
+            public string autoSelectAccount { get; set; } = default;
+        }
+
+        private State status = new();
+
+        private readonly UI ui;
+        private readonly AccountManager accountManager;
 
         public MainWindow()
         {
-            ui = new UI(this);
-            
             UI.CheckMultipleInstances();
+            ui = new UI(this);
+            string savePath = $"{Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)}\\{typeof(MainWindow).Namespace}\\UserData";
+            accountManager = new AccountManager(savePath);
             InitializeComponent();
             ui.FormLoaded();
         }
 
         #region ButtonEvents
+        private void AddRemoveAccount_Click(object sender, EventArgs e)
+        {
+            if (accountManager.Contains(accountInput.Text))
+            {
+                accountManager.RemoveAccount(accountInput.Text);
+                if (!status.loggedIn)
+                {
+                    string text = accountInput.Text;
+                    accountInput.Items.Remove(accountInput.Text);
+                    accountInput.Text = text;
+                }
+            }
+            else
+            {
+                accountManager.AddAccount(accountInput.Text);
+                AccountManager.Settings settings = accountManager.GetSettings(accountInput.Text);
+                settings.autoSelectAccount = status.autoSelectAccount;
+                accountManager.SaveSettings(accountInput.Text, settings);
+                if(!accountInput.Items.Contains(accountInput.Text))
+                    accountInput.Items.Add(accountInput.Text);
+            }
+            accountManager.SaveToFile();
+            ui.UpdateAddRemoveAccount();
+        }
+
         // The login/logout botton.
         private void loginButton_Click(object sender, EventArgs e)
         {
-            switch(status)
+            if (!status.loggedIn)
             {
-                case LogInState.LoggedOut:
-                    //Check formats of the account and password only when not using QRCode
-                    if (accountInput.Text != String.Empty || pwdInput.Text != String.Empty)
+                //Check formats of the account and password only when not using QRCode
+                if (accountInput.Text != String.Empty || passwordInput.Text != String.Empty)
+                {
+                    bool checkAccount = true, checkPassword = true;
+                    if (!Regex.Match(accountInput.Text, "^[0-9A-Za-z]{8,20}$").Success)
+                        try { new MailAddress(accountInput.Text); }
+                        catch { checkAccount = false; }
+                    if (!Regex.Match(passwordInput.Text, "^[0-9A-Za-z]{8,20}$").Success)
+                        checkPassword = false;
+                    if (!checkAccount || !checkPassword)
                     {
-                        bool checkAccount = true, checkPassword = true;
-                        if (!Regex.Match(accountInput.Text, "^[0-9A-Za-z]{8,20}$").Success)
-                            try { new MailAddress(accountInput.Text); }
-                            catch { checkAccount = false; }
-                        if (!Regex.Match(pwdInput.Text, "^[0-9A-Za-z]{8,20}$").Success)
-                            checkPassword = false;
-                        if(!checkAccount || !checkPassword)
-                        {
-                            string message = "";
+                        string message = "";
 
-                            if (!checkAccount)
-                                message += "帳號或認證 Email 格式錯誤。\n";
-                            if (!checkPassword)
-                                message += "密碼格式錯誤。\n";
+                        if (!checkAccount)
+                            message += "帳號或認證 Email 格式錯誤。\n";
+                        if (!checkPassword)
+                            message += "密碼格式錯誤。\n";
 
-                            message += "\n";
-                            message += $"{(!checkAccount ? "帳號" : "")}" +
-                                       $"{(!checkAccount && !checkPassword ? "與" : "")}" +
-                                       $"{(!checkPassword ? "密碼" : "")}";
-                            message += "格式必須是：\n" +
-                                       "1. 英文字母與數字\n" +
-                                       "2. 長度為 8 至 20";
+                        message += "\n";
+                        message += $"{(!checkAccount ? "帳號" : "")}" +
+                                   $"{(!checkAccount && !checkPassword ? "與" : "")}" +
+                                   $"{(!checkPassword ? "密碼" : "")}";
+                        message += "格式必須是：\n" +
+                                   "1. 英文字母與數字\n" +
+                                   "2. 長度為 8 至 20";
 
-                            ShowError(new BeanfunBroker.TransactionResult { Status = BeanfunBroker.TransactionResultStatus.Denied, Message = message });
-                            return;
-                        }
+                        ShowError(new BeanfunBroker.TransactionResult { Status = BeanfunBroker.TransactionResultStatus.Denied, Message = message });
+                        return;
                     }
-                    ui.LoggingIn();
-                    loginWorker.RunWorkerAsync();
-                    break;
-                case LogInState.LoggedIn:
-                    //beanfun has reader-writer lock
-                    if (beanfun.Logout())
+                }
+                ui.LoggingIn();
+                loginWorker.RunWorkerAsync();
+            }
+            else
+            {
+                //beanfun has reader-writer lock
+                if (beanfun.Logout())
+                {
+                    pingTimer.Stop();
+
+                    if (accountManager.Contains(status.username))
                     {
-                        //Log out or close window
-                        pingTimer.Stop();
-                        if (!autoSelect.Checked)
+                        AccountManager.Settings settings = accountManager.GetSettings(status.username);
+                        if (e is not AccountClosedEventArgs)
                         {
-                            Properties.Settings.Default.autoSelectIndex = -1;
-                            Properties.Settings.Default.Save();
+                            if (!autoSelect.Checked)
+                                settings.autoSelectAccount = default;
                         }
-                        ui.LoggedOut();
-                        //Log out only
-                        if (e is not FormClosingEventArgs)
-                        {
-                            status = LogInState.LoggedOut; //Closing preserves the status, because some modules need the last state for decisions
-                        }
+                        accountManager.SaveSettings(status.username, settings);
+                        accountManager.SaveToFile();
                     }
-                    else
-                        ShowError(new BeanfunBroker.TransactionResult { Status = BeanfunBroker.TransactionResultStatus.Failed, Message = "登出失敗，請重開程式。" });
-                    break;
+
+                    ui.LoggedOut();
+                }
+                else
+                    ShowError(new BeanfunBroker.TransactionResult { Status = BeanfunBroker.TransactionResultStatus.Failed, Message = "登出失敗，請重開程式。" });
             }
         }
 
@@ -123,31 +152,16 @@ namespace MapleStoryLauncher
         #endregion
 
         #region CheckBoxEvents
-        private void rememberAccount_CheckedChanged(object sender, EventArgs e)
-        {
-            if (!rememberAccount.Checked)
-            {
-                autoLogin.Checked = false;
-                rememberPwd.Checked = false;
-            }
-        }
-
-
         private void rememberPwd_CheckedChanged(object sender, EventArgs e)
         {
-            if (rememberPwd.Checked)
-                rememberAccount.Checked = true;
-            else
+            if (!rememberPwd.Checked)
                 autoLogin.Checked = false;
         }
 
         private void autoLogin_CheckedChanged(object sender, EventArgs e)
         {
             if (autoLogin.Checked)
-            {
-                rememberAccount.Checked = true;
                 rememberPwd.Checked = true;
-            }
         }
 
         private void autoSelect_CheckedChanged(object sender, EventArgs e)
@@ -156,6 +170,25 @@ namespace MapleStoryLauncher
             ui.UpdateAutoLaunchCheckBoxText();
         }
         #endregion
+
+        private class AccountClosedEventArgs : EventArgs {}
+
+        private void accountInput_SelectionChangeCommitted(object sender, EventArgs e)
+        {
+            if ((string)accountInput.SelectedItem == status.username)
+                return;
+
+            if (status.loggedIn)
+            {
+                ui.AccountClosed();
+                loginButton_Click(this, new AccountClosedEventArgs());
+            }
+            accountInput.Text = (string)accountInput.SelectedItem; //This is needed because accountInput.Text is updated after this event finishes
+            ui.AccountOpened();
+            if (autoLogin.Checked)
+                if (loginButton.Enabled)
+                    loginButton_Click(this, null);
+        }
 
         private void pointsLabel_Click(object sender, EventArgs e)
         {
@@ -204,7 +237,13 @@ namespace MapleStoryLauncher
         }
 
         //Refresh UI when changed
-        private void Input_TextChanged(object sender, EventArgs e)
+        private void accountInput_TextChanged(object sender, EventArgs e)
+        {
+            ui.UpdateLoginButtonText();
+            ui.UpdateAddRemoveAccount();
+        }
+
+        private void passwordInput_TextChanged(object sender, EventArgs e)
         {
             ui.UpdateLoginButtonText();
         }
@@ -222,19 +261,17 @@ namespace MapleStoryLauncher
         //Cleanup before closing
         private void MainWindow_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (status == LogInState.LoggedIn)
+            if (status.loggedIn)
                 if (loginButton.Enabled)
-                    loginButton_Click(null, e);
+                {
+                    ui.AccountClosed();
+                    loginButton_Click(null, new AccountClosedEventArgs());
+                }
                 else
                 {
                     e.Cancel = true;
                     MessageBox.Show("請先登出再關閉程式。", "");
                 }
-        }
-
-        private void MainWindow_FormClosed(object sender, FormClosedEventArgs e)
-        {
-            ui.FormClosed();
         }
     }
 }
