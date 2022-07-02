@@ -7,19 +7,11 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationIcon>Resources\pet bee.ico</ApplicationIcon>
-    <Version>1.3.2.1</Version>
+    <Version>1.3.2.2</Version>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="HelperFunctions\Password.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Content Include="Resources\pet bee.ico" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="HelperFunctions\Password.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -59,7 +59,7 @@ namespace MapleStoryLauncher
 
             public void FormFocused()
             {
-                if(MainWindow.status.loggedIn)
+                if (MainWindow.status.loggedIn && MainWindow.getOtpButton.Enabled)
                     UpdateGetOtpButton();
             }
 
@@ -71,7 +71,7 @@ namespace MapleStoryLauncher
                 MainWindow.passwordInput.Text = MainWindow.accountManager.GetPassword(MainWindow.accountInput.Text);
                 UpdateLoginButtonText();
                 AccountManager.Settings settings = MainWindow.accountManager.GetSettings(MainWindow.accountInput.Text);
-                MainWindow.rememberPwd.Checked = settings.rememberPwd;
+                MainWindow.rememberPwd.Checked = settings.rememberPassword;
                 MainWindow.autoLogin.Checked = settings.autoLogin;
                 MainWindow.autoSelect.Checked = settings.autoSelect;
                 MainWindow.autoLaunch.Checked = settings.autoLaunch;
@@ -84,7 +84,7 @@ namespace MapleStoryLauncher
                     return;
 
                 AccountManager.Settings settings = MainWindow.accountManager.GetSettings(MainWindow.status.username);
-                settings.rememberPwd = MainWindow.rememberPwd.Checked;
+                settings.rememberPassword = MainWindow.rememberPwd.Checked;
                 settings.autoSelect = MainWindow.autoSelect.Checked;
                 settings.autoLaunch = MainWindow.autoLaunch.Checked;
 
@@ -111,6 +111,7 @@ namespace MapleStoryLauncher
 
             public void LoggingIn()
             {
+                MainWindow.accountInput.Enabled = false;
                 MainWindow.passwordInput.Enabled = false;
                 MainWindow.loginButton.Enabled = false;
                 MainWindow.loginButton.Text = "請稍候...";
@@ -125,10 +126,10 @@ namespace MapleStoryLauncher
 
             public void LoginFailed()
             {
+                MainWindow.accountInput.Enabled = true;
                 MainWindow.passwordInput.Enabled = true;
                 UpdateLoginButtonText();
                 MainWindow.loginButton.Enabled = true;
-                UpdateAddRemoveAccount();
                 MainWindow.UseWaitCursor = false;
             }
 
@@ -138,6 +139,7 @@ namespace MapleStoryLauncher
                     MainWindow.accountInput.Items.Add(MainWindow.accountInput.Text);
                 MainWindow.accountInput.SelectedItem = MainWindow.accountInput.Text;
                 MainWindow.accountInput.DropDownStyle = ComboBoxStyle.DropDownList;
+                MainWindow.accountInput.Enabled = true;
                 MainWindow.passwordInput.Enabled = false;
                 MainWindow.loginButton.Text = "登出";
                 MainWindow.loginButton.Enabled = true;
@@ -191,7 +193,6 @@ namespace MapleStoryLauncher
                         UpdateGetOtpButton();
                     }
 
-                UpdateAddRemoveAccount();
                 MainWindow.AcceptButton = MainWindow.getOtpButton;
                 MainWindow.UseWaitCursor = false;
 
@@ -310,7 +311,7 @@ namespace MapleStoryLauncher
                         "你確定仍要執行？",
                         "警告 - 偵測到多個實例",
                         MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2)
-                       == DialogResult.Cancel)
+                        == DialogResult.Cancel)
                     {
                         SwitchToThisWindow(sameProcesses.First().MainWindowHandle);
                         Environment.Exit(0);
@@ -347,9 +348,6 @@ namespace MapleStoryLauncher
 
             public void UpdateGetOtpButton()
             {
-                if (MainWindow.getOtpWorker.IsBusy)
-                    return;
-
                 if (!MainWindow.IsGameRunning())
                     if (MainWindow.accountListView.SelectedItems.Count == 0)
                         MainWindow.getOtpButton.Text = "啟動遊戲";
@@ -433,6 +431,8 @@ namespace MapleStoryLauncher
                     MainWindow.accountListView.Items.Add(listViewItem);
                 }
 
+                //padding: 4 pixels
+                //scroll width: 16 pixels
                 if (MainWindow.accountListView.Items.Count > 5)
                     MainWindow.accountListView.Columns[1].Width = MainWindow.accountListView.Width - 4 - MainWindow.accountListView.Columns[0].Width - 16;
                 else

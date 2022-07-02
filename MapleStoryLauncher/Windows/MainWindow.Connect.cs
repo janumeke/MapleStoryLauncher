@@ -212,9 +212,16 @@ namespace MapleStoryLauncher
                     {
                         string path = $"{Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)}\\{typeof(MainWindow).Namespace}\\LastResponse.txt";
                         HttpResponseMessage res = beanfun.GetLastResponse();
-                        File.WriteAllText(path, $"{res.RequestMessage.Method} {res.RequestMessage.RequestUri}\n" +
-                                                $"{res}\n\n" +
-                                                $"{res.Content.ReadAsStringAsync().Result}");
+                        try
+                        {
+                            File.WriteAllText(path, $"{res.RequestMessage.Method} {res.RequestMessage.RequestUri}\n" +
+                                                    $"{res}\n\n" +
+                                                    $"{res.Content.ReadAsStringAsync().Result}");
+                        }
+                        catch
+                        {
+                            MessageBox.Show("無法寫入至檔案。");
+                        }
                     }
                     break;
                 case BeanfunBroker.TransactionResultStatus.ConnectionLost:

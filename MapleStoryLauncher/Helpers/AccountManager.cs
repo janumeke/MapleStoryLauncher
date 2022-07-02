@@ -25,7 +25,20 @@ namespace MapleStoryLauncher
         {
             this.savePath = savePath;
             if (!CheckSaveFile(savePath))
-                File.Create(savePath);
+            {
+                MessageBox.Show("");
+                if (MessageBox.Show("使用者資料損毀，要清除並繼續嗎？", "",
+                        MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation, MessageBoxDefaultButton.Button2)
+                        == DialogResult.Yes)
+                    try { File.Create(savePath); }
+                    catch
+                    {
+                        MessageBox.Show("無法存取使用者資料檔案，請確認其沒有被其他程式鎖定。");
+                        Environment.Exit(0);
+                    }
+                else
+                    Environment.Exit(0);
+            }
             accounts = JsonConvert.DeserializeObject<List<Account>>(File.ReadAllText(savePath));
             if(accounts == null)
                 accounts = new List<Account>();
@@ -57,7 +70,7 @@ namespace MapleStoryLauncher
                 password = default,
                 settings = new()
                 {
-                    rememberPwd = false,
+                    rememberPassword = false,
                     autoLogin = false,
                     autoSelect = false,
                     autoLaunch = false,
@@ -94,7 +107,7 @@ namespace MapleStoryLauncher
 
         public class Settings
         {
-            public bool rememberPwd { get; set; }
+            public bool rememberPassword { get; set; }
             public bool autoLogin { get; set; }
             public bool autoSelect { get; set; }
             public string autoSelectAccount { get; set; }
@@ -125,6 +138,8 @@ namespace MapleStoryLauncher
             }
             catch
             {
+                MessageBox.Show("無法存取使用者資料檔案，請確認其沒有被其他程式鎖定。\n" +
+                                "除非下次儲存成功，否則部分資料可能遺失！");
                 return false;
             }
             return true;

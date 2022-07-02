@@ -8,7 +8,7 @@
 與豬頭差異
 
 1. 不支援楓之谷以外的遊戲
-2. 沒有多帳號管理、自動檢查更新和 Google Analytics
+2. 沒有自動檢查更新和 Google Analytics
 3. 有進階防護和剩餘點數
 4. 重新設計的介面
 
@@ -27,6 +27,9 @@ Modified from BeanfunLogin:
 This project is licensed under [GNU GPL v3 or later](COPYING), if not licensed seperately.
 
 ## Changelog
+
+v1.3.2
+1. Now supports management of multiple accounts.
 
 v1.3.1
 1. Now able to see remaining points.

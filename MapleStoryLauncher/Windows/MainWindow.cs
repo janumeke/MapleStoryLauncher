@@ -37,7 +37,12 @@ namespace MapleStoryLauncher
             UI.CheckMultipleInstances();
             ui = new UI(this);
             string savePath = $"{Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)}\\{typeof(MainWindow).Namespace}\\UserData";
-            accountManager = new AccountManager(savePath);
+            try { accountManager = new AccountManager(savePath); }
+            catch
+            {
+                MessageBox.Show("無法存取使用者資料檔案，請確認其沒有被其他程式鎖定。");
+                Environment.Exit(0);
+            }
             InitializeComponent();
             ui.FormLoaded();
         }
@@ -250,7 +255,8 @@ namespace MapleStoryLauncher
 
         private void accountListView_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
         {
-            ui.UpdateGetOtpButton();
+            if (status.loggedIn && getOtpButton.Enabled)
+                ui.UpdateGetOtpButton();
         }
 
         private void MainWindow_Activated(object sender, EventArgs e)
