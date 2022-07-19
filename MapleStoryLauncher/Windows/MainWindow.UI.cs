@@ -57,12 +57,6 @@ namespace MapleStoryLauncher
                     MainWindow.accountInput_SelectionChangeCommitted(this, null);
             }
 
-            public void FormFocused()
-            {
-                if (MainWindow.status.loggedIn && MainWindow.getOtpButton.Enabled)
-                    UpdateGetOtpButton();
-            }
-
             public void AccountOpened()
             {
                 if (!MainWindow.accountManager.Contains(MainWindow.accountInput.Text))
@@ -244,6 +238,8 @@ namespace MapleStoryLauncher
 
             public void GettingOtp()
             {
+                MainWindow.Activated -= MainWindow.MainWindow_Activated;
+                MainWindow.accountInput.Enabled = false;
                 MainWindow.loginButton.Enabled = false;
                 MainWindow.accountListView.Enabled = false;
                 MainWindow.getOtpButton.Enabled = false;
@@ -261,11 +257,8 @@ namespace MapleStoryLauncher
                     MainWindow.accountManager.SaveToFile();
                 }
 
-                if (MainWindow.IsGameRunning())
-                {
-                    MainWindow.otpDisplay.PasswordChar = default;
-                    MainWindow.otpDisplay.Text = "取得密碼中...";
-                }
+                MainWindow.otpDisplay.PasswordChar = default;
+                MainWindow.otpDisplay.Text = "取得密碼中...";
             }
 
             public void OtpGot(string otp)
@@ -278,6 +271,8 @@ namespace MapleStoryLauncher
                 MainWindow.accountListView.Enabled = true;
                 UpdateGetOtpButton();
                 MainWindow.loginButton.Enabled = true;
+                MainWindow.accountInput.Enabled = true;
+                MainWindow.Activated += MainWindow.MainWindow_Activated;
 
                 try
                 {
@@ -297,12 +292,10 @@ namespace MapleStoryLauncher
             public static extern void SwitchToThisWindow(IntPtr hWnd);
             public static void CheckMultipleInstances()
             {
-                string programPath = Application.ExecutablePath;
-                string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(programPath);
-                int processId = Environment.ProcessId;
+                Process thisProcess = Process.GetCurrentProcess();
                 IEnumerable<Process> sameProcesses =
-                    from process in Process.GetProcessesByName(fileNameWithoutExtension)
-                    where process.MainModule.FileName == programPath && process.Id != processId
+                    from process in Process.GetProcessesByName(thisProcess.ProcessName)
+                    where process.Id != thisProcess.Id
                     select process;
                 if (sameProcesses.Any())
                 {

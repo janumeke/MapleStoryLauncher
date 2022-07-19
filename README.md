@@ -28,7 +28,7 @@ This project is licensed under [GNU GPL v3 or later](COPYING), if not licensed s
 
 ## Changelog
 
-v1.3.2
+v1.4
 1. Now supports management of multiple accounts.
 
 v1.3.1

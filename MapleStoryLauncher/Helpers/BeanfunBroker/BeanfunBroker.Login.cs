@@ -817,11 +817,13 @@ namespace MapleStoryLauncher
                 });
                 if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
                     success = false;
-
-                GeneralResponse result = JsonConvert.DeserializeObject<GeneralResponse>(res.Message.Content.ReadAsStringAsync().Result);
-                if (result == null || 
-                    (result.intResult != 0 && result.intResult != 1 && result.intResult != 2))
-                    success = false;
+                else
+                {
+                    GeneralResponse result = JsonConvert.DeserializeObject<GeneralResponse>(res.Message.Content.ReadAsStringAsync().Result);
+                    if (result == null ||
+                        (result.intResult != 0 && result.intResult != 1 && result.intResult != 2))
+                        success = false;
+                }
 
                 url = $"https://tw.newlogin.beanfun.com/logout.aspx?service=999999_T0&_={GetDateTime(DateTimeType.UNIX)}";
                 res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration

@@ -44,6 +44,7 @@ namespace MapleStoryLauncher
                 Environment.Exit(0);
             }
             InitializeComponent();
+            //Form.CheckForIllegalCrossThreadCalls = false;
             ui.FormLoaded();
         }
 
@@ -182,6 +183,8 @@ namespace MapleStoryLauncher
         {
             if ((string)accountInput.SelectedItem == status.username)
                 return;
+            if (!loginButton.Enabled)
+                return;
 
             if (status.loggedIn)
             {
@@ -191,8 +194,7 @@ namespace MapleStoryLauncher
             accountInput.Text = (string)accountInput.SelectedItem; //This is needed because accountInput.Text is updated after this event finishes
             ui.AccountOpened();
             if (autoLogin.Checked)
-                if (loginButton.Enabled)
-                    loginButton_Click(this, null);
+                loginButton_Click(this, null);
         }
 
         private void pointsLabel_Click(object sender, EventArgs e)
@@ -255,13 +257,13 @@ namespace MapleStoryLauncher
 
         private void accountListView_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
         {
-            if (status.loggedIn && getOtpButton.Enabled)
-                ui.UpdateGetOtpButton();
+            ui.UpdateGetOtpButton();
         }
 
         private void MainWindow_Activated(object sender, EventArgs e)
         {
-            ui.FormFocused();
+            if (status.loggedIn)
+                ui.UpdateGetOtpButton();
         }
 
         //Cleanup before closing

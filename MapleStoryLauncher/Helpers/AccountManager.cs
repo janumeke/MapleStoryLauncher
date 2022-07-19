@@ -24,22 +24,30 @@ namespace MapleStoryLauncher
         public AccountManager(string savePath)
         {
             this.savePath = savePath;
-            if (!CheckSaveFile(savePath))
+
+            try
             {
-                MessageBox.Show("");
-                if (MessageBox.Show("使用者資料損毀，要清除並繼續嗎？", "",
-                        MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation, MessageBoxDefaultButton.Button2)
-                        == DialogResult.Yes)
-                    try { File.Create(savePath); }
-                    catch
-                    {
-                        MessageBox.Show("無法存取使用者資料檔案，請確認其沒有被其他程式鎖定。");
-                        Environment.Exit(0);
-                    }
-                else
-                    Environment.Exit(0);
+                if (!Directory.Exists(Path.GetDirectoryName(savePath)))
+                    Directory.CreateDirectory(Path.GetDirectoryName(savePath));
+                if (!File.Exists(savePath))
+                     File.Create(savePath).Close();
             }
-            accounts = JsonConvert.DeserializeObject<List<Account>>(File.ReadAllText(savePath));
+            catch
+            {
+                MessageBox.Show("權限不足，無法存取使用者資料檔案。");
+                Environment.Exit(0);
+            }
+
+            try { accounts = JsonConvert.DeserializeObject<List<Account>>(File.ReadAllText(savePath)); }
+            catch
+            {
+                if (MessageBox.Show("使用者資料損毀，要清除並繼續嗎？", "",
+                        MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation, MessageBoxDefaultButton.Button2) == DialogResult.No)
+                    Environment.Exit(0);
+                else
+                    accounts = null;
+            }
+
             if(accounts == null)
                 accounts = new List<Account>();
         }
