@@ -175,7 +175,7 @@ namespace MapleStoryLauncher
 
         private static bool StartGame(string username, string otp)
         {
-            return StartProcess(Properties.Settings.Default.gamePath, "tw.login.maplestory.gamania.com 8484 BeanFun " + username + " " + otp);
+            return StartProcess(Properties.Settings.Default.gamePath, "tw.login.maplestory.beanfun.com 8484 BeanFun " + username + " " + otp);
         }
 
         private static bool StartProcess(string path, string arg)
