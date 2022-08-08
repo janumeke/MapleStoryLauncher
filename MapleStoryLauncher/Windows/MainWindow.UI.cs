@@ -22,8 +22,8 @@ namespace MapleStoryLauncher
         private sealed class UI
         {
             readonly MainWindow MainWindow;
-            const int initialWindowHeight = 220;
-            const int loggedInHeight = 485;
+            const int initialWindowHeight = 223;
+            const int loggedInHeight = 482;
 
             public UI(MainWindow handle)
             {
@@ -59,52 +59,79 @@ namespace MapleStoryLauncher
 
             public void AccountOpened()
             {
-                if (!MainWindow.accountManager.Contains(MainWindow.accountInput.Text))
-                    return;
+                Debug.WriteLine($"AccountOpened: {MainWindow.accountInput.SelectedItem}");
+                string openedAccount = (string)MainWindow.accountInput.SelectedItem;
+                if (MainWindow.accountManager.Contains(openedAccount))
+                {
+                    MainWindow.passwordInput.Text = MainWindow.accountManager.GetPassword(openedAccount);
+                    UpdateLoginButtonText();
+                    AccountManager.Settings settings = MainWindow.accountManager.GetSettings(openedAccount);
+                    MainWindow.rememberPwd.Checked = settings.rememberPassword;
+                    MainWindow.autoLogin.Checked = settings.autoLogin;
+                    MainWindow.autoSelect.Checked = settings.autoSelect;
+                    MainWindow.autoLaunch.Checked = settings.autoLaunch;
+                }
 
-                MainWindow.passwordInput.Text = MainWindow.accountManager.GetPassword(MainWindow.accountInput.Text);
-                UpdateLoginButtonText();
-                AccountManager.Settings settings = MainWindow.accountManager.GetSettings(MainWindow.accountInput.Text);
-                MainWindow.rememberPwd.Checked = settings.rememberPassword;
-                MainWindow.autoLogin.Checked = settings.autoLogin;
-                MainWindow.autoSelect.Checked = settings.autoSelect;
-                MainWindow.autoLaunch.Checked = settings.autoLaunch;
+                MainWindow.status.openedAccount = openedAccount;
+
+                if (MainWindow.autoLogin.Checked)
+                    if (MainWindow.loginButton.Enabled)
+                    {
+                        MainWindow.accountInput.Text = openedAccount;
+                        MainWindow.loginButton_Click(this, null);
+                    }
             }
 
-            public void AccountClosed()
+            public bool AccountClosed()
             {
-                //Use status.username instead of accountInput.Text, since accountInput.Text will be the account being logged in when switching accounts
-                if (!MainWindow.accountManager.Contains(MainWindow.status.username))
-                    return;
+                Debug.WriteLine($"AccountClosed:{MainWindow.status.openedAccount}");
+                string closedAccount = MainWindow.status.openedAccount;
+                bool loggedInBeforAutoLogout = MainWindow.status.loggedIn;
 
-                AccountManager.Settings settings = MainWindow.accountManager.GetSettings(MainWindow.status.username);
-                settings.rememberPassword = MainWindow.rememberPwd.Checked;
-                settings.autoSelect = MainWindow.autoSelect.Checked;
-                settings.autoLaunch = MainWindow.autoLaunch.Checked;
-
+                //Auto Logout
                 if (MainWindow.status.loggedIn)
                 {
-                    settings.autoLogin = MainWindow.autoLogin.Checked;
-                    if (MainWindow.rememberPwd.Checked)
-                        MainWindow.accountManager.SavePassword(MainWindow.status.username, MainWindow.passwordInput.Text);
+                    if (MainWindow.loginButton.Enabled)
+                        MainWindow.loginButton_Click(this, new AccountClosedEventArgs());
                     else
-                        MainWindow.accountManager.SavePassword(MainWindow.status.username, "");
-                    if (!MainWindow.autoSelect.Checked)
-                        settings.autoSelectAccount = default;
+                        return false;
                 }
-                else
+                        
+                if (MainWindow.accountManager.Contains(closedAccount))
                 {
-                    settings.autoLogin = false;
-                    if (!MainWindow.rememberPwd.Checked)
-                        MainWindow.accountManager.SavePassword(MainWindow.status.username, "");
+                    AccountManager.Settings settings = MainWindow.accountManager.GetSettings(closedAccount);
+                    settings.rememberPassword = MainWindow.rememberPwd.Checked;
+                    settings.autoSelect = MainWindow.autoSelect.Checked;
+                    settings.autoLaunch = MainWindow.autoLaunch.Checked;
+
+                    if (loggedInBeforAutoLogout)
+                    {
+                        settings.autoLogin = MainWindow.autoLogin.Checked;
+                        if (MainWindow.rememberPwd.Checked)
+                            MainWindow.accountManager.SavePassword(closedAccount, MainWindow.passwordInput.Text);
+                        else
+                            MainWindow.accountManager.SavePassword(closedAccount, "");
+                        if (!MainWindow.autoSelect.Checked)
+                            settings.autoSelectAccount = default;
+                    }
+                    else
+                    {
+                        settings.autoLogin = false;
+                        if (!MainWindow.rememberPwd.Checked)
+                            MainWindow.accountManager.SavePassword(closedAccount, "");
+                    }
+
+                    MainWindow.accountManager.SaveSettings(closedAccount, settings);
+                    MainWindow.accountManager.SaveToFile();
                 }
 
-                MainWindow.accountManager.SaveSettings(MainWindow.status.username, settings);
-                MainWindow.accountManager.SaveToFile();
+                MainWindow.status.openedAccount = default;
+                return true;
             }
 
             public void LoggingIn()
             {
+                Debug.WriteLine($"LoggingIn:{MainWindow.accountInput.Text}");
                 MainWindow.accountInput.Enabled = false;
                 MainWindow.passwordInput.Enabled = false;
                 MainWindow.loginButton.Enabled = false;
@@ -129,9 +156,11 @@ namespace MapleStoryLauncher
 
             public void LoggedIn()
             {
-                if(!MainWindow.accountInput.Items.Contains(MainWindow.accountInput.Text))
-                    MainWindow.accountInput.Items.Add(MainWindow.accountInput.Text);
-                MainWindow.accountInput.SelectedItem = MainWindow.accountInput.Text;
+                Debug.WriteLine($"LoggedIn:{MainWindow.accountInput.Text}");
+                string loggedInUsername = MainWindow.accountInput.Text;
+                if (!MainWindow.accountInput.Items.Contains(loggedInUsername))
+                    MainWindow.accountInput.Items.Add(loggedInUsername);
+                MainWindow.accountInput.SelectedItem = loggedInUsername;
                 MainWindow.accountInput.DropDownStyle = ComboBoxStyle.DropDownList;
                 MainWindow.accountInput.Enabled = true;
                 MainWindow.passwordInput.Enabled = false;
@@ -139,17 +168,16 @@ namespace MapleStoryLauncher
                 MainWindow.loginButton.Enabled = true;
                 MainWindow.otpDisplay.Text = "";
 
-                MainWindow.status.username = MainWindow.accountInput.Text;
                 MainWindow.status.loggedIn = true;
-
-                if (MainWindow.accountManager.Contains(MainWindow.accountInput.Text))
+                MainWindow.status.loggedInUsername = loggedInUsername;
+                if (MainWindow.accountManager.Contains(loggedInUsername))
                 {
                     if (MainWindow.rememberPwd.Checked)
                     {
-                        MainWindow.accountManager.SavePassword(MainWindow.accountInput.Text, MainWindow.passwordInput.Text);
+                        MainWindow.accountManager.SavePassword(loggedInUsername, MainWindow.passwordInput.Text);
                         MainWindow.accountManager.SaveToFile();
                     }
-                    AccountManager.Settings settings = MainWindow.accountManager.GetSettings(MainWindow.accountInput.Text);
+                    AccountManager.Settings settings = MainWindow.accountManager.GetSettings(loggedInUsername);
                     MainWindow.status.autoSelectAccount = settings.autoSelectAccount;
                 }
 
@@ -198,7 +226,7 @@ namespace MapleStoryLauncher
 
             public void LoggedOut()
             {
-                //Use status.username instead of accountInput.Text, since accountInput.Text will be the account being logged in when switching accounts
+                Debug.WriteLine($"LoggedOut:{MainWindow.status.loggedInUsername}");
                 MainWindow.accountListView.TabStop = false;
                 MainWindow.autoSelect.TabStop = false;
                 MainWindow.autoLaunch.TabStop = false;
@@ -206,26 +234,26 @@ namespace MapleStoryLauncher
                 MainWindow.getOtpButton.Enabled = false;
                 MainWindow.Size = new Size(MainWindow.Size.Width, initialWindowHeight);
 
-                if (MainWindow.accountManager.Contains(MainWindow.status.username))
+                if (MainWindow.accountManager.Contains(MainWindow.accountInput.Text))
                 {
+                    MainWindow.accountManager.SavePassword(MainWindow.accountInput.Text, "");
                     if (!MainWindow.autoSelect.Checked)
                     {
-                        AccountManager.Settings settings = MainWindow.accountManager.GetSettings(MainWindow.status.username);
+                        AccountManager.Settings settings = MainWindow.accountManager.GetSettings(MainWindow.accountInput.Text);
                         settings.autoSelectAccount = default;
-                        MainWindow.accountManager.SaveSettings(MainWindow.status.username, settings);
-                        MainWindow.accountManager.SaveToFile();
+                        MainWindow.accountManager.SaveSettings(MainWindow.accountInput.Text, settings);
                     }
+                    MainWindow.accountManager.SaveToFile();
                 }
 
+                MainWindow.accountInput.Leave -= MainWindow.accountInput_Leave;
                 MainWindow.accountInput.DropDownStyle = ComboBoxStyle.DropDown;
-                if (!MainWindow.accountManager.Contains(MainWindow.status.username))
-                {
-                    MainWindow.accountInput.Items.Remove(MainWindow.status.username);
-                    MainWindow.accountInput.Text = MainWindow.status.username;
-                }
+                MainWindow.accountInput.Leave += MainWindow.accountInput_Leave;
+                if (!MainWindow.accountManager.Contains(MainWindow.accountInput.Text))
+                    MainWindow.accountInput.Items.Remove(MainWindow.accountInput.Text);
 
-                MainWindow.status.username = default;
                 MainWindow.status.loggedIn = false;
+                MainWindow.status.loggedInUsername = default;
                 MainWindow.status.autoSelectAccount = default;
 
                 MainWindow.passwordInput.Enabled = true;
@@ -257,17 +285,18 @@ namespace MapleStoryLauncher
                     MainWindow.accountManager.SaveToFile();
                 }
 
-                MainWindow.otpDisplay.PasswordChar = default;
                 MainWindow.otpDisplay.Text = "取得密碼中...";
+                MainWindow.otpDisplay.PasswordChar = default;
             }
 
             public void OtpGot(string otp)
             {
+                MainWindow.otpDisplay.Text = otp;
                 if (otp == "" || !otp.IsAllDigits())
                     MainWindow.otpDisplay.PasswordChar = default;
                 else
                     MainWindow.otpDisplay.PasswordChar = '*';
-                MainWindow.otpDisplay.Text = otp;
+
                 MainWindow.accountListView.Enabled = true;
                 UpdateGetOtpButton();
                 MainWindow.loginButton.Enabled = true;
@@ -284,6 +313,30 @@ namespace MapleStoryLauncher
                     }
                 }
                 catch { }
+            }
+
+            public void StartingGame()
+            {
+                MainWindow.Activated -= MainWindow.MainWindow_Activated;
+                MainWindow.accountInput.Enabled = false;
+                MainWindow.loginButton.Enabled = false;
+                MainWindow.accountListView.Enabled = false;
+                MainWindow.getOtpButton.Enabled = false;
+
+                MainWindow.otpDisplay.Text = "啟動遊戲中...";
+                MainWindow.otpDisplay.PasswordChar = default;
+            }
+
+            public void GameStarted()
+            {
+                MainWindow.otpDisplay.Text = "";
+                MainWindow.otpDisplay.PasswordChar = default;
+
+                MainWindow.accountListView.Enabled = true;
+                UpdateGetOtpButton();
+                MainWindow.loginButton.Enabled = true;
+                MainWindow.accountInput.Enabled = true;
+                MainWindow.Activated += MainWindow.MainWindow_Activated;
             }
             #endregion
 

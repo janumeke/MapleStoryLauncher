@@ -28,8 +28,15 @@ This project is licensed under [GNU GPL v3 or later](COPYING), if not licensed s
 
 ## Changelog
 
+v1.4.2
+1. Adjusted UI behaviours and fixed UI-related bugs.
+
+v1.4.1
+1. Updated the protocol to fix the auto-login.
+
 v1.4
 1. Now supports management of multiple accounts.
+2. Improved stability.
 
 v1.3.1
 1. Now able to see remaining points.

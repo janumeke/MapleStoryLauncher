@@ -13,6 +13,7 @@ using System.Text.RegularExpressions;
 namespace MapleStoryLauncher
 {
     using ExtentionMethods;
+    using System.Diagnostics;
 
     public partial class MainWindow : Form
     {
@@ -22,9 +23,10 @@ namespace MapleStoryLauncher
 
         class State
         {
-            public string username { get; set; } = default;
+            public string openedAccount { get; set; }
             public bool loggedIn { get; set; } = false;
-            public string autoSelectAccount { get; set; } = default;
+            public string loggedInUsername { get; set; }
+            public string autoSelectAccount { get; set; }
         }
 
         private State status = new();
@@ -44,7 +46,7 @@ namespace MapleStoryLauncher
                 Environment.Exit(0);
             }
             InitializeComponent();
-            //Form.CheckForIllegalCrossThreadCalls = false;
+            Form.CheckForIllegalCrossThreadCalls = false;
             ui.FormLoaded();
         }
 
@@ -119,15 +121,15 @@ namespace MapleStoryLauncher
                 {
                     pingTimer.Stop();
 
-                    if (accountManager.Contains(status.username))
+                    if (accountManager.Contains(status.loggedInUsername))
                     {
-                        AccountManager.Settings settings = accountManager.GetSettings(status.username);
+                        AccountManager.Settings settings = accountManager.GetSettings(status.loggedInUsername);
                         if (e is not AccountClosedEventArgs)
                         {
                             if (!autoSelect.Checked)
                                 settings.autoSelectAccount = default;
                         }
-                        accountManager.SaveSettings(status.username, settings);
+                        accountManager.SaveSettings(status.loggedInUsername, settings);
                         accountManager.SaveToFile();
                     }
 
@@ -147,7 +149,11 @@ namespace MapleStoryLauncher
                 return;
 
             if (accountListView.SelectedItems.Count == 0)
+            {
+                ui.StartingGame();
                 StartGame();
+                ui.GameStarted();
+            }
             if (accountListView.SelectedItems.Count == 1 &&
                 !getOtpWorker.IsBusy)
             {
@@ -181,20 +187,43 @@ namespace MapleStoryLauncher
 
         private void accountInput_SelectionChangeCommitted(object sender, EventArgs e)
         {
-            if ((string)accountInput.SelectedItem == status.username)
-                return;
-            if (!loginButton.Enabled)
+            Debug.WriteLine($"SelectionCommitted: Text={accountInput.Text}, selectedItem={accountInput.SelectedItem}");
+            if ((string)accountInput.SelectedItem == status.openedAccount)
                 return;
 
-            if (status.loggedIn)
+            if (status.openedAccount == default)
+                ui.AccountOpened();
+            else
             {
-                ui.AccountClosed();
-                loginButton_Click(this, new AccountClosedEventArgs());
+                if (ui.AccountClosed())
+                    ui.AccountOpened();
+                else
+                    accountInput.SelectedItem = accountInput.Text;
             }
-            accountInput.Text = (string)accountInput.SelectedItem; //This is needed because accountInput.Text is updated after this event finishes
-            ui.AccountOpened();
-            if (autoLogin.Checked)
-                loginButton_Click(this, null);
+        }
+
+        private void accountInput_Leave(object sender, EventArgs e)
+        {
+            Debug.WriteLine($"FocusLeave: Text={accountInput.Text}, selectedItem={accountInput.SelectedItem}");
+            if (accountInput.Text == status.openedAccount)
+                return;
+
+            if (status.openedAccount == default)
+            {
+                if (accountManager.Contains(accountInput.Text))
+                {
+                    accountInput.SelectedItem = accountInput.Text;
+                    ui.AccountOpened();
+                }
+            }
+            else
+            {
+                if (ui.AccountClosed() && accountManager.Contains(accountInput.Text))
+                {
+                    accountInput.SelectedItem = accountInput.Text;
+                    ui.AccountOpened();
+                }
+            }
         }
 
         private void pointsLabel_Click(object sender, EventArgs e)
@@ -269,17 +298,13 @@ namespace MapleStoryLauncher
         //Cleanup before closing
         private void MainWindow_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (status.loggedIn)
-                if (loginButton.Enabled)
-                {
-                    ui.AccountClosed();
-                    loginButton_Click(null, new AccountClosedEventArgs());
-                }
-                else
-                {
-                    e.Cancel = true;
-                    MessageBox.Show("請先登出再關閉程式。", "");
-                }
+            if (status.loggedIn && !loginButton.Enabled)
+            {
+                e.Cancel = true;
+                MessageBox.Show("請先登出再關閉程式。", "");
+            }
+            else
+                ui.AccountClosed();
         }
     }
 }

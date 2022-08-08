@@ -141,8 +141,10 @@ namespace MapleStoryLauncher
                         ui.OtpGot(result.Message);
                     else
                     {
-                        StartGame(((BeanfunBroker.OTPResult)result).Username, result.Message);
                         ui.OtpGot("");
+                        ui.StartingGame();
+                        StartGame(((BeanfunBroker.OTPResult)result).Username, result.Message);
+                        ui.GameStarted();
                     }
                     break;
                 case BeanfunBroker.TransactionResultStatus.LoginFirst:
