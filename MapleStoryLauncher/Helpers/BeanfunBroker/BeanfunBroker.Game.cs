@@ -85,7 +85,7 @@ namespace MapleStoryLauncher
 
                 
                 GeneralResponse result = JsonConvert.DeserializeObject<GeneralResponse>(res.Message.Content.ReadAsStringAsync().Result);
-                if (result == null || result.intResult != 1)
+                if (result == null || (result.intResult != 0 && result.intResult != 1))
                     return new GameAccountResult { Status = TransactionResultStatus.Failed, Message = "不是預期的結果。(handler 1)" };
 
                 url = "https://tw.beanfun.com/generic_handlers/gamezone.ashx";

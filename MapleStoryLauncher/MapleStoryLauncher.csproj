@@ -7,7 +7,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationIcon>Resources\pet bee.ico</ApplicationIcon>
-    <Version>1.4.2.1</Version>
+    <Version>1.4.2.2</Version>
   </PropertyGroup>
 
   <ItemGroup>

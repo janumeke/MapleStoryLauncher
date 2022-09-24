@@ -125,7 +125,7 @@ namespace MapleStoryLauncher
         public Settings GetSettings(string username)
         {
             Account account = accounts.Find((account) => account.username == username);
-            return account != default ? account.settings : default;
+            return account != default ? account.settings : new();
         }
 
         public bool SaveSettings(string username, Settings settings)

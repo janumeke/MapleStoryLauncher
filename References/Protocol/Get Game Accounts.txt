@@ -15,6 +15,7 @@ Services.ServiceList = {"Rows":[...{"ServiceCode":"610074","ServiceRegion":"T9",
 : strFunction=getOpenedServices
 : webtoken=1
 B {intResult: 1, strServices: "610074_T9,610075_T9", strOutstring: ""}
+B {intResult: 0, strOutstring: ""}
 \ POST https://tw.beanfun.com/generic_handlers/gamezone.ashx
 : strFunction=getPromotions
 : strSubtype=-1

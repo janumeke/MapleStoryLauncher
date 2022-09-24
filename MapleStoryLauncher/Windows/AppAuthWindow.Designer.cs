@@ -42,18 +42,18 @@ namespace MapleStoryLauncher
             // 
             this.labelMessage.AutoSize = true;
             this.labelMessage.Font = new System.Drawing.Font("Microsoft YaHei UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.labelMessage.Location = new System.Drawing.Point(46, 18);
+            this.labelMessage.Location = new System.Drawing.Point(43, 17);
             this.labelMessage.Name = "labelMessage";
             this.labelMessage.Size = new System.Drawing.Size(231, 38);
             this.labelMessage.TabIndex = 0;
-            this.labelMessage.Text = "此帳號已開啟[進階防護]，\r\n請在 beanfun! App 中允許登入要求。";
+            this.labelMessage.Text = "此帳號已開啟「進階防護」，\r\n請在 beanfun! App 中允許登入要求。";
             this.labelMessage.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // labelWaiting
             // 
             this.labelWaiting.AutoSize = true;
             this.labelWaiting.Font = new System.Drawing.Font("Microsoft YaHei UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.labelWaiting.Location = new System.Drawing.Point(134, 75);
+            this.labelWaiting.Location = new System.Drawing.Point(129, 71);
             this.labelWaiting.Name = "labelWaiting";
             this.labelWaiting.Size = new System.Drawing.Size(87, 19);
             this.labelWaiting.TabIndex = 1;
@@ -62,7 +62,7 @@ namespace MapleStoryLauncher
             // pictureBoxWaiting
             // 
             this.pictureBoxWaiting.Image = global::MapleStoryLauncher.Properties.Resources.loading;
-            this.pictureBoxWaiting.Location = new System.Drawing.Point(103, 75);
+            this.pictureBoxWaiting.Location = new System.Drawing.Point(101, 71);
             this.pictureBoxWaiting.Name = "pictureBoxWaiting";
             this.pictureBoxWaiting.Size = new System.Drawing.Size(20, 20);
             this.pictureBoxWaiting.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
@@ -79,7 +79,7 @@ namespace MapleStoryLauncher
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
-            this.ClientSize = new System.Drawing.Size(310, 114);
+            this.ClientSize = new System.Drawing.Size(306, 110);
             this.Controls.Add(this.pictureBoxWaiting);
             this.Controls.Add(this.labelWaiting);
             this.Controls.Add(this.labelMessage);

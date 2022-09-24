@@ -55,7 +55,23 @@ namespace MapleStoryLauncher
         {
             if (accountManager.Contains(accountInput.Text))
             {
-                accountManager.RemoveAccount(accountInput.Text);
+                Debug.WriteLine($"AccountClosed(Removed): {accountInput.Text}");
+                status.openedAccount = default;
+                if (!status.loggedIn)
+                    accountManager.RemoveAccount(accountInput.Text);
+                else
+                {
+                    //restore the state by repeating the steps
+                    ui.EmboldenAutoSelection(false);
+                    ui.LoggedOut(false, false);
+                    accountManager.RemoveAccount(accountInput.Text);
+                    ui.LoggedIn(false);
+                    autoSelect.Checked = false;
+                    autoSelect.Enabled = false;
+                    autoLaunch.Checked = false;
+                    autoLaunch.Enabled = false;
+                }
+
                 if (!status.loggedIn)
                 {
                     string text = accountInput.Text;
@@ -65,17 +81,28 @@ namespace MapleStoryLauncher
             }
             else
             {
-                accountManager.AddAccount(accountInput.Text);
-                AccountManager.Settings settings = accountManager.GetSettings(accountInput.Text);
-                settings.autoSelectAccount = status.autoSelectAccount;
-                accountManager.SaveSettings(accountInput.Text, settings);
-                if(!accountInput.Items.Contains(accountInput.Text))
+                Debug.WriteLine($"AccountOpened(Added): {accountInput.Text}");
+                status.openedAccount = accountInput.Text;
+                if (!status.loggedIn)
+                    accountManager.AddAccount(accountInput.Text);
+                else
+                {
+                    //restore the state by repeating the steps
+                    ui.LoggedOut(false, false);
+                    accountManager.AddAccount(accountInput.Text);
+                    ui.LoggedIn(false);
+                    autoSelect.Enabled = true;
+                    autoLaunch.Enabled = true;
+                }
+
+                if (!accountInput.Items.Contains(accountInput.Text))
                     accountInput.Items.Add(accountInput.Text);
             }
             accountManager.SaveToFile();
             ui.UpdateAddRemoveAccount();
         }
 
+        private class AccountClosedEventArgs : EventArgs { }
         // The login/logout botton.
         private void loginButton_Click(object sender, EventArgs e)
         {
@@ -120,20 +147,7 @@ namespace MapleStoryLauncher
                 if (beanfun.Logout())
                 {
                     pingTimer.Stop();
-
-                    if (accountManager.Contains(status.loggedInUsername))
-                    {
-                        AccountManager.Settings settings = accountManager.GetSettings(status.loggedInUsername);
-                        if (e is not AccountClosedEventArgs)
-                        {
-                            if (!autoSelect.Checked)
-                                settings.autoSelectAccount = default;
-                        }
-                        accountManager.SaveSettings(status.loggedInUsername, settings);
-                        accountManager.SaveToFile();
-                    }
-
-                    ui.LoggedOut();
+                    ui.LoggedOut(e is AccountClosedEventArgs);
                 }
                 else
                     ShowError(new BeanfunBroker.TransactionResult { Status = BeanfunBroker.TransactionResultStatus.Failed, Message = "登出失敗，請重開程式。" });
@@ -183,23 +197,16 @@ namespace MapleStoryLauncher
         }
         #endregion
 
-        private class AccountClosedEventArgs : EventArgs {}
-
         private void accountInput_SelectionChangeCommitted(object sender, EventArgs e)
         {
             Debug.WriteLine($"SelectionCommitted: Text={accountInput.Text}, selectedItem={accountInput.SelectedItem}");
             if ((string)accountInput.SelectedItem == status.openedAccount)
                 return;
 
-            if (status.openedAccount == default)
+            if (status.openedAccount == default || ui.AccountClosed())
                 ui.AccountOpened();
             else
-            {
-                if (ui.AccountClosed())
-                    ui.AccountOpened();
-                else
-                    accountInput.SelectedItem = accountInput.Text;
-            }
+                accountInput.SelectedItem = accountInput.Text;
         }
 
         private void accountInput_Leave(object sender, EventArgs e)
@@ -208,7 +215,7 @@ namespace MapleStoryLauncher
             if (accountInput.Text == status.openedAccount)
                 return;
 
-            if (status.openedAccount == default)
+            if (status.openedAccount == default || ui.AccountClosed())
             {
                 if (accountManager.Contains(accountInput.Text))
                 {
@@ -217,13 +224,7 @@ namespace MapleStoryLauncher
                 }
             }
             else
-            {
-                if (ui.AccountClosed() && accountManager.Contains(accountInput.Text))
-                {
-                    accountInput.SelectedItem = accountInput.Text;
-                    ui.AccountOpened();
-                }
-            }
+                accountInput.Text = status.openedAccount;
         }
 
         private void pointsLabel_Click(object sender, EventArgs e)
@@ -304,7 +305,11 @@ namespace MapleStoryLauncher
                 MessageBox.Show("請先登出再關閉程式。", "");
             }
             else
-                ui.AccountClosed();
+                if(status.openedAccount != default)
+                    ui.AccountClosed();
+                else
+                    if(status.loggedIn)
+                        loginButton_Click(this, null);
         }
     }
 }

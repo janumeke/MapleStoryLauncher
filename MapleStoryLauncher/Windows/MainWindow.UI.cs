@@ -61,19 +61,19 @@ namespace MapleStoryLauncher
             {
                 Debug.WriteLine($"AccountOpened: {MainWindow.accountInput.SelectedItem}");
                 string openedAccount = (string)MainWindow.accountInput.SelectedItem;
-                if (MainWindow.accountManager.Contains(openedAccount))
-                {
-                    MainWindow.passwordInput.Text = MainWindow.accountManager.GetPassword(openedAccount);
-                    UpdateLoginButtonText();
-                    AccountManager.Settings settings = MainWindow.accountManager.GetSettings(openedAccount);
-                    MainWindow.rememberPwd.Checked = settings.rememberPassword;
-                    MainWindow.autoLogin.Checked = settings.autoLogin;
-                    MainWindow.autoSelect.Checked = settings.autoSelect;
-                    MainWindow.autoLaunch.Checked = settings.autoLaunch;
-                }
+                if (!MainWindow.accountManager.Contains(openedAccount))
+                    return;
 
                 MainWindow.status.openedAccount = openedAccount;
 
+                //Restore Settings
+                MainWindow.passwordInput.Text = MainWindow.accountManager.GetPassword(openedAccount);
+                UpdateLoginButtonText();
+                AccountManager.Settings settings = MainWindow.accountManager.GetSettings(openedAccount);
+                MainWindow.rememberPwd.Checked = settings.rememberPassword;
+                MainWindow.autoLogin.Checked = settings.autoLogin;
+
+                //Auto Login
                 if (MainWindow.autoLogin.Checked)
                     if (MainWindow.loginButton.Enabled)
                     {
@@ -86,44 +86,38 @@ namespace MapleStoryLauncher
             {
                 Debug.WriteLine($"AccountClosed:{MainWindow.status.openedAccount}");
                 string closedAccount = MainWindow.status.openedAccount;
+                if (!MainWindow.accountManager.Contains(closedAccount))
+                    return true;
                 bool loggedInBeforAutoLogout = MainWindow.status.loggedIn;
 
                 //Auto Logout
-                if (MainWindow.status.loggedIn)
+                if (loggedInBeforAutoLogout)
                 {
                     if (MainWindow.loginButton.Enabled)
                         MainWindow.loginButton_Click(this, new AccountClosedEventArgs());
                     else
                         return false;
                 }
-                        
-                if (MainWindow.accountManager.Contains(closedAccount))
+
+                //Save Settings
+                AccountManager.Settings settings = MainWindow.accountManager.GetSettings(closedAccount);
+                settings.rememberPassword = MainWindow.rememberPwd.Checked;
+
+                if (loggedInBeforAutoLogout)
                 {
-                    AccountManager.Settings settings = MainWindow.accountManager.GetSettings(closedAccount);
-                    settings.rememberPassword = MainWindow.rememberPwd.Checked;
-                    settings.autoSelect = MainWindow.autoSelect.Checked;
-                    settings.autoLaunch = MainWindow.autoLaunch.Checked;
-
-                    if (loggedInBeforAutoLogout)
-                    {
-                        settings.autoLogin = MainWindow.autoLogin.Checked;
-                        if (MainWindow.rememberPwd.Checked)
-                            MainWindow.accountManager.SavePassword(closedAccount, MainWindow.passwordInput.Text);
-                        else
-                            MainWindow.accountManager.SavePassword(closedAccount, "");
-                        if (!MainWindow.autoSelect.Checked)
-                            settings.autoSelectAccount = default;
-                    }
+                    settings.autoLogin = MainWindow.autoLogin.Checked;
+                    if (MainWindow.rememberPwd.Checked)
+                        MainWindow.accountManager.SavePassword(closedAccount, MainWindow.passwordInput.Text);
                     else
-                    {
-                        settings.autoLogin = false;
-                        if (!MainWindow.rememberPwd.Checked)
-                            MainWindow.accountManager.SavePassword(closedAccount, "");
-                    }
-
-                    MainWindow.accountManager.SaveSettings(closedAccount, settings);
-                    MainWindow.accountManager.SaveToFile();
+                        MainWindow.accountManager.SavePassword(closedAccount, "");
                 }
+                else
+                {
+                    settings.autoLogin = false;
+                }
+
+                MainWindow.accountManager.SaveSettings(closedAccount, settings);
+                MainWindow.accountManager.SaveToFile();
 
                 MainWindow.status.openedAccount = default;
                 return true;
@@ -154,22 +148,14 @@ namespace MapleStoryLauncher
                 MainWindow.UseWaitCursor = false;
             }
 
-            public void LoggedIn()
+            public void LoggedIn(bool UIEnabled = true)
             {
-                Debug.WriteLine($"LoggedIn:{MainWindow.accountInput.Text}");
+                Debug.WriteLine($"LoggedIn{(UIEnabled ? "" : "(NoUI)")}:{MainWindow.accountInput.Text}");
                 string loggedInUsername = MainWindow.accountInput.Text;
-                if (!MainWindow.accountInput.Items.Contains(loggedInUsername))
-                    MainWindow.accountInput.Items.Add(loggedInUsername);
-                MainWindow.accountInput.SelectedItem = loggedInUsername;
-                MainWindow.accountInput.DropDownStyle = ComboBoxStyle.DropDownList;
-                MainWindow.accountInput.Enabled = true;
-                MainWindow.passwordInput.Enabled = false;
-                MainWindow.loginButton.Text = "登出";
-                MainWindow.loginButton.Enabled = true;
-                MainWindow.otpDisplay.Text = "";
 
                 MainWindow.status.loggedIn = true;
                 MainWindow.status.loggedInUsername = loggedInUsername;
+
                 if (MainWindow.accountManager.Contains(loggedInUsername))
                 {
                     if (MainWindow.rememberPwd.Checked)
@@ -181,87 +167,114 @@ namespace MapleStoryLauncher
                     MainWindow.status.autoSelectAccount = settings.autoSelectAccount;
                 }
 
-                if (!RedrawAccountListView())
+                if (UIEnabled)
                 {
-                    MainWindow.ShowError(new BeanfunBroker.TransactionResult { Status = BeanfunBroker.TransactionResultStatus.Failed, Message = "更新遊戲帳號列表失敗。" });
-                    if(!MainWindow.beanfun.Logout())
-                        MainWindow.ShowError(new BeanfunBroker.TransactionResult { Status = BeanfunBroker.TransactionResultStatus.Failed, Message = "自動登出失敗，請重開程式。" });
-                    LoginFailed();
-                    return;
-                }
-                EmboldenAutoSelection(MainWindow.autoSelect.Checked);
+                    if (!MainWindow.accountInput.Items.Contains(loggedInUsername))
+                        MainWindow.accountInput.Items.Add(loggedInUsername);
+                    MainWindow.accountInput.SelectedItem = loggedInUsername;
+                    MainWindow.accountInput.DropDownStyle = ComboBoxStyle.DropDownList;
+                    MainWindow.accountInput.Enabled = true;
+                    MainWindow.passwordInput.Enabled = false;
+                    MainWindow.loginButton.Text = "登出";
+                    MainWindow.loginButton.Enabled = true;
+                    MainWindow.otpDisplay.Text = "";
 
-                MainWindow.Size = new Size(MainWindow.Size.Width, loggedInHeight);
-                MainWindow.accountListView.TabStop = true;
-                MainWindow.autoSelect.TabStop = true;
-                MainWindow.autoLaunch.TabStop = true;
-                MainWindow.getOtpButton.TabStop = true;
-                UpdateGetOtpButton();
-
-                MainWindow.pointsLabel_Click(null, null);
-                //Auto-select
-                if (MainWindow.autoSelect.Checked
-                    && MainWindow.status.autoSelectAccount != default) //There is selection
-                    if (MainWindow.accountListView.Enabled)
+                    if (!RedrawAccountListView())
                     {
-                        MainWindow.accountListView.SelectedItems.Clear();
-                        ListViewItem item = (
-                                from ListViewItem itemE in MainWindow.accountListView.Items
-                                where itemE.SubItems[0].Text == MainWindow.status.autoSelectAccount
-                                select itemE
-                            ).FirstOrDefault();
-                        if (item != default)
-                            item.Selected = true;
-                        UpdateGetOtpButton();
+                        MainWindow.ShowError(new BeanfunBroker.TransactionResult { Status = BeanfunBroker.TransactionResultStatus.Failed, Message = "更新遊戲帳號列表失敗。" });
+                        if (!MainWindow.beanfun.Logout())
+                            MainWindow.ShowError(new BeanfunBroker.TransactionResult { Status = BeanfunBroker.TransactionResultStatus.Failed, Message = "自動登出失敗，請重開程式。" });
+                        LoginFailed();
+                        return;
                     }
 
-                MainWindow.AcceptButton = MainWindow.getOtpButton;
-                MainWindow.UseWaitCursor = false;
+                    bool accountRemembered = MainWindow.accountManager.Contains(loggedInUsername);
+                    MainWindow.autoSelect.Enabled = accountRemembered;
+                    MainWindow.autoLaunch.Enabled = accountRemembered;
+                    AccountManager.Settings settings = MainWindow.accountManager.GetSettings(loggedInUsername);
+                    MainWindow.autoSelect.Checked = settings.autoSelect;
+                    MainWindow.autoLaunch.Checked = settings.autoLaunch;
+                    EmboldenAutoSelection(MainWindow.autoSelect.Checked);
 
-                //Auto-launch
-                if (MainWindow.autoLaunch.Checked && !MainWindow.IsGameRunning())
-                    if (MainWindow.getOtpButton.Enabled)
-                        MainWindow.getOtpButton_Click(null, null);
+                    MainWindow.Size = new Size(MainWindow.Size.Width, loggedInHeight);
+                    MainWindow.accountListView.TabStop = true;
+                    MainWindow.autoSelect.TabStop = true;
+                    MainWindow.autoLaunch.TabStop = true;
+                    MainWindow.getOtpButton.TabStop = true;
+                    UpdateGetOtpButton();
+
+                    MainWindow.pointsLabel_Click(null, null);
+
+                    //Auto-select
+                    if (MainWindow.autoSelect.Checked
+                        && MainWindow.status.autoSelectAccount != default) //There is selection
+                        if (MainWindow.accountListView.Enabled)
+                        {
+                            MainWindow.accountListView.SelectedItems.Clear();
+                            ListViewItem item = (
+                                    from ListViewItem itemE in MainWindow.accountListView.Items
+                                    where itemE.SubItems[0].Text == MainWindow.status.autoSelectAccount
+                                    select itemE
+                                ).FirstOrDefault();
+                            if (item != default)
+                                item.Selected = true;
+                            UpdateGetOtpButton();
+                        }
+
+                    MainWindow.AcceptButton = MainWindow.getOtpButton;
+                    MainWindow.UseWaitCursor = false;
+
+                    //Auto-launch
+                    if (MainWindow.autoLaunch.Checked && !MainWindow.IsGameRunning())
+                        if (MainWindow.getOtpButton.Enabled)
+                            MainWindow.getOtpButton_Click(null, null);
+                }
             }
 
-            public void LoggedOut()
+            public void LoggedOut(bool triggeredByAccountClosed = false, bool UIEnabled = true)
             {
-                Debug.WriteLine($"LoggedOut:{MainWindow.status.loggedInUsername}");
-                MainWindow.accountListView.TabStop = false;
-                MainWindow.autoSelect.TabStop = false;
-                MainWindow.autoLaunch.TabStop = false;
-                MainWindow.getOtpButton.TabStop = false;
-                MainWindow.getOtpButton.Enabled = false;
-                MainWindow.Size = new Size(MainWindow.Size.Width, initialWindowHeight);
+                Debug.WriteLine($"LoggedOut{(UIEnabled ? "" : "(NoUI)")}:{MainWindow.status.loggedInUsername}");
+                string loggedOutUsername = MainWindow.status.loggedInUsername;
 
-                if (MainWindow.accountManager.Contains(MainWindow.accountInput.Text))
+                if (MainWindow.accountManager.Contains(loggedOutUsername))
                 {
-                    MainWindow.accountManager.SavePassword(MainWindow.accountInput.Text, "");
+                    AccountManager.Settings settings = MainWindow.accountManager.GetSettings(loggedOutUsername);
+                    settings.autoSelect = MainWindow.autoSelect.Checked;
+                    settings.autoLaunch = MainWindow.autoLaunch.Checked;
+                    if (!triggeredByAccountClosed)
+                        MainWindow.accountManager.SavePassword(loggedOutUsername, "");
                     if (!MainWindow.autoSelect.Checked)
-                    {
-                        AccountManager.Settings settings = MainWindow.accountManager.GetSettings(MainWindow.accountInput.Text);
                         settings.autoSelectAccount = default;
-                        MainWindow.accountManager.SaveSettings(MainWindow.accountInput.Text, settings);
-                    }
+                    MainWindow.accountManager.SaveSettings(loggedOutUsername, settings);
                     MainWindow.accountManager.SaveToFile();
                 }
-
-                MainWindow.accountInput.Leave -= MainWindow.accountInput_Leave;
-                MainWindow.accountInput.DropDownStyle = ComboBoxStyle.DropDown;
-                MainWindow.accountInput.Leave += MainWindow.accountInput_Leave;
-                if (!MainWindow.accountManager.Contains(MainWindow.accountInput.Text))
-                    MainWindow.accountInput.Items.Remove(MainWindow.accountInput.Text);
 
                 MainWindow.status.loggedIn = false;
                 MainWindow.status.loggedInUsername = default;
                 MainWindow.status.autoSelectAccount = default;
 
-                MainWindow.passwordInput.Enabled = true;
-                UpdateLoginButtonText();
-                MainWindow.loginButton.Enabled = true;
-                UpdateAddRemoveAccount();
-                MainWindow.AcceptButton = MainWindow.loginButton;
-                MainWindow.UseWaitCursor = false;
+                if (UIEnabled)
+                {
+                    MainWindow.accountListView.TabStop = false;
+                    MainWindow.autoSelect.TabStop = false;
+                    MainWindow.autoLaunch.TabStop = false;
+                    MainWindow.getOtpButton.TabStop = false;
+                    MainWindow.getOtpButton.Enabled = false;
+                    MainWindow.Size = new Size(MainWindow.Size.Width, initialWindowHeight);
+
+                    MainWindow.accountInput.Leave -= MainWindow.accountInput_Leave;
+                    MainWindow.accountInput.DropDownStyle = ComboBoxStyle.DropDown;
+                    MainWindow.accountInput.Leave += MainWindow.accountInput_Leave;
+                    if (!MainWindow.accountManager.Contains(loggedOutUsername))
+                        MainWindow.accountInput.Items.Remove(loggedOutUsername);
+
+                    MainWindow.passwordInput.Enabled = true;
+                    UpdateLoginButtonText();
+                    MainWindow.loginButton.Enabled = true;
+                    UpdateAddRemoveAccount();
+                    MainWindow.AcceptButton = MainWindow.loginButton;
+                    MainWindow.UseWaitCursor = false;
+                }
             }
 
             public void GettingOtp()
