@@ -29,79 +29,78 @@ namespace MapleStoryLauncher
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
+            components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AppAuthWindow));
-            this.labelMessage = new System.Windows.Forms.Label();
-            this.labelWaiting = new System.Windows.Forms.Label();
-            this.pictureBoxWaiting = new System.Windows.Forms.PictureBox();
-            this.checkAppAuthStatusTimer = new System.Windows.Forms.Timer(this.components);
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxWaiting)).BeginInit();
-            this.SuspendLayout();
+            labelMessage = new Label();
+            labelWaiting = new Label();
+            pictureBoxWaiting = new PictureBox();
+            checkAppAuthStatusTimer = new System.Windows.Forms.Timer(components);
+            ((System.ComponentModel.ISupportInitialize)pictureBoxWaiting).BeginInit();
+            SuspendLayout();
             // 
             // labelMessage
             // 
-            this.labelMessage.AutoSize = true;
-            this.labelMessage.Font = new System.Drawing.Font("Microsoft YaHei UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.labelMessage.Location = new System.Drawing.Point(43, 17);
-            this.labelMessage.Name = "labelMessage";
-            this.labelMessage.Size = new System.Drawing.Size(231, 38);
-            this.labelMessage.TabIndex = 0;
-            this.labelMessage.Text = "此帳號已開啟「進階防護」，\r\n請在 beanfun! App 中允許登入要求。";
-            this.labelMessage.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            labelMessage.AutoSize = true;
+            labelMessage.Font = new Font("Microsoft YaHei UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point);
+            labelMessage.Location = new Point(43, 17);
+            labelMessage.Name = "labelMessage";
+            labelMessage.Size = new Size(231, 38);
+            labelMessage.TabIndex = 0;
+            labelMessage.Text = "此帳號已開啟「進階防護」，\r\n請在 beanfun! App 中允許登入要求。";
+            labelMessage.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // labelWaiting
             // 
-            this.labelWaiting.AutoSize = true;
-            this.labelWaiting.Font = new System.Drawing.Font("Microsoft YaHei UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.labelWaiting.Location = new System.Drawing.Point(129, 71);
-            this.labelWaiting.Name = "labelWaiting";
-            this.labelWaiting.Size = new System.Drawing.Size(87, 19);
-            this.labelWaiting.TabIndex = 1;
-            this.labelWaiting.Text = "等待回應中 ...";
+            labelWaiting.AutoSize = true;
+            labelWaiting.Font = new Font("Microsoft YaHei UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point);
+            labelWaiting.Location = new Point(129, 71);
+            labelWaiting.Name = "labelWaiting";
+            labelWaiting.Size = new Size(87, 19);
+            labelWaiting.TabIndex = 1;
+            labelWaiting.Text = "等待回應中 ...";
             // 
             // pictureBoxWaiting
             // 
-            this.pictureBoxWaiting.Image = global::MapleStoryLauncher.Properties.Resources.loading;
-            this.pictureBoxWaiting.Location = new System.Drawing.Point(101, 71);
-            this.pictureBoxWaiting.Name = "pictureBoxWaiting";
-            this.pictureBoxWaiting.Size = new System.Drawing.Size(20, 20);
-            this.pictureBoxWaiting.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
-            this.pictureBoxWaiting.TabIndex = 2;
-            this.pictureBoxWaiting.TabStop = false;
+            pictureBoxWaiting.Image = Properties.Resources.loading;
+            pictureBoxWaiting.Location = new Point(101, 71);
+            pictureBoxWaiting.Name = "pictureBoxWaiting";
+            pictureBoxWaiting.Size = new Size(20, 20);
+            pictureBoxWaiting.SizeMode = PictureBoxSizeMode.Zoom;
+            pictureBoxWaiting.TabIndex = 2;
+            pictureBoxWaiting.TabStop = false;
             // 
             // checkAppAuthStatusTimer
             // 
-            this.checkAppAuthStatusTimer.Enabled = true;
-            this.checkAppAuthStatusTimer.Interval = 3000;
-            this.checkAppAuthStatusTimer.Tick += new System.EventHandler(this.checkAppAuthStatusTimer_Tick);
+            checkAppAuthStatusTimer.Interval = 3000;
+            checkAppAuthStatusTimer.Tick += checkAppAuthStatusTimer_Tick;
             // 
             // AppAuthWindow
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
-            this.ClientSize = new System.Drawing.Size(306, 110);
-            this.Controls.Add(this.pictureBoxWaiting);
-            this.Controls.Add(this.labelWaiting);
-            this.Controls.Add(this.labelMessage);
-            this.Font = new System.Drawing.Font("Microsoft YaHei UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.MaximizeBox = false;
-            this.MinimizeBox = false;
-            this.Name = "AppAuthWindow";
-            this.Text = "雙重驗證";
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.AppAuthWindow_FormClosing);
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxWaiting)).EndInit();
-            this.ResumeLayout(false);
-            this.PerformLayout();
-
+            AutoScaleDimensions = new SizeF(96F, 96F);
+            AutoScaleMode = AutoScaleMode.Dpi;
+            ClientSize = new Size(306, 110);
+            Controls.Add(pictureBoxWaiting);
+            Controls.Add(labelWaiting);
+            Controls.Add(labelMessage);
+            Font = new Font("Microsoft YaHei UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            Icon = (Icon)resources.GetObject("$this.Icon");
+            MaximizeBox = false;
+            MinimizeBox = false;
+            Name = "AppAuthWindow";
+            Text = "雙重驗證";
+            FormClosing += AppAuthWindow_FormClosing;
+            Shown += AppAuthWindow_Shown;
+            ((System.ComponentModel.ISupportInitialize)pictureBoxWaiting).EndInit();
+            ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion
 
-        private System.Windows.Forms.Label labelMessage;
-        private System.Windows.Forms.Label labelWaiting;
-        private System.Windows.Forms.PictureBox pictureBoxWaiting;
+        private Label labelMessage;
+        private Label labelWaiting;
+        private PictureBox pictureBoxWaiting;
         private System.Windows.Forms.Timer checkAppAuthStatusTimer;
     }
 }

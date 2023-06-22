@@ -20,13 +20,23 @@ namespace MapleStoryLauncher
             InitializeComponent();
         }
 
+        private object result_lock = new();
         private BeanfunBroker.TransactionResult result = default;
 
         public BeanfunBroker.TransactionResult GetResult()
         {
-            lock (this)
+            lock (result_lock)
             {
                 return result;
+            }
+        }
+
+        private void AppAuthWindow_Shown(object sender, EventArgs e)
+        {
+            lock (checkAppAuthStatusTimer)
+            {
+                failedTries = 0;
+                checkAppAuthStatusTimer.Enabled = true;
             }
         }
 
@@ -35,38 +45,47 @@ namespace MapleStoryLauncher
 
         private void checkAppAuthStatusTimer_Tick(object sender, EventArgs e)
         {
-            BeanfunBroker.TransactionResult checkResult = MainWindow.beanfun.CheckAppAuthentication();
-            switch (checkResult.Status)
+            if (!checkAppAuthStatusTimer.Enabled)
+                return;
+
+            lock (checkAppAuthStatusTimer)
             {
-                case BeanfunBroker.TransactionResultStatus.RequireAppAuthentication:
-                    failedTries = 0;
-                    break;
-                case BeanfunBroker.TransactionResultStatus.ConnectionLost:
-                    if (++failedTries >= maxFailedTries)
-                    {
-                        lock (this)
+                BeanfunBroker.TransactionResult checkResult = MainWindow.beanfun.CheckAppAuthentication();
+                switch (checkResult.Status)
+                {
+                    case BeanfunBroker.TransactionResultStatus.RequireAppAuthentication:
+                        failedTries = 0;
+                        break;
+                    case BeanfunBroker.TransactionResultStatus.ConnectionLost:
+                        if (++failedTries >= maxFailedTries)
+                        {
+                            lock (result_lock)
+                            {
+                                result = checkResult;
+                            }
+                            Close(); //Deadlock Warning: hold (checkAppAuthStatusTimer) and wait (result, MainWindow.beanfun)
+                        }
+                        break;
+                    default:
+                        lock (result_lock)
                         {
                             result = checkResult;
                         }
-                        Close();
-                    }
-                    break;
-                default:
-                    lock (this)
-                    {
-                        result = checkResult;
-                    }
-                    Close();
-                    break;
+                        Close(); //Deadlock Warning: hold (checkAppAuthStatusTimer) and wait (result, MainWindow.beanfun)
+                        break;
+                }
             }
         }
 
         private void AppAuthWindow_FormClosing(object sender, FormClosingEventArgs e)
         {
             checkAppAuthStatusTimer.Enabled = false;
-            if (result == default || //manual closing while pending
-                result.Status == BeanfunBroker.TransactionResultStatus.ConnectionLost)
-                MainWindow.beanfun.LocalLogout();
+            lock (result_lock)
+            {
+                if (result == default //manual closing while pending
+                    || result.Status == BeanfunBroker.TransactionResultStatus.ConnectionLost)
+                    MainWindow.beanfun.LocalLogout(); //Deadlock Warning: hold (result) and wait (MainWindow.beanfun)
+            }
         }
     }
 }

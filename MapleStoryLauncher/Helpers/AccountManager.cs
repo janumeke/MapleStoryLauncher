@@ -104,7 +104,7 @@ namespace MapleStoryLauncher
         public void SavePassword(string username, string password)
         {
             Account account = accounts.Find((account) => account.username == username);
-            if (password == "")
+            if (password == "" || password == default)
                 account.password = default;
             else
             {
