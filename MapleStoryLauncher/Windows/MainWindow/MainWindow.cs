@@ -155,7 +155,7 @@ namespace MapleStoryLauncher
                         SyncEvents.SucceedLogin(((BeanfunBroker.TransactionResult)e.Result).Message);
                         break;
                     default:
-                        ShowError((BeanfunBroker.TransactionResult)e.Result);
+                        ShowTransactionError((BeanfunBroker.TransactionResult)e.Result);
                         SyncEvents.CancelLogin();
                         break;
                 }
@@ -178,7 +178,7 @@ namespace MapleStoryLauncher
                 case BeanfunBroker.TransactionResultStatus.Failed:
                     pingTimer.Stop();
                     beanfun.Logout();
-                    ShowError(result);
+                    ShowTransactionError(result);
                     SyncEvents.LogOut(loggedInUsername, false);
                     break;
                 case BeanfunBroker.TransactionResultStatus.ConnectionLost:
@@ -186,14 +186,14 @@ namespace MapleStoryLauncher
                     {
                         pingTimer.Stop();
                         beanfun.Logout();
-                        ShowError(result);
+                        ShowTransactionError(result);
                         SyncEvents.LogOut(loggedInUsername, false);
                     }
                     pingTimer.Interval = 3;
                     break;
                 case BeanfunBroker.TransactionResultStatus.LoginFirst:
                     pingTimer.Stop();
-                    ShowError(result);
+                    ShowTransactionError(result);
                     SyncEvents.LogOut(loggedInUsername, false);
                     break;
                 case BeanfunBroker.TransactionResultStatus.Success:
@@ -231,18 +231,18 @@ namespace MapleStoryLauncher
                     {
                         SyncEvents.FinishGettingOTP("");
                         SyncEvents.LaunchGame();
-                        StartGame(((BeanfunBroker.OTPResult)result).Username, result.Message);
+                        StartGame(((BeanfunBroker.OTPResult)result).ArgPrefix, ((BeanfunBroker.OTPResult)result).Username, result.Message);
                         SyncEvents.FinishLaunchingGame();
                     }
                     break;
                 case BeanfunBroker.TransactionResultStatus.LoginFirst:
                     pingTimer.Stop();
-                    ShowError(result);
+                    ShowTransactionError(result);
                     SyncEvents.FinishGettingOTP("");
                     SyncEvents.LogOut(loggedInUsername, false);
                     break;
                 default:
-                    ShowError(result);
+                    ShowTransactionError(result);
                     SyncEvents.FinishGettingOTP("");
                     break;
             }

@@ -8,9 +8,9 @@
 與豬頭差異
 
 1. 不支援楓之谷以外的遊戲
-2. 沒有自動檢查更新和 Google Analytics
+2. 重新設計的介面
 3. 有進階防護和剩餘點數
-4. 重新設計的介面
+4. 沒有自動檢查更新和 Google Analytics
 
 # MapleStoryLauncher
 
@@ -27,6 +27,10 @@ Modified from BeanfunLogin:
 This project is licensed under [GNU GPL v3 or later](COPYING), if not licensed seperately.
 
 ## Changelog
+
+v1.5
+1. Rewrote most UI-related codes and adjusted some UI behviours.
+2. Slightly refined the protocol.
 
 v1.4.2
 1. Adjusted UI behaviours and fixed UI-related bugs.

@@ -34,6 +34,8 @@ namespace MapleStoryLauncher
             {
                 if (activeAccount != null)
                     autoSelect.Checked = accountManager.GetSettings(activeAccount).autoSelect;
+                else
+                    autoSelect.Checked = false;
 
                 autoSelect.TabStop = true;
             };

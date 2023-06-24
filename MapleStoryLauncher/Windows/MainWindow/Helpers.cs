@@ -42,7 +42,7 @@ namespace MapleStoryLauncher
                 }
         }
 
-        private void ShowError(BeanfunBroker.TransactionResult result)
+        private void ShowTransactionError(BeanfunBroker.TransactionResult result)
         {
             switch (result.Status)
             {
@@ -91,11 +91,11 @@ namespace MapleStoryLauncher
             return true;
         }
 
-        private const string gameFileName = "MapleStory.exe";
+        private const string gameExecutableName = "MapleStory.exe";
 
         private bool IsGameRunning()
         {
-            string processName = Path.GetFileNameWithoutExtension(gameFileName);
+            string processName = Path.GetFileNameWithoutExtension(gameExecutableName);
             if (Process.GetProcessesByName(processName).Length != 0)
                 return true;
             else
@@ -103,63 +103,50 @@ namespace MapleStoryLauncher
         }
 
 
-        private const string gameName = "新楓之谷";
-
         public bool CheckGamePath()
         {
-            if (Properties.Settings.Default.gamePath == "")
-            {
-                //Use default value
-                object path = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\GAMANIA\MapleStory")?.GetValue("Path");
-                if (path != null)
-                    Properties.Settings.Default.gamePath = path.ToString();
-                //For 32-bit client on 32-bit OS or 64-bit client on 64-bit OS
-                else if (File.Exists(@"C:\Program Files\Gamania\MapleStory\" + gameFileName))
-                    Properties.Settings.Default.gamePath = @"C:\Program Files\Gamania\MapleStory\" + gameFileName;
-                //For 32-bit client on 64-bit OS
-                else if (File.Exists(@"C:\Program Files (x86)\Gamania\MapleStory\" + gameFileName))
-                    Properties.Settings.Default.gamePath = @"C:\Program Files (x86)\Gamania\MapleStory\" + gameFileName;
-            }
+            if (IsGameExecutable(Properties.Settings.Default.gamePath))
+                return true;
 
-            if (!Properties.Settings.Default.gamePath.EndsWith(gameFileName) ||
-                !File.Exists(Properties.Settings.Default.gamePath))
+            //Default values
+            string path;
+            if (IsGameExecutable(path = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\GAMANIA\MapleStory")?.GetValue("Path")?.ToString()) ||
+                IsGameExecutable(path = @"C:\Program Files\Gamania\MapleStory\" + gameExecutableName) || //For 32-bit client on 32-bit OS or 64-bit client on 64-bit OS
+                IsGameExecutable(path = @"C:\Program Files (x86)\Gamania\MapleStory\" + gameExecutableName)) //For 32-bit client on 64-bit OS
+                Properties.Settings.Default.gamePath = path;
+            //Ask
+            else
             {
-                bool pathOK;
+                OpenFileDialog askForGamePath = new()
+                {
+                    Filter = String.Format("新楓之谷 ({0})|{0}|所有檔案 (*.*)|*.*", gameExecutableName),
+                    Title = "選取遊戲執行檔",
+                    InitialDirectory = Properties.Settings.Default.gamePath
+                };
+
                 do
                 {
-                    if (!RequestGamePath())
+                    if (askForGamePath.ShowDialog() == DialogResult.Cancel)
                         return false;
-                    if (!Properties.Settings.Default.gamePath.EndsWith(gameFileName))
-                    {
-                        MessageBox.Show($"請選取{gameName}遊戲執行檔。", "錯誤檔案");
-                        pathOK = false;
-                    }
-                    else
-                        pathOK = true;
+
+                    if (!askForGamePath.FileName.EndsWith(gameExecutableName))
+                        MessageBox.Show($"請選取新楓之谷遊戲執行檔。", "錯誤檔案");
                 }
-                while (!pathOK);
+                while (!IsGameExecutable(askForGamePath.FileName));
+
+                Properties.Settings.Default.gamePath = askForGamePath.FileName;
             }
 
             Properties.Settings.Default.Save();
             return true;
         }
 
-        private bool RequestGamePath()
+        private bool IsGameExecutable(string path)
         {
-            OpenFileDialog openFileDialog = new()
-            {
-                Filter = String.Format("{0} ({1})|{1}|所有檔案 (*.*)|*.*", gameName, gameFileName),
-                Title = "選取遊戲執行檔",
-                InitialDirectory = Properties.Settings.Default.gamePath
-            };
-
-            if (openFileDialog.ShowDialog() == DialogResult.OK)
-            {
-                Properties.Settings.Default.gamePath = openFileDialog.FileName;
-                return true;
-            }
-            else
-                return false;
+            return path != null &&
+                   path != "" &&
+                   path.EndsWith(gameExecutableName) &&
+                   File.Exists(path);
         }
 
         private static bool StartGame()
@@ -167,9 +154,9 @@ namespace MapleStoryLauncher
             return StartProcess(Properties.Settings.Default.gamePath, "");
         }
 
-        private static bool StartGame(string username, string otp)
+        private static bool StartGame(string argPrefix, string username, string otp)
         {
-            return StartProcess(Properties.Settings.Default.gamePath, $"tw.login.maplestory.beanfun.com 8484 BeanFun {username} {otp}");
+            return StartProcess(Properties.Settings.Default.gamePath, $"{argPrefix} {username} {otp}");
         }
 
         private static bool StartProcess(string path, string arg)

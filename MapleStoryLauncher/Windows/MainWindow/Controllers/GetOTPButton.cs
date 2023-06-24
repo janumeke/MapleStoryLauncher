@@ -38,6 +38,7 @@ namespace MapleStoryLauncher
                 this.Activated += OnMainWindowActivated;
 
                 getOtpButton.TabStop = true;
+                this.AcceptButton = getOtpButton;
             };
 
             SyncEvents.LoggedIn_Loaded += username =>

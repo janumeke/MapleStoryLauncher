@@ -34,7 +34,9 @@ namespace MapleStoryLauncher
             SyncEvents.LoggedIn_Loading += username =>
             {
                 if (activeAccount != null)
-                    autoSelect.Checked = accountManager.GetSettings(activeAccount).autoSelect;
+                    autoLaunch.Checked = accountManager.GetSettings(activeAccount).autoLaunch;
+                else
+                    autoLaunch.Checked = false;
 
                 autoLaunch.TabStop = true;
             };

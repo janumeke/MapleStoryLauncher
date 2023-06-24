@@ -120,7 +120,7 @@ namespace MapleStoryLauncher
                         {
                             friendlyName = System.Web.HttpUtility.HtmlDecode(match.Groups[4].Value),
                             username = match.Groups[2].Value,
-                            sn = match.Groups[3].Value
+                            sn = match.Groups[3].Value,
                         });
                 }
                 #endregion
@@ -136,6 +136,7 @@ namespace MapleStoryLauncher
         public class OTPResult : TransactionResult
         {
             public string Username { get; set; }
+            public string ArgPrefix { get; set; } //Prefix of startup argument for auto-login
         }
 
         /**
@@ -251,6 +252,21 @@ namespace MapleStoryLauncher
                 if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
                     return new OTPResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("adapter 1", res.Status) };
 
+                body = res.Message.Content.ReadAsStringAsync().Result;
+                match = Regex.Match(body, @"exe=([\S]*) ([^%]*) %s %s");
+                if (match == Match.Empty)
+                    return new OTPResult { Status = TransactionResultStatus.Failed, Message = "找不到啟動參數。" };
+                //string executableName = match.Groups[1].Value;
+                string argPrefix = match.Groups[2].Value;
+                /*match = Regex.Match(body, @"dir_reg=(.*)");
+                if (match == Match.Empty)
+                    return new OTPResult { Status = TransactionResultStatus.Failed, Message = "找不到登錄檔路徑。" };
+                string regPath = match.Groups[1].Value;
+                match = Regex.Match(body, @"dir_value_name=(.*)");
+                if (match == Match.Empty)
+                    return new OTPResult { Status = TransactionResultStatus.Failed, Message = "找不到登錄檔鍵名。" };
+                string regKey = match.Groups[1].Value;*/
+
                 url = $"https://tw.beanfun.com/generic_handlers/adapter.ashx?cmd=06002&sn={sn}&result=1&d={GetDateTime(DateTimeType.System)}";
                 res = client.HttpGet(url);
                 if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
@@ -288,7 +304,7 @@ namespace MapleStoryLauncher
                     return new OTPResult { Status = TransactionResultStatus.Failed, Message = "不是預期的結果。(get_result)" };
                 #endregion
 
-                return new OTPResult { Status = TransactionResultStatus.Success, Message = otp, Username = gameAccount.username };
+                return new OTPResult { Status = TransactionResultStatus.Success, Message = otp, Username = gameAccount.username, ArgPrefix = argPrefix };
             }
             finally
             {

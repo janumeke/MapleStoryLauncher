@@ -18,8 +18,8 @@ namespace MapleStoryLauncher
                 accountInput.Items.Clear();
                 accountInput.Items.AddRange(accountManager.GetListOfUsernames().ToArray());
 
-                if (accountInput.Items.Contains(""))
-                    accountInput.SelectedItem = "";
+                if (accountManager.Contains(""))
+                    SyncEvents.LoadAccount("");
             };
 
             void OnLeave(object sender, EventArgs _)

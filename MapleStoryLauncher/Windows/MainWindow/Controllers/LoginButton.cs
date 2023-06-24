@@ -139,7 +139,6 @@ namespace MapleStoryLauncher
             {
                 UpdateText();
                 loginButton.Enabled = true;
-
                 this.AcceptButton = loginButton;
             };
 
