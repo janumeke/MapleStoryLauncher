@@ -162,6 +162,18 @@ namespace MapleStoryLauncher
         }
         #endregion
 
+        #region Points
+        private void getPointsWorker_DoWork(object sender, DoWorkEventArgs e)
+        {
+            e.Result = beanfun.GetRemainingPoints();
+        }
+
+        private void getPointsWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            SyncEvents.UpdatePoints((int)e.Result);
+        }
+        #endregion
+
         #region Ping
         private const int pingInterval = 10 * 60 * 1000; //10 mins
         private const int pingMaxFailedTries = 5;

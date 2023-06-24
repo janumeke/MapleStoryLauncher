@@ -12,6 +12,7 @@ namespace MapleStoryLauncher
         private static class SyncEvents
         {
             public delegate void EventHandler_Void();
+            public delegate void EventHandler_Int(int arg);
             public delegate void EventHandler_String(string arg);
             public delegate void EventHandler_StringBool(string arg1, bool arg2);
 
@@ -40,6 +41,11 @@ namespace MapleStoryLauncher
             public static void CancelLogin() { LoginFailed?.Invoke(); }
             public static void SucceedLogin(string username) { LoggedIn_Loading?.Invoke(username); LoggedIn_Loaded?.Invoke(username); }
             public static void LogOut(string username, bool auto) { LoggedOut?.Invoke(username, auto); }
+
+
+            public static event EventHandler_Int PointsUpdated;
+
+            public static void UpdatePoints(int points) { PointsUpdated?.Invoke(points); }
 
 
             public static event EventHandler_String OTPGetting;

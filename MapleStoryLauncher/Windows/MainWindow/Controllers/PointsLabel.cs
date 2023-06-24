@@ -15,27 +15,26 @@ namespace MapleStoryLauncher
                 this.Tip.SetToolTip(pointsLabel, "雙擊更新點數");
             };
 
-            void UpdatePoints()
+            SyncEvents.LoggedIn_Loading += username =>
+            {
+                getPointsWorker.RunWorkerAsync();
+            };
+
+            SyncEvents.PointsUpdated += points =>
             {
                 int rightX = pointsLabel.Location.X + pointsLabel.Width;
 
-                int points = beanfun.GetRemainingPoints();
                 if (points < 0)
                     pointsLabel.Text = "-- 點";
                 else
                     pointsLabel.Text = $"{points} 點";
 
                 pointsLabel.Location = new Point(rightX - pointsLabel.Width, pointsLabel.Location.Y);
-            }
-
-            SyncEvents.LoggedIn_Loading += username =>
-            {
-                UpdatePoints();
             };
 
             pointsLabel.DoubleClick += (sender, _) =>
             {
-                UpdatePoints();
+                getPointsWorker.RunWorkerAsync();
             };
         }
     }

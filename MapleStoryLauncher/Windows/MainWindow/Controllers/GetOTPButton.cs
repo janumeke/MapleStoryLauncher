@@ -73,10 +73,10 @@ namespace MapleStoryLauncher
                     StartGame();
                     SyncEvents.FinishLaunchingGame();
                 }
-                if (accountListView.SelectedItems.Count == 1 && !getOtpWorker.IsBusy)
+                if (accountListView.SelectedItems.Count == 1 && !getOTPWorker.IsBusy)
                 {
                     SyncEvents.GetOTP(accountListView.SelectedItems[0].SubItems[0].Text);
-                    getOtpWorker.RunWorkerAsync(gameAccounts[accountListView.SelectedIndices[0]]);
+                    getOTPWorker.RunWorkerAsync(gameAccounts[accountListView.SelectedIndices[0]]);
                 }
             };
 

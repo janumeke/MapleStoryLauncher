@@ -93,10 +93,7 @@ namespace MapleStoryLauncher
                         checkQRCodeStatusTimer.Enabled = false;
                         ShowWaitMessage();
                         if (Visible)
-                        {
-                            failedTries = 0;
-                            checkQRCodeStatusTimer.Enabled = true;
-                        }
+                            getQRCodeWorker.RunWorkerAsync();
                         break;
                     case BeanfunBroker.TransactionResultStatus.ConnectionLost:
                         if (++failedTries >= maxFailedTries)

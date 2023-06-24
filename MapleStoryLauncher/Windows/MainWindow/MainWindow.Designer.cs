@@ -50,11 +50,12 @@
             accountListView = new ListView();
             Nickname = new ColumnHeader();
             Account = new ColumnHeader();
-            getOtpWorker = new System.ComponentModel.BackgroundWorker();
+            getOTPWorker = new System.ComponentModel.BackgroundWorker();
             loginWorker = new System.ComponentModel.BackgroundWorker();
             Tip = new ToolTip(components);
             Notification = new ToolTip(components);
             pingTimer = new System.Windows.Forms.Timer(components);
+            getPointsWorker = new System.ComponentModel.BackgroundWorker();
             panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)maplePictureBox).BeginInit();
             ((System.ComponentModel.ISupportInitialize)beanfunPictureBox).BeginInit();
@@ -297,17 +298,13 @@
             Account.Text = "登入帳號";
             Account.Width = 123;
             // 
-            // getOtpWorker
+            // getOTPWorker
             // 
-            getOtpWorker.WorkerReportsProgress = true;
-            getOtpWorker.WorkerSupportsCancellation = true;
-            getOtpWorker.DoWork += getOTPWorker_DoWork;
-            getOtpWorker.RunWorkerCompleted += getOTPWorker_RunWorkerCompleted;
+            getOTPWorker.DoWork += getOTPWorker_DoWork;
+            getOTPWorker.RunWorkerCompleted += getOTPWorker_RunWorkerCompleted;
             // 
             // loginWorker
             // 
-            loginWorker.WorkerReportsProgress = true;
-            loginWorker.WorkerSupportsCancellation = true;
             loginWorker.DoWork += loginWorker_DoWork;
             loginWorker.RunWorkerCompleted += loginWorker_RunWorkerCompleted;
             // 
@@ -327,6 +324,11 @@
             // pingTimer
             // 
             pingTimer.Tick += pingTimer_Tick;
+            // 
+            // getPointsWorker
+            // 
+            getPointsWorker.DoWork += getPointsWorker_DoWork;
+            getPointsWorker.RunWorkerCompleted += getPointsWorker_RunWorkerCompleted;
             // 
             // MainWindow
             // 
@@ -366,7 +368,7 @@
         private Button loginButton;
         private TextBox otpDisplay;
         private Button getOtpButton;
-        private System.ComponentModel.BackgroundWorker getOtpWorker;
+        private System.ComponentModel.BackgroundWorker getOTPWorker;
         private System.ComponentModel.BackgroundWorker loginWorker;
         private ToolTip Tip;
         private ToolTip Notification;
@@ -379,6 +381,7 @@
         private Label pointsLabel;
         private ComboBox accountInput;
         private PictureBox AddRemoveAccount;
+        private System.ComponentModel.BackgroundWorker getPointsWorker;
     }
 }
 
