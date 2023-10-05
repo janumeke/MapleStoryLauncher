@@ -17,7 +17,8 @@ namespace MapleStoryLauncher
 
             SyncEvents.LoggedIn_Loading += username =>
             {
-                getPointsWorker.RunWorkerAsync();
+                if(!getPointsWorker.IsBusy)
+                    getPointsWorker.RunWorkerAsync();
             };
 
             SyncEvents.PointsUpdated += points =>
@@ -34,7 +35,8 @@ namespace MapleStoryLauncher
 
             pointsLabel.DoubleClick += (sender, _) =>
             {
-                getPointsWorker.RunWorkerAsync();
+                if (!getPointsWorker.IsBusy)
+                    getPointsWorker.RunWorkerAsync();
             };
         }
     }

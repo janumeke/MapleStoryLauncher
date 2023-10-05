@@ -20,6 +20,16 @@ namespace MapleStoryLauncher
             InitializeComponent();
         }
 
+        protected override bool ProcessDialogKey(Keys keyData)
+        {
+            if(keyData == Keys.Escape)
+            {
+                Close();
+                return true;
+            }
+            return base.ProcessDialogKey(keyData);
+        }
+
         private object result_lock = new();
         private BeanfunBroker.TransactionResult result = default;
 
@@ -33,6 +43,10 @@ namespace MapleStoryLauncher
 
         private void AppAuthWindow_Shown(object sender, EventArgs e)
         {
+            lock (result_lock)
+            {
+                result = default;
+            }
             lock (checkAppAuthStatusTimer)
             {
                 failedTries = 0;
