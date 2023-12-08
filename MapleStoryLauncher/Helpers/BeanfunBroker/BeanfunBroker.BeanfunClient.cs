@@ -36,23 +36,17 @@ namespace MapleStoryLauncher
                         };
                     else
                         os = win10;
-                    string firefox = $"Mozilla/5.0 (Windows {os}; Win64; x64; rv:98.0) Gecko/20100101 Firefox/98.0";
-                    string chrome = $"Mozilla/5.0 (Windows {os}; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.74 Safari/537.36";
-                    string edge = $"Mozilla/5.0 (Windows {os}; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.74 Safari/537.36 Edg/99.0.1150.36";
-                    using RegistryKey key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\Shell\Associations\UrlAssociations\https\UserChoice");
-                    if (key != null)
-                    {
-                        object progId = key.GetValue("ProgId");
-                        if (progId != null)
-                            userAgent = progId.ToString() switch
-                            {
-                                "FirefoxURL" => firefox,
-                                "ChromeHTML" => chrome,
-                                _ => edge,
-                            };
-                        else
-                            userAgent = edge;
-                    }
+                    
+                    string firefox = $"Mozilla/5.0 (Windows {os}; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0";
+                    string chrome = $"Mozilla/5.0 (Windows {os}; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+                    string edge = $"Mozilla/5.0 (Windows {os}; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0";
+                    string progID = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\Shell\Associations\UrlAssociations\https\UserChoice")?.GetValue("ProgID")?.ToString();
+                    if (progID is null)
+                        userAgent = edge;
+                    else if (progID.StartsWith("FirefoxURL"))
+                        userAgent = firefox;
+                    else if (progID == "ChromeHTML")
+                        userAgent = chrome;
                     else
                         userAgent = edge;
                 }
