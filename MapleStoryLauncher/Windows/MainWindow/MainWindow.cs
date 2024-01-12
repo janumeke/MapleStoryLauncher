@@ -16,6 +16,7 @@ namespace MapleStoryLauncher
 {
     public partial class MainWindow : Form
     {
+        private ReCaptchaWindow reCaptchaWindow = new();
 
         public MainWindow()
         {
@@ -79,12 +80,12 @@ namespace MapleStoryLauncher
 
         private void MainWindow_FormClosing(object sender, FormClosingEventArgs e)
         {
-            bool loggedInBefore = loggedIn;
+            beanfun.Cancel();
 
+            bool loggedInBefore = loggedIn;
             if (!AutoLogOut())
                 e.Cancel = true;
-
-            if (activeAccount != null)
+            else if (activeAccount != null)
                 SyncEvents.CloseAccount(activeAccount, loggedInBefore);
         }
 
@@ -115,7 +116,26 @@ namespace MapleStoryLauncher
             }
             else
             {
-                BeanfunBroker.TransactionResult result = beanfun.Login(args.username, args.password);
+                BeanfunBroker.TransactionResult result;
+                result = beanfun.GetReCaptcha();
+                if(result.Status == BeanfunBroker.TransactionResultStatus.Success)
+                {
+                    reCaptchaWindow.SetAddress(result.Message);
+                    Invoke(() => {
+                        reCaptchaWindow.SetCookies(beanfun.GetAllCookies());
+                        reCaptchaWindow.ShowDialog();
+                    });
+                    string reCaptchaResponse = reCaptchaWindow.GetResult();
+                    if (reCaptchaResponse == default)
+                    {
+                        beanfun.LocalLogout();
+                        e.Cancel = true;
+                    }
+                    else if(reCaptchaResponse == "NULL")
+                        result = beanfun.Login(args.username, args.password);
+                    else
+                        result = beanfun.Login(args.username, args.password, reCaptchaResponse);
+                }
                 switch (result.Status)
                 {
                     case BeanfunBroker.TransactionResultStatus.RequireAppAuthentication:
@@ -124,7 +144,10 @@ namespace MapleStoryLauncher
                         appAuthWindow.ShowDialog();
                         e.Result = appAuthWindow.GetResult();
                         if (e.Result == default(BeanfunBroker.TransactionResult))
+                        {
+                            beanfun.LocalLogout();
                             e.Cancel = true;
+                        }
                         break;
                     default:
                         e.Result = result;

@@ -110,7 +110,7 @@ namespace MapleStoryLauncher
 
             //Default values
             string path;
-            if (IsGameExecutable(path = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\GAMANIA\MapleStory")?.GetValue("Path")?.ToString()) ||
+            if (IsGameExecutable(path = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\GAMANIA\MapleStory")?.GetValue("Path")?.ToString()) ||
                 IsGameExecutable(path = @"C:\Program Files\Gamania\MapleStory\" + gameExecutableName) || //For 32-bit client on 32-bit OS or 64-bit client on 64-bit OS
                 IsGameExecutable(path = @"C:\Program Files (x86)\Gamania\MapleStory\" + gameExecutableName)) //For 32-bit client on 64-bit OS
                 Properties.Settings.Default.gamePath = path;

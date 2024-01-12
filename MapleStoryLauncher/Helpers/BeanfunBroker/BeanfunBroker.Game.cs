@@ -44,15 +44,19 @@ namespace MapleStoryLauncher
         /**
          * <summary>Get all loginable MapleStory accounts associated with this beanfun account.</summary>
          * <returns>
-         * Possible statuses (message, gameAccounts):
-         *   Failed (error description, none):
-         *     1. This beanfun account is currently not logged in.
-         *     2. Requests to beanfun returns a non-success http code.
-         *     3. Returned messages don't have the expected contents.
-         *   ConnectionLost (description, none):
-         *     Any connection failed.
-         *   Success (none, MapleStory accounts): 
-         *     All loginable MapleStory accounts are retrieved.
+         * Possible statuses (message, gameAccounts):<list type="bullet">
+         *     <item><description>Failed (error description, none):<list type="number">
+         *         <item><description>This beanfun account is currently not logged in.</description></item>
+         *         <item><description>Requests to beanfun returns a non-success http code.</description></item>
+         *         <item><description>Returned messages don't have the expected contents.</description></item>
+         *     </list></description></item>
+         *     <item><description>ConnectionLost (description, none):
+         *         <para>Any connection failed or was cancelled.</para>
+         *     </description></item>
+         *     <item><description>Success (none, MapleStory accounts): 
+         *         <para>All loginable MapleStory accounts are retrieved.</para>
+         *     </description></item>
+         * </list>
          * </returns>
          */
         public GameAccountResult GetGameAccounts()
@@ -142,17 +146,22 @@ namespace MapleStoryLauncher
         /**
          * <summary>Get the OTP for the specified MapleStory account.</summary>
          * <returns>
-         * Possible statuses (message, username):
-         *   Failed (error description, none):
-         *     1. This beanfun account is currently not logged in.
-         *     2. Requests to beanfun returns a non-success http code.
-         *     3. Returned messages don't have the expected contents.
-         *   ConnectionLost (description, none):
-         *     Any connection failed.
-         *   Denied (reason given by beanfun):
-         *     Beanfun rejected the request for any reason.
-         *   Success (retrieved OTP, username of the specified MapleStory acoount): 
-         *     The OTP for the specified MapleStory account is retrieved.
+         * Possible statuses (message, username):<list type="bullet">
+         *     <item><description>Failed (error description, none):<list type="number">
+         *         <item><description>This beanfun account is currently not logged in.</description></item>
+         *         <item><description>Requests to beanfun returns a non-success http code.</description></item>
+         *         <item><description>Returned messages don't have the expected contents.</description></item>
+         *     </list></description></item>
+         *     <item><description>ConnectionLost (description, none):
+         *         <para>Any connection failed or was cancelled.</para>
+         *     </description></item>
+         *     <item><description>Denied (reason given by beanfun):
+         *         <para>Beanfun rejected the request for any reason.</para>
+         *     </description></item>
+         *     <item><description>Success (retrieved OTP, username of the specified MapleStory acoount):
+         *         <para>The OTP for the specified MapleStory account is retrieved.</para>
+         *     </description></item>
+         * </list>
          * </returns>
          */
         public OTPResult GetOTP(GameAccount gameAccount)

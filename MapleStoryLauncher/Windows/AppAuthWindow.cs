@@ -22,7 +22,7 @@ namespace MapleStoryLauncher
 
         protected override bool ProcessDialogKey(Keys keyData)
         {
-            if(keyData == Keys.Escape)
+            if (keyData == Keys.Escape)
             {
                 Close();
                 return true;
@@ -30,7 +30,7 @@ namespace MapleStoryLauncher
             return base.ProcessDialogKey(keyData);
         }
 
-        private object result_lock = new();
+        private readonly object result_lock = new();
         private BeanfunBroker.TransactionResult result = default;
 
         public BeanfunBroker.TransactionResult GetResult()
@@ -47,11 +47,8 @@ namespace MapleStoryLauncher
             {
                 result = default;
             }
-            lock (checkAppAuthStatusTimer)
-            {
-                failedTries = 0;
-                checkAppAuthStatusTimer.Enabled = true;
-            }
+            failedTries = 0;
+            checkAppAuthStatusTimer.Enabled = true;
         }
 
         private const int maxFailedTries = 3;
@@ -59,41 +56,36 @@ namespace MapleStoryLauncher
 
         private void checkAppAuthStatusTimer_Tick(object sender, EventArgs e)
         {
-            if (!checkAppAuthStatusTimer.Enabled)
-                return;
-
-            lock (checkAppAuthStatusTimer)
+            BeanfunBroker.TransactionResult checkResult = MainWindow.beanfun.CheckAppAuthentication();
+            switch (checkResult.Status)
             {
-                BeanfunBroker.TransactionResult checkResult = MainWindow.beanfun.CheckAppAuthentication();
-                switch (checkResult.Status)
-                {
-                    case BeanfunBroker.TransactionResultStatus.RequireAppAuthentication:
-                        failedTries = 0;
-                        break;
-                    case BeanfunBroker.TransactionResultStatus.ConnectionLost:
-                        if (++failedTries >= maxFailedTries)
-                        {
-                            lock (result_lock)
-                            {
-                                result = checkResult;
-                            }
-                            Close(); //Deadlock Warning: hold (checkAppAuthStatusTimer) and wait (result, MainWindow.beanfun)
-                        }
-                        break;
-                    default:
+                case BeanfunBroker.TransactionResultStatus.RequireAppAuthentication:
+                    failedTries = 0;
+                    break;
+                case BeanfunBroker.TransactionResultStatus.ConnectionLost:
+                    if (++failedTries >= maxFailedTries)
+                    {
                         lock (result_lock)
                         {
                             result = checkResult;
                         }
-                        Close(); //Deadlock Warning: hold (checkAppAuthStatusTimer) and wait (result, MainWindow.beanfun)
-                        break;
-                }
+                        Close();
+                    }
+                    break;
+                default:
+                    lock (result_lock)
+                    {
+                        result = checkResult;
+                    }
+                    Close();
+                    break;
             }
         }
 
         private void AppAuthWindow_FormClosing(object sender, FormClosingEventArgs e)
         {
             checkAppAuthStatusTimer.Enabled = false;
+            MainWindow.beanfun.Cancel();
             lock (result_lock)
             {
                 if (result == default //manual closing while pending

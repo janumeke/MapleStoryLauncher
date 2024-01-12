@@ -30,7 +30,7 @@ namespace MapleStoryLauncher
             return base.ProcessDialogKey(keyData);
         }
 
-        private object result_lock = new();
+        private readonly object result_lock = new();
         private BeanfunBroker.TransactionResult result;
 
         public BeanfunBroker.TransactionResult GetResult()
@@ -47,13 +47,9 @@ namespace MapleStoryLauncher
             {
                 result = default;
             }
-            TopMost = true;
             ShowWaitMessage();
             if (!getQRCodeWorker.IsBusy)
-                lock (checkQRCodeStatusTimer)
-                {
-                    getQRCodeWorker.RunWorkerAsync();
-                }
+                getQRCodeWorker.RunWorkerAsync();
         }
 
         private void getQRCodeWorker_DoWork(object sender, DoWorkEventArgs e)
@@ -92,41 +88,34 @@ namespace MapleStoryLauncher
 
         private void checkQRCodeStatusTimer_Tick(object sender, EventArgs e)
         {
-            if (!checkQRCodeStatusTimer.Enabled)
-                return;
-
-            lock (checkQRCodeStatusTimer)
+            BeanfunBroker.TransactionResult checkResult = MainWindow.beanfun.CheckQRCode();
+            switch (checkResult.Status)
             {
-                BeanfunBroker.TransactionResult checkResult = MainWindow.beanfun.CheckQRCode(); //Deadlock Warning: hold (checkQRCodeStatusTimer) and wait (MainWindow.beanfun)
-                switch (checkResult.Status)
-                {
-                    case BeanfunBroker.TransactionResultStatus.RequireQRCode:
-                        failedTries = 0;
-                        break;
-                    case BeanfunBroker.TransactionResultStatus.Expired:
-                        checkQRCodeStatusTimer.Enabled = false;
-                        ShowWaitMessage();
-                        if (Visible)
-                            getQRCodeWorker.RunWorkerAsync();
-                        break;
-                    case BeanfunBroker.TransactionResultStatus.ConnectionLost:
-                        if (++failedTries >= maxFailedTries)
-                        {
-                            lock (result_lock) //Deadlock Warning: hold (checkQRCodeStatusTimer) and wait (result)
-                            {
-                                result = checkResult;
-                            }
-                            Close(); //Deadlock Warning: hold (checkQRCodeStatusTimer) and wait (result, MainWindow.beanfun)
-                        }
-                        break;
-                    default:
-                        lock (result_lock) //Deadlock Warning: hold (checkQRCodeStatusTimer) and wait (result)
+                case BeanfunBroker.TransactionResultStatus.RequireQRCode:
+                    failedTries = 0;
+                    break;
+                case BeanfunBroker.TransactionResultStatus.Expired:
+                    checkQRCodeStatusTimer.Enabled = false;
+                    ShowWaitMessage();
+                    getQRCodeWorker.RunWorkerAsync();
+                    break;
+                case BeanfunBroker.TransactionResultStatus.ConnectionLost:
+                    if (++failedTries >= maxFailedTries)
+                    {
+                        lock (result_lock)
                         {
                             result = checkResult;
                         }
-                        Close(); //Deadlock Warning: hold (checkQRCodeStatusTimer) and wait (result, MainWindow.beanfun)
-                        break;
-                }
+                        Close();
+                    }
+                    break;
+                default:
+                    lock (result_lock)
+                    {
+                        result = checkResult;
+                    }
+                    Close();
+                    break;
             }
         }
 
@@ -145,6 +134,7 @@ namespace MapleStoryLauncher
         private void QRCodeWindow_FormClosing(object sender, FormClosingEventArgs e)
         {
             checkQRCodeStatusTimer.Enabled = false;
+            MainWindow.beanfun.Cancel();
             lock (result_lock)
             {
                 if (result == default //manual closing while pending

@@ -85,9 +85,9 @@ namespace MapleStoryLauncher
             }
 
             /**
-             * <summary>Get all cookies of the internal http client.</summary>
+             * <summary>Get the cookie container of the internal http client.</summary>
              */
-            public CookieContainer GetCookies()
+            public CookieContainer GetCookieContainer()
             {
                 return handler.CookieContainer;
             }
@@ -99,6 +99,19 @@ namespace MapleStoryLauncher
             {
                 handler = new();
                 client = new HttpClient(handler);
+            }
+
+            CancellationTokenSource cancellationSource = new();
+
+            /**
+             * <summary>Cancel any ongoing connection.</summary>
+             */
+            public void Cancel()
+            {
+                lock (cancellationSource)
+                {
+                    cancellationSource.Cancel();
+                }
             }
 
             public enum HttpResponseStatus
@@ -132,8 +145,13 @@ namespace MapleStoryLauncher
                     handler.SaveNextResponseUrlAsFurtherReferrer = handlerConfiguration.saveResponseUrlAsReferrer;
                 }
 
+                lock (cancellationSource)
+                {
+                    if(cancellationSource.IsCancellationRequested)
+                        cancellationSource = new();
+                }
                 HttpResponseMessage res;
-                try { res = client.Send(req); }
+                try { res = client.Send(req, cancellationSource.Token); }
                 catch { return new HttpResponse { Status = HttpResponseStatus.Disconnected }; }
                 if (!res.IsSuccessStatusCode)
                     return new HttpResponse { Status = HttpResponseStatus.Unsuccessful, Message = res };
@@ -154,8 +172,13 @@ namespace MapleStoryLauncher
 
                 req.Content = new FormUrlEncodedContent(form);
 
+                lock (cancellationSource)
+                {
+                    if (cancellationSource.IsCancellationRequested)
+                        cancellationSource = new();
+                }
                 HttpResponseMessage res;
-                try { res = client.Send(req); }
+                try { res = client.Send(req, cancellationSource.Token); }
                 catch { return new HttpResponse { Status = HttpResponseStatus.Disconnected }; }
                 if (!res.IsSuccessStatusCode)
                     return new HttpResponse { Status = HttpResponseStatus.Unsuccessful, Message = res };

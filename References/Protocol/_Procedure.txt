@@ -1,4 +1,4 @@
-Regular Login
+GetReCaptcha→Regular Login
 1. Denied → END
 2. Require App Authentication → Check App Authentication
 3. Successful

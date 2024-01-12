@@ -11,10 +11,8 @@ using Newtonsoft.Json;
 namespace MapleStoryLauncher
 {
     /**
-     * <summary>
-     * <para>A BeanfunBroker instance can be associated with a beanfun account.</para>
-     * <para>BeanfunBroker has reader-writer lock that may block when calling its public methods.</para>
-     * </summary>
+     * <summary>A BeanfunBroker instance can be associated with a beanfun account.</summary>
+     * <remarks>BeanfunBroker has reader-writer lock that may block when calling its public methods.</remarks>
      */
     public partial class BeanfunBroker
     {
@@ -38,6 +36,22 @@ namespace MapleStoryLauncher
             {
                 rwLock.ExitReadLock();
             }
+        }
+
+        /**
+         * <summary>Get all cookies of the internal http client.</summary>
+         */
+        public CookieCollection GetAllCookies()
+        {
+            return client.GetCookieContainer().GetAllCookies();
+        }
+
+        /**
+         * <summary>Cancel any ongoing connection.</summary>
+         */
+        public void Cancel()
+        {
+            client.Cancel();
         }
 
         private class BeanfunAccount
@@ -64,15 +78,15 @@ namespace MapleStoryLauncher
 
         /**
          * <summary>Get the remaining points of the beanfun account.</summary>
-         * <returns>
-         *   -1 if
-         *     1. This beanfun account is currently not logged in.
-         *     2. Requests to beanfun returns a non-success http code.
-         *     3. Returned messages don't have the expected contents.
-         *     4. Any connection failed.
-         *   ;
-         *   points if successful.
-         * </returns>
+         * <returns><list type="bullet">
+         *     <item><description>-1 if<list type="number">
+         *         <item><description>This beanfun account is currently not logged in.</description></item>
+         *         <item><description>Requests to beanfun returns a non-success http code.</description></item>
+         *         <item><description>Returned messages don't have the expected contents.</description></item>
+         *         <item><description>Any connection failed or was cancelled.</description></item>
+         *     </list></description></item>
+         *     <item><description>points if successful.</description></item>
+         * </list></returns>
          */
         public int GetRemainingPoints()
         {
@@ -157,17 +171,22 @@ namespace MapleStoryLauncher
         /**
          * <summary>Check the login status of beanfun account.</summary>
          * <returns>
-         * Possible statuses (message):
-         *   Failed (error description):
-         *     1. This beanfun account is currently not logged in.
-         *     2. Requests to beanfun returns a non-success http code.
-         *     3. Returned messages don't have the expected contents.
-         *   ConnectionLost (description):
-         *     Any connection failed.
-         *   LoginFirst (none):
-         *     The account is logged out.
-         *   Success (username of this beanfun account): 
-         *     The account is still logged in.
+         * Possible statuses (message):<list type="bullet">
+         *     <item><description>Failed (error description):<list type="number">
+         *         <item><description>This beanfun account is currently not logged in.</description></item>
+         *         <item><description>Requests to beanfun returns a non-success http code.</description></item>
+         *         <item><description>Returned messages don't have the expected contents.</description></item>
+         *     </list></description></item>
+         *     <item><description>ConnectionLost (description):
+         *         <para>Any connection failed or was cancelled.</para>
+         *     </description></item>
+         *     <item><description>LoginFirst (none):
+         *         <para>The account is logged out.</para>
+         *     </description></item>
+         *     <item><description>Success (username of this beanfun account):
+         *         <para>The account is still logged in.</para>
+         *     </description></item>
+         * </list>
          * </returns>
          */
         public TransactionResult Ping()

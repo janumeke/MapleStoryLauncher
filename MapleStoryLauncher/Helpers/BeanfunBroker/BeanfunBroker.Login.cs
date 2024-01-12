@@ -114,27 +114,27 @@ namespace MapleStoryLauncher
         }
 
         /**
-         * <summary>Login to beanfun by an account and a password.</summary>
+         * <summary>Get the link to a page where you get response from reCAPTCHA for login.</summary>
          * <returns>
-         * Possible statuses (message):
-         *   Failed (error description):
-         *     1. This account is currently logged in.
-         *     2. Requests to beanfun returns a non-success http code.
-         *     3. Returned messages don't have the expected contents.
-         *   ConnectionLost (description):
-         *     Any connection failed.
-         *   RequireAppAuthentication (none):
-         *     App authentication is required by beanfun. An incomplete account has been created.(See '<see cref="LocalLogout"/>'.)
-         *   Denied (reason given by beanfun):
-         *     Beanfun rejected this login for any reason.
-         *   Success (none): 
-         *     The account is logged in.
+         * Possible statuses (message):<list type="bullet">
+         *     <item><description>Failed (error description):<list type="number">
+         *         <item><description>This account is currently logged in or there is an incomplete account.</description></item>
+         *         <item><description>Requests to beanfun returns a non-success http code.</description></item>
+         *         <item><description>Returned messages don't have the expected contents.</description></item>
+         *     </list></description></item>
+         *     <item><description>ConnectionLost (description):
+         *         <para>Any connection failed or was cancelled.</para>
+         *     </description></item>
+         *     <item><description>Success (the link):
+         *         <para>The link to reCAPTCHA is acquired. An incomplete account has been created.(See '<see cref="LocalLogout"/>'.)</para>
+         *     </description></item>
+         * </list>
          * </returns>
          */
-        public TransactionResult Login(string username, string password)
+        public TransactionResult GetReCaptcha()
         {
             if (account != default(BeanfunAccount))
-                return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "登入狀態不允許此操作。(一般登入)" };
+                return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "登入狀態不允許此操作。(reCAPTCHA)" };
 
             rwLock.EnterWriteLock();
             try
@@ -147,14 +147,12 @@ namespace MapleStoryLauncher
                     skey = getskey.Message;
 
                 string url;
-                string body;
-                Match match;
 
                 #region Login page(Regular)
                 url = $"https://tw.newlogin.beanfun.com/loginform.aspx?skey={skey}&display_mode=2";
                 res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
                 {
-                    setReferrer= true,
+                    setReferrer = true,
                     saveResponseUrlAsReferrer = true
                 });
                 if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
@@ -171,28 +169,90 @@ namespace MapleStoryLauncher
                     return new TransactionResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("loginform", res.Status) };
                 #endregion
 
+                account = new BeanfunAccount
+                {
+                    skey = skey
+                };
+                return new TransactionResult { Status = TransactionResultStatus.Success, Message = $"https://tw.newlogin.beanfun.com/login/id-pass_form.aspx?skey={skey}&clientID=undefined" };
+            }
+            finally
+            {
+                rwLock.ExitWriteLock();
+            }
+        }
+
+        /**
+         * <summary>Login to beanfun by an account, a password and a reCAPTCHA response (if required).</summary>
+         * <remarks>You need to call <c>GetReCaptcha()</c> whether reCAPTCHA is required or not.</remarks>
+         * <returns>
+         * Possible statuses (message):<list type="bullet">
+         *     <item><description>Failed (error description):<list type="number">
+         *         <item><description><c>GetReCaptcha()</c> hasn't been called.</description></item>
+         *         <item><description>This account is currently logged in or there is an incomplete account from <c>Login()</c> or <c>GetQRCode()</c> but <c>GetReCaptcha()</c>. The incomplete account is not cleared.(See '<see cref="LocalLogout"/>'.)</description></item>
+         *         <item><description>Requests to beanfun returns a non-success http code.</description></item>
+         *         <item><description>Returned messages don't have the expected contents.</description></item>
+         *     </list></description></item>
+         *     <item><description>ConnectionLost (description):
+         *         <para>Any connection failed or was cancelled.</para>
+         *     </description></item>
+         *     <item><description>RequireAppAuthentication (none):
+         *         <para>App authentication is required by beanfun. The incomplete account is not cleared.(See '<see cref="LocalLogout"/>'.)</para>
+         *     </description></item>
+         *     <item><description>Denied (reason given by beanfun):
+         *         <para>Beanfun rejected this login for any reason.</para>
+         *     </description></item>
+         *     <item><description>Success (none):
+         *         <para>The account is logged in.</para>
+         *     </description></item>
+         * </list>
+         * </returns>
+         */
+        public TransactionResult Login(string username, string password, string reCaptchaResponse = default)
+        {
+            if (account == default(BeanfunAccount) || account.lt != default || account.encryptData != default || account.webToken != default)
+                return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "登入狀態不允許此操作。(一般登入)" };
+
+            rwLock.EnterWriteLock();
+            try
+            {
+                string url;
+                string body;
+                Match match;
+
                 #region Get viewState, viewStateGenerator and eventValidation
-                url = $"https://tw.newlogin.beanfun.com/login/id-pass_form.aspx?skey={skey}&clientID=undefined";
+                url = $"https://tw.newlogin.beanfun.com/login/id-pass_form.aspx?skey={account.skey}&clientID=undefined";
                 res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
                 {
                     setReferrer = true,
                     saveResponseUrlAsReferrer = true
                 });
                 if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                {
+                    account = default;
                     return new TransactionResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("viewState, viewStateGenerator, eventValidation", res.Status) };
+                }
 
                 body = res.Message.Content.ReadAsStringAsync().Result;
                 match = Regex.Match(body, @"<input type=""hidden"" name=""__VIEWSTATE"" id=""__VIEWSTATE"" value=""([^""]*)"" />");
                 if (match == Match.Empty)
+                {
+                    account = default;
                     return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "找不到 viewState。" };
+                }
                 string viewState = match.Groups[1].Value;
                 match = Regex.Match(body, @"<input type=""hidden"" name=""__VIEWSTATEGENERATOR"" id=""__VIEWSTATEGENERATOR"" value=""([^""]*)"" />");
                 if (match == Match.Empty)
+                {
+                    account = default;
                     return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "找不到 viewStateGenerator。" };
+                }
                 string viewStateGenerator = match.Groups[1].Value;
                 match = Regex.Match(body, @"<input type=""hidden"" name=""__EVENTVALIDATION"" id=""__EVENTVALIDATION"" value=""([^""]*)"" />");
                 if (match == Match.Empty)
+                {
+                    account = default;
                     return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "找不到 eventValidation。" };
+                }
                 string eventValidation = match.Groups[1].Value;
 
                 MatchCollection matches = Regex.Matches(body, @"<script src=""\/WebResource\.axd\?([^""]*)"" type=""text\/javascript""><\/script>");
@@ -204,13 +264,16 @@ namespace MapleStoryLauncher
                         setReferrer = true
                     });
                     if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                    {
+                        account = default;
                         return new TransactionResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("WebResource", res.Status) };
+                    }
                 }
                 #endregion
 
                 #region Get bfWebToken, writeUrl and akey
-                url = $"https://tw.newlogin.beanfun.com/login/id-pass_form.aspx?skey={skey}&clientID=undefined";
-                res = client.HttpPost(url, new Dictionary<string, string>
+                url = $"https://tw.newlogin.beanfun.com/login/id-pass_form.aspx?skey={account.skey}&clientID=undefined";
+                Dictionary<string, string> form = new()
                 {
                     { "__EVENTTARGET", "" },
                     { "__EVENTARGUMENT", "" },
@@ -220,13 +283,19 @@ namespace MapleStoryLauncher
                     { "t_AccountID", username },
                     { "t_Password", password },
                     { "btn_login", "登入" }
-                }, null, new BeanfunClient.HandlerConfiguration
+                };
+                if (reCaptchaResponse != default)
+                    form.Add("g-recaptcha-response", reCaptchaResponse);
+                res = client.HttpPost(url, form, null, new BeanfunClient.HandlerConfiguration
                 {
                     setReferrer = true,
                     saveResponseUrlAsReferrer = true
                 });
                 if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                {
+                    account = default;
                     return new TransactionResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("bfWebToken, writeUrl, akey", res.Status) };
+                }
 
                 body = res.Message.Content.ReadAsStringAsync().Result;
                 //Check for errors
@@ -236,43 +305,48 @@ namespace MapleStoryLauncher
                     match = Regex.Match(body, @"pollRequest\(""bfAPPAutoLogin\.ashx"",""([^""]*)"",""[^""]*""\);");
                     if (match != Match.Empty)
                     {
-                        account = new BeanfunAccount
-                        {
-                            skey = skey,
-                            lt = match.Groups[1].Value
-                        };
+                        account.lt = match.Groups[1].Value;
                         return new TransactionResult { Status = TransactionResultStatus.RequireAppAuthentication };
                     }
                     //Denied
                     match = Regex.Match(body, @"<div id=""pnlMsg"">.*<script type=""text\/javascript"">\$\(function\(\)\{MsgBox\.Show\('([^']*)'\);\}\);<\/script>.*<\/div>", RegexOptions.Singleline);
                     if (match != Match.Empty)
                     {
-                        client.ClearCookies();
+                        account = default;
                         return new TransactionResult { Status = TransactionResultStatus.Denied, Message = match.Groups[1].Value.Replace("<br />", "\n") };
                     }
                 }
                 //Retrieve info
-                if (client.GetCookies().GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"] == default)
+                if (client.GetCookieContainer().GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"] == default)
+                {
+                    account = default;
                     return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "找不到 bfWebToken。" };
-                string bfwebtoken = client.GetCookies().GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"].Value;
+                }
+                string bfwebtoken = client.GetCookieContainer().GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"].Value;
                 match = Regex.Match(body, @"var strWriteUrl = ""([^""]*)"";");
                 if (match == Match.Empty)
+                {
+                    account = default;
                     return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "找不到 writeUrl。" };
+                }
                 string writeUrl = match.Groups[1].Value;
                 match = Regex.Match(body, @"AuthKey.value = ""([^""]*)"";");
                 if (match == Match.Empty)
+                {
+                    account = default;
                     return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "找不到 akey。" };
+                }
                 string akey = match.Groups[1].Value;
                 #endregion
 
-                TransactionResult final = Step_Final(writeUrl, skey, akey);
+                TransactionResult final = Step_Final(writeUrl, account.skey, akey);
                 if (final.Status != TransactionResultStatus.Success)
-                    return final;
-
-                account = new BeanfunAccount
                 {
-                    webToken = bfwebtoken
-                };
+                    account = default;
+                    return final;
+                }
+
+                account.webToken = bfwebtoken;
                 return new TransactionResult { Status = TransactionResultStatus.Success };
             }
             finally
@@ -290,26 +364,34 @@ namespace MapleStoryLauncher
         /**
          * <summary>Check if the app authentication is passed.</summary>
          * <returns>
-         * Possible statuses (message):
-         *   Failed (error description):
-         *     1. 'Login()' hasn't been called.
-         *     2. Requests to beanfun returns a non-success http code.
-         *     3. Returned messages don't have the expected contents.
-         *   ConnectionLost (description):
-         *     Any connection failed. The incomplete account is not cleared.(See '<see cref="LocalLogout"/>'.)
-         *   RequireAppAuthentication (none):
-         *     App authentication is pending. The incomplete account is not cleared.(See '<see cref="LocalLogout"/>'.)
-         *   Expired (description):
-         *     The login session has expired.
-         *   Denied (reason given by beanfun):
-         *     The App denied this login.
-         *   Success (none): 
-         *     The account is logged in.
+         * Possible statuses (message):<list type="bullet">
+         *     <item><description>Failed (error description):<list type="number">
+         *         <item><description><c>Login()</c> hasn't been called.</description></item>
+         *         <item><description>This account is currently logged in.</description></item>
+         *         <item><description>Requests to beanfun returns a non-success http code.</description></item>
+         *         <item><description>Returned messages don't have the expected contents.</description></item>
+         *     </list></description></item>
+         *     <item><description>ConnectionLost (description):
+         *         <para>Any connection failed or was cancelled. The incomplete account is not cleared.(See '<see cref="LocalLogout"/>'.)</para>
+         *     </description></item>
+         *     <item><description>RequireAppAuthentication (none):
+         *         <para>App authentication is pending. The incomplete account is not cleared.(See '<see cref="LocalLogout"/>'.)</para>
+         *     </description></item>
+         *     <item><description>Expired (description):
+         *         <para>The login session has expired.</para>
+         *     </description></item>
+         *     <item><description>Denied (reason given by beanfun):
+         *         <para>The App denied this login.</para>
+         *     </description></item>
+         *     <item><description>Success (none):
+         *         <para>The account is logged in.</para>
+         *     </description></item>
+         * </list>
          * </returns>
          */
         public TransactionResult CheckAppAuthentication()
         {
-            if (account == default(BeanfunAccount))
+            if (account?.lt == null || account.webToken != default)
                 return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "登入狀態不允許此操作。(檢查 App 授權)" };
 
             rwLock.EnterWriteLock();
@@ -361,12 +443,12 @@ namespace MapleStoryLauncher
                         if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
                             return new TransactionResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("bfWebToken, writeUrl, akey", res.Status) };
 
-                        if (client.GetCookies().GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"] == default)
+                        if (client.GetCookieContainer().GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"] == default)
                         {
                             account = default;
                             return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "找不到 bfWebToken。" };
                         }
-                        string bfwebtoken = client.GetCookies().GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"].Value;
+                        string bfwebtoken = client.GetCookieContainer().GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"].Value;
                         body = res.Message.Content.ReadAsStringAsync().Result;
                         match = Regex.Match(body, @"var strWriteUrl = ""([^""]*)"";");
                         if (match == Match.Empty)
@@ -416,15 +498,19 @@ namespace MapleStoryLauncher
         /**
          * <summary>Get a QRCode for login.</summary>
          * <returns>
-         * Possible statuses (message, picture):
-         *   Failed (error description, none):
-         *     1. This account is currently logged in.
-         *     2. Requests to beanfun returns a non-success http code.
-         *     3. Returned messages don't have the expected contents.
-         *   ConnectionLost (description, none):
-         *     Any connection failed.
-         *   Success (none, QRCode): 
-         *     QRCode was gotten. An incomplete account has been created.(See '<see cref="LocalLogout"/>'.)
+         * Possible statuses (message, picture):<list type="bullet">
+         *     <item><description>Failed (error description, none):<list type="number">
+         *         <item><description>This account is currently logged in or there is an incomplete account.</description></item>
+         *         <item><description>Requests to beanfun returns a non-success http code.</description></item>
+         *         <item><description>Returned messages don't have the expected contents.</description></item>
+         *     </list></description></item>
+         *     <item><description>ConnectionLost (description, none):
+         *         <para>Any connection failed or was cancelled.</para>
+         *     </description></item>
+         *     <item><description>Success (none, QRCode): 
+         *         <para>QRCode was gotten. An incomplete account has been created.(See '<see cref="LocalLogout"/>'.)</para>
+         *     </description></item>
+         * </list>
          * </returns>
          */
         public QRCodeResult GetQRCode()
@@ -594,24 +680,31 @@ namespace MapleStoryLauncher
         /**
          * <summary>Check if the QRCode has been used to login.</summary>
          * <returns>
-         * Possible statuses (message):
-         *   Failed (error description):
-         *     1. 'GetQRCode()' hasn't been called.
-         *     2. Requests to beanfun returns a non-success http code.
-         *     3. Returned messages don't have the expected contents.
-         *   ConnectionLost (description):
-         *     Any connection failed. The incomplete account is not cleared.(See '<see cref="LocalLogout"/>'.)
-         *   RequireQRCode (none):
-         *     QRCode is pending for login. The incomplete account is not cleared.(See '<see cref="LocalLogout"/>'.)
-         *   Expired (description):
-         *     The QRcode has expired.
-         *   Success (none): 
-         *     The account is logged in.
+         * Possible statuses (message):<list type="bullet">
+         *     <item><description>Failed (error description):<list type="number">
+         *         <item><description><c>GetQRCode()</c> hasn't been called.</description></item>
+         *         <item><description>This account is currently logged in.</description></item>
+         *         <item><description>Requests to beanfun returns a non-success http code.</description></item>
+         *         <item><description>Returned messages don't have the expected contents.</description></item>
+         *     </list></description></item>
+         *     <item><description>ConnectionLost (description):
+         *         <para>Any connection failed or was cancelled. The incomplete account is not cleared.(See '<see cref="LocalLogout"/>'.)</para>
+         *     </description></item>
+         *     <item><description>RequireQRCode (none):
+         *         <para>QRCode is pending for login. The incomplete account is not cleared.(See '<see cref="LocalLogout"/>'.)</para>
+         *     </description></item>
+         *     <item><description>Expired (description):
+         *         <para>The QRcode has expired.</para>
+         *     </description></item>
+         *     <item><description>Success (none):
+         *         <para>The account is logged in.</para>
+         *     </description></item>
+         * </list>
          * </returns>
          */
         public TransactionResult CheckQRCode()
         {
-            if (account == default(BeanfunAccount))
+            if (account?.encryptData == null || account.webToken != default)
                 return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "登入狀態不允許此操作。(檢查 QRCode)" };
 
             rwLock.EnterWriteLock();
@@ -686,12 +779,12 @@ namespace MapleStoryLauncher
                         if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
                             return new TransactionResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("bfWebToken, writeUrl, akey", res.Status) };
 
-                        if (client.GetCookies().GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"] == default)
+                        if (client.GetCookieContainer().GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"] == default)
                         {
                             account = default;
                             return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "找不到 bfWebToken。" };
                         }
-                        string bfwebtoken = client.GetCookies().GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"].Value;
+                        string bfwebtoken = client.GetCookieContainer().GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"].Value;
                         body = res.Message.Content.ReadAsStringAsync().Result;
                         match = Regex.Match(body, @"var strWriteUrl = ""([^""]*)"";");
                         if (match == Match.Empty)
@@ -726,13 +819,12 @@ namespace MapleStoryLauncher
         }
 
         /**
-         * <summary>
-         * <para>Remove internal beanfun account.</para>
-         * 
-         * After 'Login()' returns status 'RequireAppAuthentication' or 'GetQRCode()' is called, an incomplete beanfun account is created, but hasn't been logged in.
-         * If 'CheckAppAuthentication()' or 'CheckQRCode()' returns a non-fatal status: 'ConnectionLost' or 'RequireAppAuthentication'/'RequireQRCode'(Pending),
-         * or is not called at all, you need to call this function before logging in again.
-         * </summary>
+         * <summary>Remove internal beanfun account.</summary>
+         * <remarks>
+         * <para>An incomplete beanfun account will exist if <c>GetReCaptcha()</c> or <c>GetQRCode()</c> is called, or <c>Login()</c> returns status <c>RequireAppAuthentication</c>.</para>
+         * <para>If <c>Login()</c> (after <c>GetRecaptcha()</c>), <c>CheckAppAuthentication()</c> (after <c>Login()</c>) or <c>CheckQRCode()</c> (after <c>GetQRCode()</c>) returns a non-fatal status:
+         *  <c>ConnectionLost</c> or <c>RequireAppAuthentication</c>/<c>RequireQRCode</c>(Pending), or is not called at all, you need to call this function before logging in again.</para>
+         * </remarks>
          */
         public void LocalLogout()
         {
@@ -749,16 +841,23 @@ namespace MapleStoryLauncher
 
         /**
          * <summary>Log out the beanfun account.</summary>
-         * <returns>
-         * true: The process finished completely.
-         * false:
-         *   1. The account is not logged in.
-         *   2. Some steps of the process are not successful.
-         * </returns>
+         * <returns><list type="bullet">
+         *     <item>
+         *         <description>true:
+         *             <para>The process finished completely.</para>
+         *         </description>
+         *     </item>
+         *     <item>
+         *         <description>false<list type="number">
+         *             <item><description>The account is not logged in.</description></item>
+         *             <item><description>Some steps of the process are not successful.</description></item>
+         *         </list></description>
+         *     </item>
+         * </list></returns>
          */
         public bool Logout()
         {
-            if (account == default(BeanfunAccount))
+            if (account?.webToken == null)
                 return false;
 
             rwLock.EnterWriteLock();

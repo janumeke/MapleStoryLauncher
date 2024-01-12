@@ -24,9 +24,15 @@ Modified from BeanfunLogin:
 
 ### License
 
-This project is licensed under [GNU GPL v3 or later](COPYING), if not licensed seperately.
+This project is licensed under [GNU GPL v3 or later](COPYING), if not licensed separately.
 
 ## Changelog
+
+v1.5.1
+1. Added reCAPTCHA to the procedure of login.
+2. Cancelling connections in any way is much faster.
+3. Updated the user-agent strings.
+4. Fixes.
 
 v1.5
 1. Rewrote most UI-related codes and adjusted some UI behviours.
