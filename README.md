@@ -3,7 +3,7 @@
 > 支援 Beanfun (台灣)帳密登入與進階防護 (App 允許登入)或 QR Code 登入。    
 > 取得新楓之谷登入帳號與一次性密碼。
 > 
-> **需要先安裝 [.NET 6 Desktop Runtime x64](https://dotnet.microsoft.com/en-us/download/dotnet/6.0/runtime)。**
+> **需要先安裝 [.NET 6 Desktop Runtime x64](https://aka.ms/dotnet/6.0/windowsdesktop-runtime-win-x64.exe)。**
 
 與豬頭差異
 

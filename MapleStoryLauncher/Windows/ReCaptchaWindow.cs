@@ -14,10 +14,19 @@ namespace MapleStoryLauncher
 {
     public partial class ReCaptchaWindow : Form
     {
+        private async Task InitWebView()
+        {
+            string userDataPath = $"{Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)}\\{typeof(MainWindow).Namespace}\\";
+            CoreWebView2Environment env = await CoreWebView2Environment.CreateAsync(null, userDataPath, null);
+            await webView.EnsureCoreWebView2Async(env);
+        }
+
+        private Task initialization;
+
         public ReCaptchaWindow()
         {
             InitializeComponent();
-            webView.EnsureCoreWebView2Async();
+            initialization = InitWebView();
         }
 
         protected override bool ProcessDialogKey(Keys keyData)
@@ -92,13 +101,14 @@ namespace MapleStoryLauncher
             }
         }
 
-        private void ReCaptchaWindow_Shown(object sender, EventArgs e)
+        private async void ReCaptchaWindow_Shown(object sender, EventArgs e)
         {
             webView.Visible = false;
             lock (result_lock)
             {
                 result = default;
             }
+            await initialization;
             lock (address_lock)
             {
                 webView.CoreWebView2.Navigate(address);

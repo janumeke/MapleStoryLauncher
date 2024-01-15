@@ -11,7 +11,8 @@
     <Platforms>AnyCPU</Platforms>
     <Authors />
     <Company />
-    <FileVersion>1.5.1.1</FileVersion>
+    <FileVersion>1.5.1.2</FileVersion>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
   </PropertyGroup>
 
   <ItemGroup>
