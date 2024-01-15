@@ -1,0 +1,20 @@
+\ POST https://tw.newlogin.beanfun.com/login/bfAPPAutoLogin.ashx
+:LT=...lt
+B
+{"IntResult":2,"StrReslut":"final_step.aspx?akey=...&bfapp=1"} #Success
+"IntResult":1,"StrReslut":"LoginNotAuthorized"} #Pending
+{"IntResult":-3,"StrReslut":null} #Denied
+{"IntResult":-1,"StrReslut":"InvalidToken"} #Expired
+{"IntResult":-1,"StrReslut":"Session Not Exist"} #Error
+
+GET https://tw.newlogin.beanfun.com/login/final_step.aspx?akey=...&bfapp=1
+C bfWebToken=...; domain=.beanfun.com; path=/; secure; HttpOnly
+R https://tw.newlogin.beanfun.com/
+POST https://tw.beanfun.com/beanfun_block/bflogin/return.aspx
+:SessionKey=...
+:AuthKey=...
+:ServiceCode=
+:ServiceRegion=
+:ServiceAccountSN=0
+→ GET https://tw.beanfun.com/game_zone/
+#the rest is in the documentation of game_zone

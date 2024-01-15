@@ -1,0 +1,53 @@
+POST https://tw.newlogin.beanfun.com/login/id-pass_form.aspx?skey=202401d3a1e0e2fe9b41&clientID=undefined
+:__EVENTTARGET=
+:__EVENTARGUMENT=
+:_VIEWSTATE=...
+:_VIEWSTATEGENERATOR=...
+:_EVENTVALIDATION=...
+:t_AccountID=...
+:t_Password=...
+:g-recaptcha-response=...
+:btn_login=登入
+
+#Expired/System Error
+→ GET https://tw.newlogin.beanfun.com/login/msg.aspx?msg=...
+B
+    <div class="loginn">
+        <!-- Content -->
+        <div class="loginContent">
+            <div class="loginContent__wrap">
+                <div class="contentMessage">                 
+                    <p id="divTitle">登入失敗</p>
+                    <p id="divMsg">...</p>
+                </div>
+                    ...
+            </div>
+        </div>
+        <!-- Content End -->
+    </div>
+
+#Wrong Password/Require QRCode
+B
+        <div id="pnlMsg">
+	<script type="text/javascript">$(function(){MsgBox.Show('...');});</script>
+</div>
+\ GET https://tw.newlogin.beanfun.com/WebResource.axd?d=...&t=637812243300000000
+\ GET https://tw.newlogin.beanfun.com/WebResource.axd?d=...&t=637812243300000000
+R https://tw.newlogin.beanfun.com/
+\ GET https://tw-event.beanfun.com/communication/api/ga4/GetProductList
+
+#Require AppAuth
+pollRequest("bfAPPAutoLogin.ashx","...lt","2,Success_UnknowDevice");
+
+#Success
+→ GET https://tw.newlogin.beanfun.com/login/final_step.aspx?akey=...
+C bfWebToken=...; domain=.beanfun.com; path=/; secure; HttpOnly
+R https://tw.newlogin.beanfun.com/
+POST https://tw.beanfun.com/beanfun_block/bflogin/return.aspx
+:SessionKey=...
+:AuthKey=...
+:ServiceCode=
+:ServiceRegion=
+:ServiceAccountSN=0
+→ GET https://tw.beanfun.com/game_zone/
+#the rest is in the documentation of game_zone

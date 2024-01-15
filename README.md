@@ -29,7 +29,8 @@ This project is licensed under [GNU GPL v3 or later](COPYING), if not licensed s
 ## Changelog
 
 v1.5.1
-1. Added reCAPTCHA to the procedure of login.
+1. Added reCAPTCHA to the procedure of logging in.
+2. Updated and refactorred the protocol.
 2. Cancelling connections in any way is much faster.
 3. Updated the user-agent strings.
 4. Fixes.

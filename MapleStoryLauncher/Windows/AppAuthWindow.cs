@@ -12,11 +12,11 @@ namespace MapleStoryLauncher
 {
     public partial class AppAuthWindow : Form
     {
-        readonly MainWindow MainWindow;
+        readonly MainWindow mainWindow;
 
         public AppAuthWindow(MainWindow handle)
         {
-            MainWindow = handle;
+            mainWindow = handle;
             InitializeComponent();
         }
 
@@ -56,7 +56,7 @@ namespace MapleStoryLauncher
 
         private void checkAppAuthStatusTimer_Tick(object sender, EventArgs e)
         {
-            BeanfunBroker.TransactionResult checkResult = MainWindow.beanfun.CheckAppAuthentication();
+            BeanfunBroker.TransactionResult checkResult = mainWindow.beanfun.CheckAppAuthentication();
             switch (checkResult.Status)
             {
                 case BeanfunBroker.TransactionResultStatus.RequireAppAuthentication:
@@ -85,13 +85,13 @@ namespace MapleStoryLauncher
         private void AppAuthWindow_FormClosing(object sender, FormClosingEventArgs e)
         {
             checkAppAuthStatusTimer.Enabled = false;
-            MainWindow.beanfun.Cancel();
-            lock (result_lock)
+            mainWindow.beanfun.Cancel();
+            /*lock (result_lock)
             {
                 if (result == default //manual closing while pending
                     || result.Status == BeanfunBroker.TransactionResultStatus.ConnectionLost)
-                    MainWindow.beanfun.LocalLogout(); //Deadlock Warning: hold (result) and wait (MainWindow.beanfun)
-            }
+                    mainWindow.beanfun.LocalLogout(); //Deadlock Warning: hold (result) and wait (MainWindow.beanfun)
+            }*/
         }
     }
 }

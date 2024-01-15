@@ -21,16 +21,16 @@ namespace MapleStoryLauncher
         private string savePath;
         private List<Account> accounts;
 
-        public AccountManager(string savePath)
+        public AccountManager(string path)
         {
-            this.savePath = savePath;
+            this.savePath = path;
 
             try
             {
-                if (!Directory.Exists(Path.GetDirectoryName(savePath)))
-                    Directory.CreateDirectory(Path.GetDirectoryName(savePath));
-                if (!File.Exists(savePath))
-                     File.Create(savePath).Close();
+                if (!Directory.Exists(Path.GetDirectoryName(path)))
+                    Directory.CreateDirectory(Path.GetDirectoryName(path));
+                if (!File.Exists(path))
+                     File.Create(path).Close();
             }
             catch
             {
@@ -38,7 +38,7 @@ namespace MapleStoryLauncher
                 Environment.Exit(0);
             }
 
-            try { accounts = JsonConvert.DeserializeObject<List<Account>>(File.ReadAllText(savePath)); }
+            try { accounts = JsonConvert.DeserializeObject<List<Account>>(File.ReadAllText(path)); }
             catch
             {
                 if (MessageBox.Show("使用者資料損毀，要清除並繼續嗎？", "",

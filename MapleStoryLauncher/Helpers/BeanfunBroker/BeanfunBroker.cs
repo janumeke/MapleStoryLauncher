@@ -57,12 +57,54 @@ namespace MapleStoryLauncher
         private class BeanfunAccount
         {
             public string skey;  //for app authentication and QRCode
+            public string VIEWSTATE;
+            public string VIEWSTATEGENERATOR;
+            public string EVENTVALIDATION;
             public string lt; //for app authentication
             public string encryptData; //for QRCode
             public string webToken;
         }
 
         private BeanfunAccount account;
+
+        public enum TransactionResultStatus
+        {
+            Success,
+            Failed,
+            Cancelled,
+            ConnectionLost,
+            Expired,
+            Denied,
+            RequireAppAuthentication,
+            RequireQRCode,
+            LoggedOutByBeanfun,
+        }
+
+        public class TransactionResult
+        {
+            public TransactionResultStatus Status { get; set; }
+            public string Message { get; set; }
+        }
+
+        private static TransactionResultStatus ConvertStatus(BeanfunClient.HttpResponseStatus status)
+        {
+            return status switch
+            {
+                BeanfunClient.HttpResponseStatus.Successful => TransactionResultStatus.Success,
+                BeanfunClient.HttpResponseStatus.Disconnected => TransactionResultStatus.ConnectionLost,
+                _ => TransactionResultStatus.Failed,
+            };
+        }
+
+        private static string MakeTransactionMessage(string label, BeanfunClient.HttpResponseStatus status)
+        {
+            return status switch
+            {
+                BeanfunClient.HttpResponseStatus.Unsuccessful => $"不是成功的回應代碼。({label})",
+                BeanfunClient.HttpResponseStatus.Disconnected => $"連線中斷。({label})",
+                _ => "",
+            };
+        }
 
         private class GeneralResponse
         {
@@ -90,7 +132,7 @@ namespace MapleStoryLauncher
          */
         public int GetRemainingPoints()
         {
-            if (account == default(BeanfunAccount))
+            if (account?.webToken == null)
                 return -1;
 
             rwLock.EnterWriteLock();
@@ -99,15 +141,16 @@ namespace MapleStoryLauncher
                 string url, referrer;
                 Match match;
 
-                url = $"https://tw.beanfun.com/beanfun_block/generic_handlers/get_remain_point.ashx?webtoken=1&noCacheIE={GetDateTime(DateTimeType.Points)}";
-                referrer = "https://tw.beanfun.com/";
+                url = $"https://tw.beanfun.com/beanfun_block/generic_handlers/get_remain_point.ashx?webtoken=1&noCacheIE={GetTimestamp(TimestampType.Float)}";
+                referrer = "https://tw.beanfun.com/game_zone/";
                 res = client.HttpGet(url, referrer);
-                if(res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
                     return -1;
 
                 match = Regex.Match(res.Message.Content.ReadAsStringAsync().Result, @"(\{[^\{\}]*\})");
                 if (match == Match.Empty)
                     return -1;
+
                 GetPointsResponse result = JsonConvert.DeserializeObject<GetPointsResponse>(match.Groups[1].Value);
                 if (result == null)
                     return -1;
@@ -121,44 +164,6 @@ namespace MapleStoryLauncher
             {
                 rwLock.ExitWriteLock();
             }
-        }
-
-        public enum TransactionResultStatus
-        {
-            Success,
-            RequireAppAuthentication,
-            RequireQRCode,
-            Expired,
-            Denied,
-            Failed,
-            ConnectionLost,
-            LoginFirst,
-        }
-
-        private static TransactionResultStatus ConvertToTransactionStatus(BeanfunClient.HttpResponseStatus status)
-        {
-            return status switch
-            {
-                BeanfunClient.HttpResponseStatus.Successful => TransactionResultStatus.Success,
-                BeanfunClient.HttpResponseStatus.Disconnected => TransactionResultStatus.ConnectionLost,
-                _ => TransactionResultStatus.Failed,
-            };
-        }
-
-        public class TransactionResult
-        {
-            public TransactionResultStatus Status { get; set; }
-            public string Message { get; set; }
-        }
-
-        private static string GetTransactionMessage(string label, BeanfunClient.HttpResponseStatus status)
-        {
-            return status switch
-            {
-                BeanfunClient.HttpResponseStatus.Unsuccessful => $"不是成功的回應代碼。({label})",
-                BeanfunClient.HttpResponseStatus.Disconnected => $"連線中斷。({label})",
-                _ => "",
-            };
         }
 
         private class PingResponse
@@ -180,7 +185,7 @@ namespace MapleStoryLauncher
          *     <item><description>ConnectionLost (description):
          *         <para>Any connection failed or was cancelled.</para>
          *     </description></item>
-         *     <item><description>LoginFirst (none):
+         *     <item><description>LoggedOutByBeanfun (none):
          *         <para>The account is logged out.</para>
          *     </description></item>
          *     <item><description>Success (username of this beanfun account):
@@ -191,7 +196,7 @@ namespace MapleStoryLauncher
          */
         public TransactionResult Ping()
         {
-            if (account == default(BeanfunAccount))
+            if (account?.webToken == null)
                 return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "登入狀態不允許此操作。(ping)" };
 
             rwLock.EnterWriteLock();
@@ -200,24 +205,24 @@ namespace MapleStoryLauncher
                 string url, referrer;
                 Match match;
 
-                url = $"https://tw.beanfun.com/beanfun_block/generic_handlers/echo_token.ashx?webtoken=1&noCacheIE={GetDateTime(DateTimeType.Ping)}";
+                url = $"https://tw.beanfun.com/beanfun_block/generic_handlers/echo_token.ashx?webtoken=1&noCacheIE={GetTimestamp(TimestampType.Float)}";
                 referrer = "https://tw.beanfun.com/game_zone";
                 res = client.HttpGet(url, referrer);
                 if(res.Status != BeanfunClient.HttpResponseStatus.Successful)
-                    return new TransactionResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("ping", res.Status) };
+                    return new TransactionResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("ping", res.Status) };
 
                 match = Regex.Match(res.Message.Content.ReadAsStringAsync().Result, @"(\{[^\{\}]*\})");
                 if (match == Match.Empty)
                     return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "不是預期的結果。(ping)" };
+
                 PingResponse result = JsonConvert.DeserializeObject<PingResponse>(match.Groups[1].Value);
                 if (result == null)
                     return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "不是預期的結果。(ping)" };
                 switch (result.ResultCode)
                 {
                     case 0:
-                        Step_FrontPage();
                         account = default;
-                        return new TransactionResult { Status = TransactionResultStatus.LoginFirst };
+                        return new TransactionResult { Status = TransactionResultStatus.LoggedOutByBeanfun };
                     case 1:
                         return new TransactionResult { Status = TransactionResultStatus.Success, Message = result.MainAccountID };
                     default:
@@ -230,52 +235,39 @@ namespace MapleStoryLauncher
             }
         }
 
-        private enum DateTimeType
+        private enum TimestampType
         {
-            Skey,
-            Ping,
-            Points,
-            Logout,
             OTP,
             Regular,
+            Float,
             UNIX,
+            UNIX_Random,
             System
         }
 
-        private static string GetDateTime(DateTimeType type)
+        Random rng = new();
+
+        private string GetTimestamp(TimestampType type)
         {
             DateTime now = DateTime.Now;
             switch (type)
             {
-                case DateTimeType.Skey:
-                case DateTimeType.Ping:
-                case DateTimeType.Points:
-                case DateTimeType.Logout:
-                    return now.ToString("yyyyMMddHHmmss.fff");
-                case DateTimeType.OTP:
+                case TimestampType.OTP:
                     return (now.Year - 1900).ToString() + (now.Month - 1).ToString() + now.ToString("dHmsfff");
-                case DateTimeType.Regular:
+                case TimestampType.Regular:
                     return now.ToString("yyyyMMddHHmmss");
-                case DateTimeType.UNIX:
+                case TimestampType.Float:
+                    return now.ToString("yyyyMMddHHmmss.fff");
+                case TimestampType.UNIX:
                     DateTime origin = new(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
                     TimeSpan diff = now.ToUniversalTime() - origin;
                     return diff.TotalMilliseconds.ToString("F0");
-                case DateTimeType.System:
+                case TimestampType.UNIX_Random:
+                    return GetTimestamp(TimestampType.UNIX) + rng.Next(9999).ToString();
+                case TimestampType.System:
                     return Environment.TickCount.ToString();
             }
             return string.Empty;
-        }
-
-        private TransactionResult Step_Loader()
-        {
-            string url = "https://tw.beanfun.com/beanfun_block/loader.ashx?service_code=999999&service_region=T0&ssl=yes";
-            res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
-            {
-                setReferrer = true
-            });
-            if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
-                return new TransactionResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("loader", res.Status) };
-            return new TransactionResult { Status = TransactionResultStatus.Success };
         }
     }
 }

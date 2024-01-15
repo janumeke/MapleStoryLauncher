@@ -56,7 +56,8 @@
             Controls.Add(webView);
             Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "ReCaptchaWindow";
-            Text = "需要完成驗證";
+            StartPosition = FormStartPosition.CenterScreen;
+            Text = "真人驗證";
             Shown += ReCaptchaWindow_Shown;
             ((System.ComponentModel.ISupportInitialize)webView).EndInit();
             ResumeLayout(false);

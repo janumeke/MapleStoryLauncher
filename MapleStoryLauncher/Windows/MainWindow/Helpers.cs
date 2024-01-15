@@ -15,13 +15,10 @@ using Microsoft.Win32;
 
 namespace MapleStoryLauncher
 {
-    using ExtentionMethods;
-    using static System.Windows.Forms.VisualStyles.VisualStyleElement;
-
     public partial class MainWindow : Form
     {
-        [DllImport("user32.dll")]
-        public static extern void SwitchToThisWindow(IntPtr hWnd);
+        //Window
+
         public static void CheckMultipleInstances()
         {
             Process thisProcess = Process.GetCurrentProcess();
@@ -41,6 +38,9 @@ namespace MapleStoryLauncher
                     Environment.Exit(0);
                 }
         }
+
+        [DllImport("user32.dll")]
+        public static extern void SwitchToThisWindow(IntPtr hWnd);
 
         private void ShowTransactionError(BeanfunBroker.TransactionResult result)
         {
@@ -67,7 +67,7 @@ namespace MapleStoryLauncher
                 case BeanfunBroker.TransactionResultStatus.ConnectionLost:
                     MessageBox.Show(result.Message + "\n請稍後再試一次。", "網路錯誤");
                     break;
-                case BeanfunBroker.TransactionResultStatus.LoginFirst:
+                case BeanfunBroker.TransactionResultStatus.LoggedOutByBeanfun:
                     MessageBox.Show("帳號已登出。\n可能已從其他地方登入。", "");
                     break;
             }
@@ -90,6 +90,8 @@ namespace MapleStoryLauncher
             }
             return true;
         }
+
+        //Game
 
         private const string gameExecutableName = "MapleStory.exe";
 

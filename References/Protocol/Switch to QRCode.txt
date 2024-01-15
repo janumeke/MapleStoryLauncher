@@ -1,0 +1,52 @@
+POST https://tw.newlogin.beanfun.com/loginform.aspx?skey=...&display_mode=2
+:__EVENTTARGET= __Page
+:__EVENTARGUMENT=SwitchToLocalAreaQR
+:__VIEWSTATE=...
+:__VIEWSTATEGENERATOR=...
+:ddlAuthType=1
+→ GET https://tw.newlogin.beanfun.com/loginform.aspx?skey=...&display_mode=2&region=qr
+B
+<iframe src="/commonlogintop.html"
+<iframe src="/commonloginbottom.html"
+<iframe src="/ie.htm"
+\ GET https://tw.newlogin.beanfun.com/commonlogintop.html
+\ GET https://tw.newlogin.beanfun.com/commonloginbottom.html
+\ GET https://tw.newlogin.beanfun.com/ie.htm
+
+R https://tw.newlogin.beanfun.com/
+\ GET https://tw-event.beanfun.com/communication/api/ga4/GetProductList
+
+\ GET https://tw.newlogin.beanfun.com/login/loading.htm?17052847206978658
+\ GET https://tw.newlogin.beanfun.com/loginform.aspx?skey=...&display_mode=2&region=qr&_=1705284720373
+
+R https://tw.newlogin.beanfun.com/
+\ POST https://gamaad.beanfun.com/api/BFWebCommon/GetBannerInfo
+:Type=LoginTop
+:ProductGuid=4
+:ADGroupGuid=27
+R https://tw.newlogin.beanfun.com/
+\ GET https://tw-event.beanfun.com/communication/api/ga4/GetProductList
+R https://tw.newlogin.beanfun.com/
+\ POST https://gamaad.beanfun.com/api/BFWebCommon/GetBannerInfo
+:Type=LoginButtom
+:ProductGuid=4
+:ADGroupGuid=27
+R https://tw.newlogin.beanfun.com/
+\ GET https://gamesync.beanfun.com/V1.1/BeanGo/GetToken
+
+GET https://tw.newlogin.beanfun.com/login/qr_form.aspx?skey=...&clientID=undefined
+B
+$("#theQrCodeImg").attr("src", "../qrhandler.ashx?u=https://beanfunstor.blob.core.windows.net/redirect/appCheck.html?url=beanfunapp://Q/gameLogin/gtw/" + obj.strEncryptData);
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="..." />
+<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="..." />
+<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="..." />
+
+R https://tw.newlogin.beanfun.com/
+\ GET https://tw-event.beanfun.com/communication/api/ga4/GetProductList
+
+\ GET https://tw.newlogin.beanfun.com/generic_handlers/get_qrcodeData.ashx?skey=...&startGame=&clientID=
+B
+{"intResult": 1,"strResult": "success","strEncryptData": "...","strEncryptBCDOData": "..."}
+
+#QRCode Image
+https://tw.newlogin.beanfun.com/qrhandler.ashx?u=https://beanfunstor.blob.core.windows.net/redirect/appCheck.html?url=beanfunapp://Q/gameLogin/gtw/...strEncryptData

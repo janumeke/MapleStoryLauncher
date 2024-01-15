@@ -12,11 +12,11 @@ namespace MapleStoryLauncher
 {
     public partial class QRCodeWindow : Form
     {
-        readonly MainWindow MainWindow;
+        readonly MainWindow mainWindow;
 
         public QRCodeWindow(MainWindow handle)
         {
-            MainWindow = handle;
+            mainWindow = handle;
             InitializeComponent();
         }
 
@@ -54,7 +54,7 @@ namespace MapleStoryLauncher
 
         private void getQRCodeWorker_DoWork(object sender, DoWorkEventArgs e)
         {
-            e.Result = MainWindow.beanfun.GetQRCode();
+            e.Result = mainWindow.beanfun.GetQRCode();
         }
 
         private void getQRCodeWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -88,7 +88,7 @@ namespace MapleStoryLauncher
 
         private void checkQRCodeStatusTimer_Tick(object sender, EventArgs e)
         {
-            BeanfunBroker.TransactionResult checkResult = MainWindow.beanfun.CheckQRCode();
+            BeanfunBroker.TransactionResult checkResult = mainWindow.beanfun.CheckQRCode();
             switch (checkResult.Status)
             {
                 case BeanfunBroker.TransactionResultStatus.RequireQRCode:
@@ -134,13 +134,13 @@ namespace MapleStoryLauncher
         private void QRCodeWindow_FormClosing(object sender, FormClosingEventArgs e)
         {
             checkQRCodeStatusTimer.Enabled = false;
-            MainWindow.beanfun.Cancel();
-            lock (result_lock)
+            mainWindow.beanfun.Cancel();
+            /*lock (result_lock)
             {
                 if (result == default //manual closing while pending
                     || result.Status == BeanfunBroker.TransactionResultStatus.ConnectionLost)
-                    MainWindow.beanfun.LocalLogout(); //Deadlock Warning: hold (result) and wait (MainWindow.beanfun)
-            }
+                    mainWindow.beanfun.LocalLogout(); //Deadlock Warning: hold (result) and wait (MainWindow.beanfun)
+            }*/
         }
     }
 }

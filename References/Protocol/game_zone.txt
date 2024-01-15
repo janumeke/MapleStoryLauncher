@@ -1,0 +1,42 @@
+GET https://tw.beanfun.com/game_zone/
+B
+<iframe id="browserAlert" src="https://tw.beanfun.com/bfevent/bf/browser/index.html"
+<iframe id="GameZoneAD" src="https://tw.beanfun.com/bfweb/new2/gamezonead.aspx"
+\ GET https://tw.beanfun.com/beanfun_block/loader.ashx?service_code=999999&service_region=T0&ssl=yes
+\ GET https://tw.beanfun.com/bfevent/bf/browser/index.html
+\ GET https://tw.beanfun.com/bfweb/new2/gamezonead.aspx
+B
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="..." />
+<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="..." />
+
+#First Time
+\ POST https://tw.beanfun.com/generic_handlers/gamezone.ashx
+:strFunction=getPromotions
+:strSubtype=ALL
+B
+{"Rows":[]}
+R https://tw.beanfun.com/
+\ GET https://tw-event.beanfun.com/communication/api/ga4/GetProductList
+R https://tw.beanfun.com/
+\ GET https://tw-event.beanfun.com/communication/api/ga4/GetProductList
+
+#Logged in
+\ POST https://tw.beanfun.com/generic_handlers/gamezone.ashx
+:strFunction=getOpenedServices
+:webtoken=1
+B
+{"intResult":1,"strServices":"610074_T9,610075_T9","strOutstring":""}
+R https://tw.beanfun.com/
+\ POST https://gamaad.beanfun.com/api/BFWebCommon/ShowcasePlayPhone
+R https://tw.beanfun.com/
+\ GET https://tw-event.beanfun.com/communication/api/ga4/GetProductList
+R https://tw.beanfun.com/
+\ GET https://tw-event.beanfun.com/communication/api/ga4/GetProductList
+\ POST https://tw.beanfun.com/generic_handlers/gamezone.ashx
+:strFunction=getPromotions
+:strSubtype=-1
+B
+{"Rows":[]}
+#first time logged in
+\ GET https://tw.beanfun.com/scripts/floatbox/graphics/loader_iframe_custom.html
+\ GET https://tw.beanfun.com/bfweb/NEW2/showcase_playphone.aspx

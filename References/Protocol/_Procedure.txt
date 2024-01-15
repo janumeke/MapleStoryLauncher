@@ -1,28 +1,31 @@
-GetReCaptcha→Regular Login
-1. Denied → END
-2. Require App Authentication → Check App Authentication
-3. Successful
-→ START Ping
-→ Get Game Accounts → Get Points
-  → Get OTP
-  → Logout → STOP Ping → END
+[Step]
 
-Check App Authentication
-1. Pending → Check App Authentication
-2. Expired → Regular Login
-3. Successful
-→ START Ping
-→ Get Game Accounts → Get Points
-  → Get OTP
-  → Logout → STOP Ping → END
+game_zone→Login Page
+  →Login
+    →Check AppAuth
+  →Switch to QRCode→Check QRCode
+→Ping
+→Get Points
+→Get Game Accounts
+  →Get OTP
+→Logout
 
-Get QR Code → Check QR Code
+[Func]
 
-Check QR Code
-1. Pending → Check QR Code
-2. Expired → Get QR Code
-3. Successful
-→ START Ping
-→ Get Game Accounts → Get Points
-  → Get OTP
+GetReCaptcha→Login
+  → Denied → END
+  → RequireAppAuth → CheckAppAuth
+    → RequireAppAuth(Pending) → CheckAppAuth
+    → Expired → END
+    → Successful
+
+GetQRCode → CheckQRCode
+  → RequireQRCode(Pending) → Check QR Code
+  → Expired → Get QR Code
+  → Successful
+
+Successful → START Ping every 10 minutes
+  → Get Points
+  → Get Game Accounts
+    → Get OTP
   → Logout → STOP Ping → END

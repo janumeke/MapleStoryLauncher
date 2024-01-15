@@ -342,8 +342,6 @@
             MaximizeBox = false;
             Name = "MainWindow";
             Text = "新楓之谷啟動器";
-            FormClosing += MainWindow_FormClosing;
-            Load += MainWindow_Load;
             panel1.ResumeLayout(false);
             panel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)maplePictureBox).EndInit();

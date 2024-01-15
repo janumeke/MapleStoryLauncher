@@ -1,6 +1,7 @@
 ﻿using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -155,6 +156,7 @@ namespace MapleStoryLauncher
                 catch { return new HttpResponse { Status = HttpResponseStatus.Disconnected }; }
                 if (!res.IsSuccessStatusCode)
                     return new HttpResponse { Status = HttpResponseStatus.Unsuccessful, Message = res };
+                Debug.WriteLine($"GET: {url}");
                 return new HttpResponse { Status = HttpResponseStatus.Successful, Message = res };
             }
 
@@ -170,7 +172,8 @@ namespace MapleStoryLauncher
                     handler.SaveNextResponseUrlAsFurtherReferrer = handlerConfiguration.saveResponseUrlAsReferrer;
                 }
 
-                req.Content = new FormUrlEncodedContent(form);
+                if(form != default)
+                    req.Content = new FormUrlEncodedContent(form);
 
                 lock (cancellationSource)
                 {
@@ -182,6 +185,7 @@ namespace MapleStoryLauncher
                 catch { return new HttpResponse { Status = HttpResponseStatus.Disconnected }; }
                 if (!res.IsSuccessStatusCode)
                     return new HttpResponse { Status = HttpResponseStatus.Unsuccessful, Message = res };
+                Debug.WriteLine($"POST: {url}");
                 return new HttpResponse { Status = HttpResponseStatus.Successful, Message = res };
             }
         }

@@ -1,21 +1,47 @@
-# comments
-→ redirects to
-B response body: line or block
-\ doesn't change onward referrers
-: x-www-form-urlencoded row
-R referrer of the next request
-
-R https://tw.beanfun.com/game_zone
+R https://tw.beanfun.com/game_zone/
+\ GET https://tw.beanfun.com/scripts/floatbox/graphics/loader_iframe_custom.html
+R https://tw.beanfun.com/game_zone/
 GET https://tw.beanfun.com/beanfun_block/bflogin/logout_confirm.aspx?service=999999_T0
-\ GET https://tw.beanfun.com/generic_handlers/remove_bflogin_session.ashx?d=20220318154635.622
-\ GET https://tw.beanfun.com/TW/data_provider/remove_bflogin_session.ashx?d=20220318154635.641
-R https://tw.beanfun.com/
+R https://tw.beanfun.com
+\ GET https://tw.adnew.beanfun.com/ADClient/GamaADClient.aspx?Guid=29
+\ GET https://tw.beanfun.com/generic_handlers/remove_bflogin_session.ashx?d=20240115104704.407
+\ GET https://tw.beanfun.com/TW/data_provider/remove_bflogin_session.ashx?d=20240115104704.445
+R https://tw.beanfun.com
 GET https://tw.newlogin.beanfun.com/logout.aspx?service=999999_T0
+B
+<iframe src="/commonlogintop.html"
+<iframe src="/commonloginbottom.html"
+<iframe src="/ie.htm"
 R https://tw.newlogin.beanfun.com/
 \ GET https://tw.beanfun.com/beanfun_block/scripts/BeanFunBlockParams.ashx
+\ GET https://tw.newlogin.beanfun.com/commonlogintop.html
+\ GET https://tw.newlogin.beanfun.com/commonloginbottom.html
+\ GET https://tw.newlogin.beanfun.com/ie.htm
+
+R https://tw.newlogin.beanfun.com/
+\ GET https://tw-event.beanfun.com/communication/api/ga4/GetProductList
+R https://tw.newlogin.beanfun.com/
+\ GET https://tw-event.beanfun.com/communication/api/ga4/GetProductList
+
 \ POST https://tw.newlogin.beanfun.com/generic_handlers/erase_token.ashx
-: web_token=1
-B {"intResult": 0, "strResult": "Token value error"}
-B {"intResult": 1, "strResult": "log out successfully"}
-B {"intResult": 2, "strResult": "Token is not a existence(RememberFlag)"}
-\ GET https://tw.newlogin.beanfun.com/logout.aspx?service=999999_T0&_=1647589595800
+:web_token=1
+B
+{"intResult": 1, "strResult": "log out successfully"}
+{"intResult": 2, "strResult": "Token is not a existence(RememberFlag)"}
+{"intResult": 0, "strResult": "Token value error"}
+\ GET https://tw.newlogin.beanfun.com/logout.aspx?service=999999_T0&_=1705286824644
+
+R https://tw.newlogin.beanfun.com/
+\ GET https://tw-event.beanfun.com/communication/api/ga4/GetProductList
+R https://tw.newlogin.beanfun.com/
+\ POST https://gamaad.beanfun.com/api/BFWebCommon/GetBannerInfo
+:Type=LoginButtom
+:ProductGuid=4
+:ADGroupGuid=27
+R https://tw.newlogin.beanfun.com/
+\ POST https://gamaad.beanfun.com/api/BFWebCommon/GetBannerInfo
+:Type=LoginTop
+:ProductGuid=4
+:ADGroupGuid=27
+R https://tw.newlogin.beanfun.com/
+\ GET https://gamesync.beanfun.com/V1.1/BeanGo/GetToken

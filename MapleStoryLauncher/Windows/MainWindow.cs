@@ -16,17 +16,14 @@ namespace MapleStoryLauncher
 {
     public partial class MainWindow : Form
     {
-        private ReCaptchaWindow reCaptchaWindow = new();
-
         public MainWindow()
         {
             CheckMultipleInstances();
             InitializeComponent();
-            Form.CheckForIllegalCrossThreadCalls = false;
+            //Form.CheckForIllegalCrossThreadCalls = false;
 
             Model();
             Controller_MainWindow();
-
             Controller_AccountInput();
             Controller_AddRemoveAccount();
             Controller_PasswordInput();
@@ -41,58 +38,11 @@ namespace MapleStoryLauncher
             Controller_OTPDisplay();
         }
 
-        const int initialWindowHeight = 223;
-        const int loggedInHeight = 482;
-
-        private void Controller_MainWindow()
-        {
-            SyncEvents.LoggingIn += username =>
-            {
-                this.UseWaitCursor = true;
-            };
-
-            SyncEvents.LoginFailed += () =>
-            {
-                this.UseWaitCursor = false;
-            };
-
-            SyncEvents.LoggedIn_Loading += username =>
-            {
-                this.Size = new Size(this.Size.Width, loggedInHeight);
-                this.UseWaitCursor = false;
-            };
-
-            SyncEvents.LoggedOut += (username, auto) =>
-            {
-                this.Size = new Size(this.Size.Width, initialWindowHeight);
-            };
-        }
-
-        private void MainWindow_Load(object sender, EventArgs e)
-        {
-            this.Size = new Size(this.Size.Width, initialWindowHeight);
-
-            Version version = Assembly.GetExecutingAssembly().GetName().Version;
-            this.Text += $" v{version.Major}.{version.Minor}";
-            if (version.Build != 0)
-                this.Text += $".{version.Build}";
-        }
-
-        private void MainWindow_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            beanfun.Cancel();
-
-            bool loggedInBefore = loggedIn;
-            if (!AutoLogOut())
-                e.Cancel = true;
-            else if (activeAccount != null)
-                SyncEvents.CloseAccount(activeAccount, loggedInBefore);
-        }
-
         public BeanfunBroker beanfun = new();
 
         # region Login
         private QRCodeWindow qrcodeWindow = default;
+        private readonly ReCaptchaWindow reCaptchaWindow = new(); //webView2 needs more time, initialized early
         private AppAuthWindow appAuthWindow = default;
 
         private class LoginWorkerArgs
@@ -118,20 +68,21 @@ namespace MapleStoryLauncher
             {
                 BeanfunBroker.TransactionResult result;
                 result = beanfun.GetReCaptcha();
-                if(result.Status == BeanfunBroker.TransactionResultStatus.Success)
+                if (result.Status == BeanfunBroker.TransactionResultStatus.Success)
                 {
                     reCaptchaWindow.SetAddress(result.Message);
-                    Invoke(() => {
+                    Invoke(() =>
+                    {
                         reCaptchaWindow.SetCookies(beanfun.GetAllCookies());
                         reCaptchaWindow.ShowDialog();
                     });
                     string reCaptchaResponse = reCaptchaWindow.GetResult();
                     if (reCaptchaResponse == default)
                     {
-                        beanfun.LocalLogout();
+                        //beanfun.LocalLogout();
                         e.Cancel = true;
                     }
-                    else if(reCaptchaResponse == "NULL")
+                    else if (reCaptchaResponse == "NULL")
                         result = beanfun.Login(args.username, args.password);
                     else
                         result = beanfun.Login(args.username, args.password, reCaptchaResponse);
@@ -145,7 +96,7 @@ namespace MapleStoryLauncher
                         e.Result = appAuthWindow.GetResult();
                         if (e.Result == default(BeanfunBroker.TransactionResult))
                         {
-                            beanfun.LocalLogout();
+                            //beanfun.LocalLogout();
                             e.Cancel = true;
                         }
                         break;
@@ -226,7 +177,7 @@ namespace MapleStoryLauncher
                     }
                     pingTimer.Interval = 3;
                     break;
-                case BeanfunBroker.TransactionResultStatus.LoginFirst:
+                case BeanfunBroker.TransactionResultStatus.LoggedOutByBeanfun:
                     pingTimer.Stop();
                     ShowTransactionError(result);
                     SyncEvents.LogOut(loggedInUsername, false);
@@ -270,7 +221,7 @@ namespace MapleStoryLauncher
                         SyncEvents.FinishLaunchingGame();
                     }
                     break;
-                case BeanfunBroker.TransactionResultStatus.LoginFirst:
+                case BeanfunBroker.TransactionResultStatus.LoggedOutByBeanfun:
                     pingTimer.Stop();
                     ShowTransactionError(result);
                     SyncEvents.FinishGettingOTP("");

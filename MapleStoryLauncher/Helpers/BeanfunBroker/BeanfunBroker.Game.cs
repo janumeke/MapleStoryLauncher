@@ -6,29 +6,14 @@ using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using System.Security.Cryptography;
 using Newtonsoft.Json;
+using HtmlAgilityPack;
+using HtmlDocument = HtmlAgilityPack.HtmlDocument;
+using System.Web;
 
 namespace MapleStoryLauncher
 {
     public partial class BeanfunBroker
     {
-        private TransactionResult Step_GamePage()
-        {
-            string url = "https://tw.beanfun.com/game_zone/";
-            string referrer = "https://tw.beanfun.com/";
-            res = client.HttpGet(url, referrer, new BeanfunClient.HandlerConfiguration
-            {
-                saveResponseUrlAsReferrer = true
-            });
-            if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
-                return new GameAccountResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("game_zone", res.Status) };
-
-            TransactionResult loader = Step_Loader();
-            if (loader.Status != TransactionResultStatus.Success)
-                return loader;
-
-            return new TransactionResult { Status = TransactionResultStatus.Success };
-        }
-
         public class GameAccount
         {
             public string friendlyName;
@@ -61,73 +46,46 @@ namespace MapleStoryLauncher
          */
         public GameAccountResult GetGameAccounts()
         {
-            if (account == default(BeanfunAccount))
+            if (account?.webToken == null)
                 return new GameAccountResult { Status = TransactionResultStatus.Failed, Message = "登入狀態不允許此操作。(取得遊戲帳號)" };
 
             rwLock.EnterWriteLock();
             try
             {
-                string url;
-                MatchCollection matches;
+                string url, referrer;
 
-                TransactionResult gamepage = Step_GamePage();
-                if (gamepage.Status != TransactionResultStatus.Success)
-                    return new GameAccountResult { Status = gamepage.Status, Message = gamepage.Message };
+                url = "https://tw.beanfun.com/scripts/floatbox/graphics/loader_iframe_custom.html";
+                referrer = "https://tw.beanfun.com/game_zone/";
+                res = client.HttpGet(url, referrer);
+                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                    return new GameAccountResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("loader_iframe_custom", res.Status) };
 
-                #region handlers
-                url = "https://tw.beanfun.com/generic_handlers/gamezone.ashx";
-                res = client.HttpPost(url, new Dictionary<string, string>
+                url = $"https://tw.beanfun.com/beanfun_block/auth.aspx?channel=game_zone&page_and_query=game_start.aspx%3Fservice_code_and_region%3D610074_T9&web_token={account.webToken}";
+                referrer = "https://tw.beanfun.com/game_zone/";
+                res = client.HttpGet(url, referrer, new BeanfunClient.HandlerConfiguration
                 {
-                    { "strFunction", "getOpenedServices" },
-                    { "webtoken", "1" }
-                }, null, new BeanfunClient.HandlerConfiguration
-                {
-                    setReferrer = true
+                    saveResponseUrlAsReferrer = true,
                 });
                 if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
-                    return new GameAccountResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("handler 1", res.Status) };
-
-                
-                GeneralResponse result = JsonConvert.DeserializeObject<GeneralResponse>(res.Message.Content.ReadAsStringAsync().Result);
-                if (result == null || (result.intResult != 0 && result.intResult != 1))
-                    return new GameAccountResult { Status = TransactionResultStatus.Failed, Message = "不是預期的結果。(handler 1)" };
-
-                url = "https://tw.beanfun.com/generic_handlers/gamezone.ashx";
-                res = client.HttpPost(url, new Dictionary<string, string>
-                {
-                    { "strFunction", "getPromotions" },
-                    { "strSubtype", "-1" }
-                }, null, new BeanfunClient.HandlerConfiguration
-                {
-                    setReferrer = true
-                });
-                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
-                    return new GameAccountResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("handler 2", res.Status) };
-                #endregion
-
-                #region Game accounts
-                url = $"https://tw.beanfun.com/beanfun_block/auth.aspx?channel=game_zone&page_and_query=game_start.aspx?service_code_and_region=610074_T9&web_token={account.webToken}";
-                res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
-                {
-                    setReferrer = true,
-                    saveResponseUrlAsReferrer = true
-                });
-                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
-                    return new GameAccountResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("遊戲帳號", res.Status) };
+                    return new GameAccountResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("遊戲帳號", res.Status) };
 
                 List<GameAccount> accounts = new();
-                matches = Regex.Matches(res.Message.Content.ReadAsStringAsync().Result, @"(?<!')<li class=""([^""]*)""[^<>]*><div id=""([^""]*)"" sn=""([^""]*)"" name=""([^""]*)""");
-                foreach (Match match in matches)
-                {
-                    if (match.Groups[1].Value != "Stop")
+                HtmlDocument doc = new();
+                doc.LoadHtml(res.Message.Content.ReadAsStringAsync().Result);
+                HtmlNodeCollection lis = doc.DocumentNode.SelectNodes("//ul[@id='ulServiceAccountList']/li");
+                if(lis != null)
+                    foreach(HtmlNode li in lis)
+                    {
+                        if (li.Attributes["class"].Value.Contains("Stop"))
+                            continue;
+                        HtmlNode div = li.FirstChild;
                         accounts.Add(new GameAccount
                         {
-                            friendlyName = System.Web.HttpUtility.HtmlDecode(match.Groups[4].Value),
-                            username = match.Groups[2].Value,
-                            sn = match.Groups[3].Value,
+                            friendlyName = HttpUtility.HtmlDecode(div.Attributes["name"].Value),
+                            username = div.Attributes["id"].Value,
+                            sn = div.Attributes["sn"].Value,
                         });
-                }
-                #endregion
+                    }
 
                 return new GameAccountResult { Status = TransactionResultStatus.Success, GameAccounts = accounts };
             }
@@ -166,7 +124,7 @@ namespace MapleStoryLauncher
          */
         public OTPResult GetOTP(GameAccount gameAccount)
         {
-            if (account == default(BeanfunAccount))
+            if (account?.webToken == null)
                 return new OTPResult { Status = TransactionResultStatus.Failed, Message = "登入狀態不允許此操作。(取得 OTP)" };
 
             rwLock.EnterWriteLock();
@@ -177,17 +135,27 @@ namespace MapleStoryLauncher
                 Match match;
                 GeneralResponse result;
 
-                #region createTime, SN and session
-                url = $"https://tw.beanfun.com/beanfun_block/game_zone/game_start_step2.aspx?service_code=610074&service_region=T9&sotp={gameAccount.sn}&dt={GetDateTime(DateTimeType.OTP)}";
+                url = $"https://tw.beanfun.com/beanfun_block/auth.aspx?channel=game_zone&page_and_query=game_start.aspx%3Fservice_code_and_region%3D610074_T9&web_token={account.webToken}";
+                referrer = "https://tw.beanfun.com/game_zone/";
+                res = client.HttpGet(url, referrer, new BeanfunClient.HandlerConfiguration
+                {
+                    saveResponseUrlAsReferrer = true,
+                });
+                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                    return new OTPResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("auth", res.Status) };
+
+                #region createTime, SN and query
+                url = $"https://tw.beanfun.com/beanfun_block/game_zone/game_start_step2.aspx?service_code=610074&service_region=T9&sotp={gameAccount.sn}&dt={GetTimestamp(TimestampType.OTP)}";
                 res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
                 {
                     setReferrer = true,
                     saveResponseUrlAsReferrer = true
                 });
                 if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
-                    return new OTPResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("createTime, SN", res.Status) };
+                    return new OTPResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("createTime, SN", res.Status) };
 
                 body = res.Message.Content.ReadAsStringAsync().Result;
+
                 match = Regex.Match(body, @"ServiceAccountCreateTime: ""([^""]*)""");
                 if (match == Match.Empty)
                     return new OTPResult { Status = TransactionResultStatus.Failed, Message = "找不到 createTime。" };
@@ -195,23 +163,12 @@ namespace MapleStoryLauncher
                 match = Regex.Match(body, @"GetResultByLongPolling&key=([^""]*)");
                 if (match == Match.Empty)
                     return new OTPResult { Status = TransactionResultStatus.Failed, Message = "找不到 SN。" };
-                string sn = match.Groups[1].Value;
-                match = Regex.Match(body, @"MyAccountData.ServiceAccountCreateTime \+ ""&([^""]*)"";");
+                string resultKey = match.Groups[1].Value;
+                match = Regex.Match(body, @"MyAccountData.ServiceAccountCreateTime \+ ""&([^=]*)=([^""]*)"";");
                 if (match == Match.Empty)
-                    return new OTPResult { Status = TransactionResultStatus.Failed, Message = "找不到 session。" };
-                string session = match.Groups[1].Value;
-                if (session.Split('=').Length != 2)
-                    return new OTPResult { Status = TransactionResultStatus.Failed, Message = "不是預期的結果。(session)" };
-                #endregion
-
-                #region Params
-                url = "https://tw.beanfun.com/beanfun_block/scripts/BeanFunBlockParams.ashx";
-                res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
-                {
-                    setReferrer = true
-                });
-                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
-                    return new OTPResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("Params", res.Status) };
+                    return new OTPResult { Status = TransactionResultStatus.Failed, Message = "找不到 query。" };
+                string qK = match.Groups[1].Value;
+                string qV = match.Groups[2].Value;
                 #endregion
 
                 #region secretCode
@@ -219,7 +176,7 @@ namespace MapleStoryLauncher
                 referrer = "https://tw.beanfun.com/";
                 res = client.HttpGet(url, referrer);
                 if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
-                    return new OTPResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("secretCode", res.Status) };
+                    return new OTPResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("secretCode", res.Status) };
 
                 match = Regex.Match(res.Message.Content.ReadAsStringAsync().Result, @"var m_strSecretCode = '([^']*)'");
                 if (match == Match.Empty)
@@ -237,13 +194,13 @@ namespace MapleStoryLauncher
                     { "sotp", gameAccount.sn },
                     { "service_account_display_name", gameAccount.friendlyName },
                     { "service_account_create_time", createTime },
-                    { session.Split('=')[0], session.Split('=')[1] }
+                    { qK, qV }
                 }, null, new BeanfunClient.HandlerConfiguration
                 {
                     setReferrer = true
                 });
                 if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
-                    return new OTPResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("record_start", res.Status) };
+                    return new OTPResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("record_start", res.Status) };
 
                 result = JsonConvert.DeserializeObject<GeneralResponse>(res.Message.Content.ReadAsStringAsync().Result);
                 if (result == null || result.intResult != 1)
@@ -254,39 +211,29 @@ namespace MapleStoryLauncher
                 url = "https://tw.beanfun.com/generic_handlers/CheckVersion.ashx";
                 res = client.HttpGet(url);
                 if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
-                    return new OTPResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("CheckVersion", res.Status) };
+                    return new OTPResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("CheckVersion", res.Status) };
 
-                url = $"https://tw.beanfun.com/generic_handlers/adapter.ashx?cmd=01003&service_code=610074&service_region=T9&d={GetDateTime(DateTimeType.System)}";
+                url = $"https://tw.beanfun.com/generic_handlers/adapter.ashx?cmd=01003&service_code=610074&service_region=T9&d={GetTimestamp(TimestampType.System)}";
                 res = client.HttpGet(url);
                 if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
-                    return new OTPResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("adapter 1", res.Status) };
+                    return new OTPResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("adapter 1", res.Status) };
 
-                body = res.Message.Content.ReadAsStringAsync().Result;
-                match = Regex.Match(body, @"exe=([\S]*) ([^%]*) %s %s");
+                match = Regex.Match(res.Message.Content.ReadAsStringAsync().Result, @"exe=([\S]*) ([^%]*) %s %s");
                 if (match == Match.Empty)
                     return new OTPResult { Status = TransactionResultStatus.Failed, Message = "找不到啟動參數。" };
-                //string executableName = match.Groups[1].Value;
                 string argPrefix = match.Groups[2].Value;
-                /*match = Regex.Match(body, @"dir_reg=(.*)");
-                if (match == Match.Empty)
-                    return new OTPResult { Status = TransactionResultStatus.Failed, Message = "找不到登錄檔路徑。" };
-                string regPath = match.Groups[1].Value;
-                match = Regex.Match(body, @"dir_value_name=(.*)");
-                if (match == Match.Empty)
-                    return new OTPResult { Status = TransactionResultStatus.Failed, Message = "找不到登錄檔鍵名。" };
-                string regKey = match.Groups[1].Value;*/
 
-                url = $"https://tw.beanfun.com/generic_handlers/adapter.ashx?cmd=06002&sn={sn}&result=1&d={GetDateTime(DateTimeType.System)}";
+                url = $"https://tw.beanfun.com/generic_handlers/adapter.ashx?cmd=06002&sn={resultKey}&result=1&d={GetTimestamp(TimestampType.System)}";
                 res = client.HttpGet(url);
                 if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
-                    return new OTPResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("adapter 2", res.Status) };
+                    return new OTPResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("adapter 2", res.Status) };
                 #endregion
 
                 #region OTP
-                url = $"https://tw.beanfun.com/beanfun_block/generic_handlers/get_webstart_otp.ashx?SN={sn}&WebToken={account.webToken}&SecretCode={secretCode}&ppppp=0&ServiceCode=610074&ServiceRegion=T9&ServiceAccount={gameAccount.username}&CreateTime={createTime.Replace(" ", "%20")}&d={GetDateTime(DateTimeType.System)}";
+                url = $"https://tw.beanfun.com/beanfun_block/generic_handlers/get_webstart_otp.ashx?SN={resultKey}&WebToken={account.webToken}&SecretCode={secretCode}&ppppp=0&ServiceCode=610074&ServiceRegion=T9&ServiceAccount={gameAccount.username}&CreateTime={createTime.Replace(" ", "%20")}&d={GetTimestamp(TimestampType.System)}";
                 res = client.HttpGet(url);
                 if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
-                    return new OTPResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("OTP", res.Status) };
+                    return new OTPResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("OTP", res.Status) };
 
                 body = res.Message.Content.ReadAsStringAsync().Result;
                 if (body.StartsWith("0;"))
@@ -300,13 +247,13 @@ namespace MapleStoryLauncher
                 #endregion
 
                 #region get_result
-                url = $"https://tw.beanfun.com/generic_handlers/get_result.ashx?meth=GetResultByLongPolling&key={sn}&_={GetDateTime(DateTimeType.UNIX)}";
+                url = $"https://tw.beanfun.com/generic_handlers/get_result.ashx?meth=GetResultByLongPolling&key={resultKey}&_={GetTimestamp(TimestampType.UNIX)}";
                 res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
                 {
                     setReferrer = true
                 });
                 if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
-                    return new OTPResult { Status = ConvertToTransactionStatus(res.Status), Message = GetTransactionMessage("get_result", res.Status) };
+                    return new OTPResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("get_result", res.Status) };
 
                 result = JsonConvert.DeserializeObject<GeneralResponse>(res.Message.Content.ReadAsStringAsync().Result);
                 if (result == null || result.intResult != 1)

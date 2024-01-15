@@ -1,0 +1,22 @@
+\ POST https://tw.newlogin.beanfun.com/generic_handlers/CheckLoginStatus.ashx
+:status=...srtEncryptData
+B
+{"ResultData":null,"Result":1,"ResultMessage":"Success"}
+{"ResultData":null,"Result":0,"ResultMessage":"Failed"} #Pending
+{"ResultData":null,"Result":0,"ResultMessage":"Token Expired"}
+
+#Success
+GET https://tw.newlogin.beanfun.com/login/qr_step2.aspx?skey=...
+B
+RedirectPage("","./final_step.aspx?akey=...&authkey=N&bfapp=1") ;
+GET https://tw.newlogin.beanfun.com/login/final_step.aspx?akey=...&authkey=N&bfapp=1
+C bfWebToken=...; domain=.beanfun.com; path=/; secure; HttpOnly
+R https://tw.newlogin.beanfun.com/
+POST https://tw.beanfun.com/beanfun_block/bflogin/return.aspx
+:SessionKey=...
+:AuthKey=...
+:ServiceCode=
+:ServiceRegion=
+:ServiceAccountSN=0
+→ GET https://tw.beanfun.com/game_zone/
+#the rest is in the documentation of game_zone
