@@ -24,7 +24,7 @@ namespace MapleStoryLauncher
         {
             if (keyData == Keys.Escape)
             {
-                Close();
+                Hide();
                 return true;
             }
             return base.ProcessDialogKey(keyData);
@@ -39,17 +39,6 @@ namespace MapleStoryLauncher
             {
                 return result;
             }
-        }
-
-        private void QRCodeWindow_Shown(object sender, EventArgs e)
-        {
-            lock (result_lock)
-            {
-                result = default;
-            }
-            ShowWaitMessage();
-            if (!getQRCodeWorker.IsBusy)
-                getQRCodeWorker.RunWorkerAsync();
         }
 
         private void getQRCodeWorker_DoWork(object sender, DoWorkEventArgs e)
@@ -78,7 +67,7 @@ namespace MapleStoryLauncher
                     {
                         result = getResult;
                     }
-                    Close();
+                    Hide();
                     break;
             }
         }
@@ -106,7 +95,7 @@ namespace MapleStoryLauncher
                         {
                             result = checkResult;
                         }
-                        Close();
+                        Hide();
                     }
                     break;
                 default:
@@ -114,7 +103,7 @@ namespace MapleStoryLauncher
                     {
                         result = checkResult;
                     }
-                    Close();
+                    Hide();
                     break;
             }
         }
@@ -131,16 +120,29 @@ namespace MapleStoryLauncher
             labelProgress.Visible = true;
         }
 
-        private void QRCodeWindow_FormClosing(object sender, FormClosingEventArgs e)
+        private void QRCodeWindow_VisibleChanged(object sender, EventArgs e)
         {
-            checkQRCodeStatusTimer.Enabled = false;
-            mainWindow.beanfun.Cancel();
-            /*lock (result_lock)
+            if (Visible)
             {
-                if (result == default //manual closing while pending
-                    || result.Status == BeanfunBroker.TransactionResultStatus.ConnectionLost)
-                    mainWindow.beanfun.LocalLogout(); //Deadlock Warning: hold (result) and wait (MainWindow.beanfun)
-            }*/
+                lock (result_lock)
+                {
+                    result = default;
+                }
+                ShowWaitMessage();
+                if (!getQRCodeWorker.IsBusy)
+                    getQRCodeWorker.RunWorkerAsync();
+            }
+            else
+            {
+                checkQRCodeStatusTimer.Enabled = false;
+                mainWindow.beanfun.Cancel();
+                /*lock (result_lock)
+                {
+                    if (result == default //manual closing while pending
+                        || result.Status == BeanfunBroker.TransactionResultStatus.ConnectionLost)
+                        mainWindow.beanfun.LocalLogout(); //Deadlock Warning: hold (result) and wait (MainWindow.beanfun)
+                }*/
+            }
         }
     }
 }

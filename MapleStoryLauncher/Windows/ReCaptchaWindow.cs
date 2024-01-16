@@ -33,6 +33,7 @@ namespace MapleStoryLauncher
         {
             if (keyData == Keys.Escape)
             {
+                DialogResult = DialogResult.Cancel;
                 Hide();
                 return true;
             }
@@ -50,7 +51,7 @@ namespace MapleStoryLauncher
             webView.ExecuteScriptAsync("let wrap = document.getElementsByClassName('loginContent__wrap')[0]; wrap.style.margin = 0; wrap.style.padding = 0;");
             webView.ExecuteScriptAsync(
                 "let recaptcha = document.getElementsByClassName('g-recaptcha')[0];" +
-                "if(!recaptcha) window.chrome.webview.postMessage('NULL');" +
+                "if(!recaptcha) window.chrome.webview.postMessage('');" +
                 "else {" +
                 "  let sitekey = recaptcha.getAttribute('data-sitekey');" +
                 "  function recaptchaReady(token) { window.chrome.webview.postMessage(token); }" +
@@ -62,10 +63,11 @@ namespace MapleStoryLauncher
 
         private void webView_WebMessageReceived(object sender, Microsoft.Web.WebView2.Core.CoreWebView2WebMessageReceivedEventArgs e)
         {
-            lock (result_lock)
+            lock (response_lock)
             {
-                result = e.TryGetWebMessageAsString();
+                response = e.TryGetWebMessageAsString();
             }
+            DialogResult = DialogResult.Continue;
             Hide();
         }
 
@@ -90,23 +92,23 @@ namespace MapleStoryLauncher
             }
         }
 
-        private readonly object result_lock = new();
-        private string result;
+        private readonly object response_lock = new();
+        private string response;
 
-        public string GetResult()
+        public string GetResponse()
         {
-            lock (result_lock)
+            lock (response_lock)
             {
-                return result;
+                return response;
             }
         }
 
         private async void ReCaptchaWindow_Shown(object sender, EventArgs e)
         {
             webView.Visible = false;
-            lock (result_lock)
+            lock (response_lock)
             {
-                result = default;
+                response = default;
             }
             await initialization;
             lock (address_lock)

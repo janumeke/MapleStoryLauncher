@@ -76,13 +76,13 @@ namespace MapleStoryLauncher
                         reCaptchaWindow.SetCookies(beanfun.GetAllCookies());
                         reCaptchaWindow.ShowDialog();
                     });
-                    string reCaptchaResponse = reCaptchaWindow.GetResult();
-                    if (reCaptchaResponse == default)
+                    string reCaptchaResponse = reCaptchaWindow.GetResponse();
+                    if (reCaptchaWindow.DialogResult == DialogResult.Cancel)
                     {
                         //beanfun.LocalLogout();
                         e.Cancel = true;
                     }
-                    else if (reCaptchaResponse == "NULL")
+                    else if (reCaptchaResponse == String.Empty)
                         result = beanfun.Login(args.username, args.password);
                     else
                         result = beanfun.Login(args.username, args.password, reCaptchaResponse);
@@ -124,7 +124,7 @@ namespace MapleStoryLauncher
                 {
                     case BeanfunBroker.TransactionResultStatus.Success:
                         gameAccounts = ((BeanfunBroker.GameAccountResult)e.Result).GameAccounts;
-                        pingTimer.Interval = pingInterval;
+                        pingTimer.Interval = PING_INTERVAL;
                         pingTimer.Start();
                         SyncEvents.SucceedLogin(((BeanfunBroker.TransactionResult)e.Result).Message);
                         break;
@@ -149,8 +149,8 @@ namespace MapleStoryLauncher
         #endregion
 
         #region Ping
-        private const int pingInterval = 10 * 60 * 1000; //10 mins
-        private const int pingMaxFailedTries = 5;
+        private const int PING_INTERVAL = 10 * 60 * 1000; //10 mins
+        private const int PING_MAX_FAILED_TRIES = 5;
         private int pingFailedTries = 0;
 
         private void pingTimer_Tick(object sender, EventArgs e)
@@ -168,7 +168,7 @@ namespace MapleStoryLauncher
                     SyncEvents.LogOut(loggedInUsername, false);
                     break;
                 case BeanfunBroker.TransactionResultStatus.ConnectionLost:
-                    if (++pingFailedTries >= pingMaxFailedTries)
+                    if (++pingFailedTries >= PING_MAX_FAILED_TRIES)
                     {
                         pingTimer.Stop();
                         beanfun.Logout();
@@ -183,7 +183,7 @@ namespace MapleStoryLauncher
                     SyncEvents.LogOut(loggedInUsername, false);
                     break;
                 case BeanfunBroker.TransactionResultStatus.Success:
-                    pingTimer.Interval = pingInterval;
+                    pingTimer.Interval = PING_INTERVAL;
                     break;
             }
         }

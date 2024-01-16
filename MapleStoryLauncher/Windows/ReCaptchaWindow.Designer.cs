@@ -39,7 +39,7 @@
             webView.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             webView.CreationProperties = null;
             webView.DefaultBackgroundColor = SystemColors.Control;
-            webView.Location = new Point(0, 0);
+            webView.Location = new Point(5, 5);
             webView.Margin = new Padding(0);
             webView.Name = "webView";
             webView.Size = new Size(320, 480);
@@ -52,7 +52,7 @@
             // 
             AutoScaleDimensions = new SizeF(96F, 96F);
             AutoScaleMode = AutoScaleMode.Dpi;
-            ClientSize = new Size(320, 480);
+            ClientSize = new Size(330, 490);
             Controls.Add(webView);
             Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "ReCaptchaWindow";

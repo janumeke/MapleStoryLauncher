@@ -1,4 +1,4 @@
-POST https://tw.newlogin.beanfun.com/login/id-pass_form.aspx?skey=202401d3a1e0e2fe9b41&clientID=undefined
+POST https://tw.newlogin.beanfun.com/login/id-pass_form.aspx?skey=...&clientID=undefined
 :__EVENTTARGET=
 :__EVENTARGUMENT=
 :_VIEWSTATE=...
@@ -10,7 +10,7 @@ POST https://tw.newlogin.beanfun.com/login/id-pass_form.aspx?skey=202401d3a1e0e2
 :btn_login=登入
 
 #Expired/System Error
-→ GET https://tw.newlogin.beanfun.com/login/msg.aspx?msg=...
+→ GET https://tw.newlogin.beanfun.com/login/msg.aspx?msg=...number
 B
     <div class="loginn">
         <!-- Content -->

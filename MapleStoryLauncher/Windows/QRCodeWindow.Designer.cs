@@ -88,8 +88,7 @@ namespace MapleStoryLauncher
             StartPosition = FormStartPosition.CenterScreen;
             Text = "QRCode";
             TopMost = true;
-            FormClosing += QRCodeWindow_FormClosing;
-            Shown += QRCodeWindow_Shown;
+            VisibleChanged += QRCodeWindow_VisibleChanged;
             ((System.ComponentModel.ISupportInitialize)qrcodeDisplay).EndInit();
             ResumeLayout(false);
             PerformLayout();

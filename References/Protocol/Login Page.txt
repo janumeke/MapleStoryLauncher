@@ -33,7 +33,7 @@ R https://tw.newlogin.beanfun.com/
 \ GET https://tw-event.beanfun.com/communication/api/ga4/GetProductList
 \ GET https://tw.newlogin.beanfun.com/login/loading.htm?17052123110676758
 \ GET https://tw.newlogin.beanfun.com/login/loading.htm?17052123110679806
-\ GET https://tw.newlogin.beanfun.com/loginform.aspx?skey=202401d3a1e0e2fe9b41&display_mode=2&_=1705212310637
+\ GET https://tw.newlogin.beanfun.com/loginform.aspx?skey=...&display_mode=2&_=1705212310637
 R https://tw.newlogin.beanfun.com/
 \ POST https://gamaad.beanfun.com/api/BFWebCommon/GetBannerInfo
 :Type=LoginButtom

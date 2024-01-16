@@ -89,8 +89,7 @@ namespace MapleStoryLauncher
             MinimizeBox = false;
             Name = "AppAuthWindow";
             Text = "雙重驗證";
-            FormClosing += AppAuthWindow_FormClosing;
-            Shown += AppAuthWindow_Shown;
+            VisibleChanged += AppAuthWindow_VisibleChanged;
             ((System.ComponentModel.ISupportInitialize)pictureBoxWaiting).EndInit();
             ResumeLayout(false);
             PerformLayout();

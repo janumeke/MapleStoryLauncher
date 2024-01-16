@@ -24,7 +24,7 @@ namespace MapleStoryLauncher
         {
             if (keyData == Keys.Escape)
             {
-                Close();
+                Hide();
                 return true;
             }
             return base.ProcessDialogKey(keyData);
@@ -39,16 +39,6 @@ namespace MapleStoryLauncher
             {
                 return result;
             }
-        }
-
-        private void AppAuthWindow_Shown(object sender, EventArgs e)
-        {
-            lock (result_lock)
-            {
-                result = default;
-            }
-            failedTries = 0;
-            checkAppAuthStatusTimer.Enabled = true;
         }
 
         private const int maxFailedTries = 3;
@@ -69,7 +59,7 @@ namespace MapleStoryLauncher
                         {
                             result = checkResult;
                         }
-                        Close();
+                        Hide();
                     }
                     break;
                 default:
@@ -77,21 +67,33 @@ namespace MapleStoryLauncher
                     {
                         result = checkResult;
                     }
-                    Close();
+                    Hide();
                     break;
             }
         }
 
-        private void AppAuthWindow_FormClosing(object sender, FormClosingEventArgs e)
+        private void AppAuthWindow_VisibleChanged(object sender, EventArgs e)
         {
-            checkAppAuthStatusTimer.Enabled = false;
-            mainWindow.beanfun.Cancel();
-            /*lock (result_lock)
+            if (Visible)
             {
-                if (result == default //manual closing while pending
-                    || result.Status == BeanfunBroker.TransactionResultStatus.ConnectionLost)
-                    mainWindow.beanfun.LocalLogout(); //Deadlock Warning: hold (result) and wait (MainWindow.beanfun)
-            }*/
+                lock (result_lock)
+                {
+                    result = default;
+                }
+                failedTries = 0;
+                checkAppAuthStatusTimer.Enabled = true;
+            }
+            else
+            {
+                checkAppAuthStatusTimer.Enabled = false;
+                mainWindow.beanfun.Cancel();
+                /*lock (result_lock)
+                {
+                    if (result == default //manual closing while pending
+                        || result.Status == BeanfunBroker.TransactionResultStatus.ConnectionLost)
+                        mainWindow.beanfun.LocalLogout(); //Deadlock Warning: hold (result) and wait (MainWindow.beanfun)
+                }*/
+            }
         }
     }
 }
