@@ -34,14 +34,14 @@ namespace MapleStoryLauncher
 
             SyncEvents.AccountLoading += key =>
             {
-                rememberPwd.Checked = accountManager.GetSettings(key).rememberPassword;
+                rememberPwd.Checked = accountManager.GetAccount(key).Settings.rememberPassword;
 
                 rememberPwd.Enabled = true;
             };
 
             SyncEvents.AccountClosing += (key, loggedIn) =>
             {
-                accountManager.GetSettings(key).rememberPassword = rememberPwd.Checked;
+                accountManager.GetAccount(key).Settings.rememberPassword = rememberPwd.Checked;
             };
 
             SyncEvents.AccountClosed += (key, loggedIn) =>

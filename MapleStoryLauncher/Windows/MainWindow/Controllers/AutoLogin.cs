@@ -34,7 +34,7 @@ namespace MapleStoryLauncher
 
             SyncEvents.AccountLoading += key =>
             {
-                autoLogin.Checked = accountManager.GetSettings(key).autoLogin;
+                autoLogin.Checked = accountManager.GetAccount(key).Settings.autoLogin;
 
                 autoLogin.Enabled = true;
             };
@@ -42,9 +42,9 @@ namespace MapleStoryLauncher
             SyncEvents.AccountClosing += (key, loggedIn) =>
             {
                 if (loggedIn)
-                    accountManager.GetSettings(key).autoLogin = autoLogin.Checked;
+                    accountManager.GetAccount(key).Settings.autoLogin = autoLogin.Checked;
                 else
-                    accountManager.GetSettings(key).autoLogin = false;
+                    accountManager.GetAccount(key).Settings.autoLogin = false;
             };
 
             SyncEvents.AccountClosed += (key, loggedIn) =>

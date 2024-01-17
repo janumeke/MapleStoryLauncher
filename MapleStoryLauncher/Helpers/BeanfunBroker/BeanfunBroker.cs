@@ -18,9 +18,9 @@ namespace MapleStoryLauncher
     {
         private readonly ReaderWriterLockSlim rwLock = new();
 
-        private readonly BeanfunClient client = new();
+        private readonly Client client = new();
 
-        private BeanfunClient.HttpResponse res;
+        private Client.HttpResponse res;
 
         /**
          * <summary>Get the last response from the internal http client.</summary>
@@ -86,22 +86,22 @@ namespace MapleStoryLauncher
             public string Message { get; set; }
         }
 
-        private static TransactionResultStatus ConvertStatus(BeanfunClient.HttpResponseStatus status)
+        private static TransactionResultStatus ConvertStatus(Client.HttpResponseStatus status)
         {
             return status switch
             {
-                BeanfunClient.HttpResponseStatus.Successful => TransactionResultStatus.Success,
-                BeanfunClient.HttpResponseStatus.Disconnected => TransactionResultStatus.ConnectionLost,
+                Client.HttpResponseStatus.Successful => TransactionResultStatus.Success,
+                Client.HttpResponseStatus.Disconnected => TransactionResultStatus.ConnectionLost,
                 _ => TransactionResultStatus.Failed,
             };
         }
 
-        private static string MakeTransactionMessage(string label, BeanfunClient.HttpResponseStatus status)
+        private static string MakeTransactionMessage(string label, Client.HttpResponseStatus status)
         {
             return status switch
             {
-                BeanfunClient.HttpResponseStatus.Unsuccessful => $"不是成功的回應代碼。({label})",
-                BeanfunClient.HttpResponseStatus.Disconnected => $"連線中斷。({label})",
+                Client.HttpResponseStatus.Unsuccessful => $"不是成功的回應代碼。({label})",
+                Client.HttpResponseStatus.Disconnected => $"連線中斷。({label})",
                 _ => "",
             };
         }
@@ -144,7 +144,7 @@ namespace MapleStoryLauncher
                 url = $"https://tw.beanfun.com/beanfun_block/generic_handlers/get_remain_point.ashx?webtoken=1&noCacheIE={GetTimestamp(TimestampType.Float)}";
                 referrer = "https://tw.beanfun.com/game_zone/";
                 res = client.HttpGet(url, referrer);
-                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                if (res.Status != Client.HttpResponseStatus.Successful)
                     return -1;
 
                 match = Regex.Match(res.Message.Content.ReadAsStringAsync().Result, @"(\{[^\{\}]*\})");
@@ -208,7 +208,7 @@ namespace MapleStoryLauncher
                 url = $"https://tw.beanfun.com/beanfun_block/generic_handlers/echo_token.ashx?webtoken=1&noCacheIE={GetTimestamp(TimestampType.Float)}";
                 referrer = "https://tw.beanfun.com/game_zone";
                 res = client.HttpGet(url, referrer);
-                if(res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                if(res.Status != Client.HttpResponseStatus.Successful)
                     return new TransactionResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("ping", res.Status) };
 
                 match = Regex.Match(res.Message.Content.ReadAsStringAsync().Result, @"(\{[^\{\}]*\})");

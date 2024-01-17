@@ -11,7 +11,7 @@ namespace MapleStoryLauncher
 {
     public partial class BeanfunBroker
     {
-        private class BeanfunClient
+        private class Client
         {
             private class CustomHandler : DelegatingHandler
             {
@@ -79,7 +79,7 @@ namespace MapleStoryLauncher
             private CustomHandler handler = default;
             private HttpClient client = default;
 
-            public BeanfunClient()
+            public Client()
             {
                 handler = new();
                 client = new HttpClient(handler);

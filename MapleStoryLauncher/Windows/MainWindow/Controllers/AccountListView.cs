@@ -65,7 +65,7 @@ namespace MapleStoryLauncher
                 if (activeAccount != null)
                     if (autoSelect.Checked)
                     {
-                        ListViewItem autoSelection = accountListView.FindItemWithSubItemTextExact(accountManager.GetSettings(activeAccount).autoSelectAccount);
+                        ListViewItem autoSelection = accountListView.FindItemWithSubItemTextExact(accountManager.GetAccount(activeAccount).Settings.autoSelectAccount);
                         if(autoSelection != null)
                             autoSelection.Selected = true;
                     }
@@ -75,7 +75,7 @@ namespace MapleStoryLauncher
             {
                 if (activeAccount != null)
                     if (!autoSelect.Checked)
-                        accountManager.GetSettings(activeAccount).autoSelectAccount = default;
+                        accountManager.GetAccount(activeAccount).Settings.autoSelectAccount = default;
 
                 accountListView.TabStop = false;
             };
@@ -98,7 +98,7 @@ namespace MapleStoryLauncher
             {
                 if (activeAccount != null)
                     if (autoSelect.Checked)
-                        accountManager.GetSettings(activeAccount).autoSelectAccount = gameAccount;
+                        accountManager.GetAccount(activeAccount).Settings.autoSelectAccount = gameAccount;
 
                 accountListView.Enabled = false;
             };

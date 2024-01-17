@@ -21,11 +21,11 @@ namespace MapleStoryLauncher
             if(!isRedirected)
             {
                 url = "https://tw.beanfun.com/game_zone/";
-                res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+                res = client.HttpGet(url, null, new Client.HandlerConfiguration
                 {
                     saveResponseUrlAsReferrer = true,
                 });
-                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                if (res.Status != Client.HttpResponseStatus.Successful)
                     return new TransactionResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("game_zone", res.Status) };
             }
 
@@ -40,11 +40,11 @@ namespace MapleStoryLauncher
                 {
                     { "strFunction", "getPromotions"},
                     { "strSubtype", "ALL"},
-                }, null, new BeanfunClient.HandlerConfiguration
+                }, null, new Client.HandlerConfiguration
                 {
                     setReferrer = true,
                 });
-                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                if (res.Status != Client.HttpResponseStatus.Successful)
                     return new TransactionResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("gamezone", res.Status) };
             }
             else
@@ -54,17 +54,17 @@ namespace MapleStoryLauncher
                 {
                     { "strFunction", "getOpenedServices"},
                     { "webtoken", "1"},
-                }, null, new BeanfunClient.HandlerConfiguration
+                }, null, new Client.HandlerConfiguration
                 {
                     setReferrer = true,
                 });
-                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                if (res.Status != Client.HttpResponseStatus.Successful)
                     return new TransactionResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("gamezone 1", res.Status) };
 
                 url = "https://gamaad.beanfun.com/api/BFWebCommon/ShowcasePlayPhone";
                 referrer = "https://tw.beanfun.com/";
                 res = client.HttpPost(url, null, referrer);
-                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                if (res.Status != Client.HttpResponseStatus.Successful)
                     return new TransactionResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("ShowcasePlayPhone", res.Status) };
 
                 url = "https://tw.beanfun.com/generic_handlers/gamezone.ashx";
@@ -72,29 +72,29 @@ namespace MapleStoryLauncher
                 {
                     { "strFunction", "getPromotions"},
                     { "strSubtype", "-1"},
-                }, null, new BeanfunClient.HandlerConfiguration
+                }, null, new Client.HandlerConfiguration
                 {
                     setReferrer = true,
                 });
-                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                if (res.Status != Client.HttpResponseStatus.Successful)
                     return new TransactionResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("gamezone 2", res.Status) };
 
                 if (isRedirected)
                 {
                     url = "https://tw.beanfun.com/scripts/floatbox/graphics/loader_iframe_custom.html";
-                    res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+                    res = client.HttpGet(url, null, new Client.HandlerConfiguration
                     {
                         setReferrer = true,
                     });
-                    if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                    if (res.Status != Client.HttpResponseStatus.Successful)
                         return new TransactionResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("loader_iframe_custom", res.Status) };
 
                     url = "https://tw.beanfun.com/bfweb/NEW2/showcase_playphone.aspx";
-                    res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+                    res = client.HttpGet(url, null, new Client.HandlerConfiguration
                     {
                         setReferrer = true,
                     });
-                    if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                    if (res.Status != Client.HttpResponseStatus.Successful)
                         return new TransactionResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("showcase_playphone", res.Status) };
                 }
             }
@@ -104,11 +104,11 @@ namespace MapleStoryLauncher
         private TransactionResult Step_Loading()
         {
             string url = $"https://tw.newlogin.beanfun.com/login/loading.htm?{GetTimestamp(TimestampType.UNIX_Random)}";
-            res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+            res = client.HttpGet(url, null, new Client.HandlerConfiguration
             {
                 setReferrer = true
             });
-            if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+            if (res.Status != Client.HttpResponseStatus.Successful)
                 return new TransactionResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("loading", res.Status) };
             return new TransactionResult { Status = TransactionResultStatus.Success };
         }
@@ -123,12 +123,12 @@ namespace MapleStoryLauncher
             TransactionResult result;
 
             url = $"https://tw.beanfun.com/beanfun_block/bflogin/default.aspx?service=999999_T0&dt={GetTimestamp(TimestampType.Float)}&url=https%3A//tw.beanfun.com/game_zone/";
-            res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+            res = client.HttpGet(url, null, new Client.HandlerConfiguration
             {
                 setReferrer= true,
                 saveResponseUrlAsReferrer = true,
             });
-            if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+            if (res.Status != Client.HttpResponseStatus.Successful)
                 return new TransactionResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("Login page", res.Status) };
 
             match = Regex.Match(res.Message.RequestMessage.RequestUri.ToString(), "skey=([^&]*)");
@@ -141,12 +141,12 @@ namespace MapleStoryLauncher
                 return result;
 
             url = $"https://tw.newlogin.beanfun.com/loginform.aspx?skey={account.skey}&display_mode=2";
-            res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+            res = client.HttpGet(url, null, new Client.HandlerConfiguration
             {
                 setReferrer = true,
                 saveResponseUrlAsReferrer = true,
             });
-            if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+            if (res.Status != Client.HttpResponseStatus.Successful)
                 return new TransactionResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("loginform", res.Status) };
 
             result = Step_GetIframes("loginform");
@@ -161,20 +161,20 @@ namespace MapleStoryLauncher
             }
 
             url = $"https://tw.newlogin.beanfun.com/loginform.aspx?skey={account.skey}&display_mode=2&_={GetTimestamp(TimestampType.UNIX)}";
-            res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+            res = client.HttpGet(url, null, new Client.HandlerConfiguration
             {
                 setReferrer = true,
             });
-            if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+            if (res.Status != Client.HttpResponseStatus.Successful)
                 return new TransactionResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("loginform 2", res.Status) };
 
             url = $"https://tw.newlogin.beanfun.com/login/id-pass_form.aspx?skey={account.skey}&clientID=undefined";
-            res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+            res = client.HttpGet(url, null, new Client.HandlerConfiguration
             {
                 setReferrer = true,
                 saveResponseUrlAsReferrer = true,
             });
-            if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+            if (res.Status != Client.HttpResponseStatus.Successful)
                 return new TransactionResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("id-pass_form", res.Status) };
 
             string body = res.Message.Content.ReadAsStringAsync().Result;
@@ -208,7 +208,7 @@ namespace MapleStoryLauncher
                 { "ServiceCode", "" },
                 { "ServiceRegion", "" },
                 { "ServiceAccountSN", "0" },
-            }, referrer, new BeanfunClient.HandlerConfiguration
+            }, referrer, new Client.HandlerConfiguration
             {
                 saveResponseUrlAsReferrer = true,
             });
@@ -242,12 +242,12 @@ namespace MapleStoryLauncher
                             src = new(baseUri, src);
                         if (src.IsWellFormedOriginalString() && src.Host.EndsWith("beanfun.com"))
                         {
-                            res = client.HttpGet(src.OriginalString, null, new BeanfunClient.HandlerConfiguration
+                            res = client.HttpGet(src.OriginalString, null, new Client.HandlerConfiguration
                             {
                                 setReferrer = true,
                                 saveResponseUrlAsReferrer = false,
                             });
-                            if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                            if (res.Status != Client.HttpResponseStatus.Successful)
                                 return new TransactionResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage($"{label} iframes", res.Status) };
                         }
                     }

@@ -19,18 +19,18 @@ namespace MapleStoryLauncher
             SyncEvents.AccountCreated_RestoreSettings += key =>
             {
                 if (loggedIn)
-                    accountManager.SavePassword(activeAccount, rememberPwd.Checked ? passwordInput.Text : "");
+                    accountManager.GetAccount(key).Password = rememberPwd.Checked ? passwordInput.Text : "";
             };
 
             SyncEvents.AccountLoading += key =>
             {
-                passwordInput.Text = accountManager.GetPassword(key);
+                passwordInput.Text = accountManager.GetAccount(key).Password;
             };
 
             SyncEvents.AccountClosing += (username, loggedIn) =>
             {
                 if(loggedIn)
-                    accountManager.SavePassword(username, rememberPwd.Checked ? passwordInput.Text : "");
+                    accountManager.GetAccount(username).Password = rememberPwd.Checked ? passwordInput.Text : "";
             };
 
             SyncEvents.LoggingIn += username =>
@@ -38,7 +38,7 @@ namespace MapleStoryLauncher
                 passwordInput.Enabled = false;
 
                 if (activeAccount != null)
-                    accountManager.SavePassword(username, "");
+                    accountManager.GetAccount(username).Password = "";
             };
 
             SyncEvents.LoginFailed += () =>
@@ -52,14 +52,13 @@ namespace MapleStoryLauncher
 
                 if (activeAccount != null)
                     if (rememberPwd.Checked)
-                        accountManager.SavePassword(activeAccount, passwordInput.Text);
+                        accountManager.GetAccount(activeAccount).Password = passwordInput.Text;
             };
 
             SyncEvents.LoggedOut += (username, auto) =>
             {
-                if (activeAccount != null)
-                    if (!auto)
-                        accountManager.SavePassword(activeAccount, "");
+                if (activeAccount != null && !auto)
+                    accountManager.GetAccount(activeAccount).Password = "";
 
                 passwordInput.Enabled = true;
             };

@@ -40,7 +40,7 @@ namespace MapleStoryLauncher
             SyncEvents.AccountCreated_RestoreSettings += key =>
             {
                 if (loggedIn)
-                    accountManager.GetSettings(key).autoSelectAccount = autoSelectGameAccount?.SubItems[0].Text;
+                    accountManager.GetAccount(key).Settings.autoSelectAccount = autoSelectGameAccount?.SubItems[0].Text;
             };
 
             SyncEvents.AccountRemoved += key =>
@@ -63,7 +63,7 @@ namespace MapleStoryLauncher
             {
                 if (activeAccount != null)
                 {
-                    autoSelectGameAccount = accountListView.FindItemWithSubItemTextExact(accountManager.GetSettings(activeAccount).autoSelectAccount);
+                    autoSelectGameAccount = accountListView.FindItemWithSubItemTextExact(accountManager.GetAccount(activeAccount).Settings.autoSelectAccount);
                     AccountListView_EmboldenAutoSelectionOrNot(true);
                 }
                 else

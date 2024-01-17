@@ -33,7 +33,7 @@ namespace MapleStoryLauncher
             SyncEvents.LoggedIn_Loading += username =>
             {
                 if (activeAccount != null)
-                    autoSelect.Checked = accountManager.GetSettings(activeAccount).autoSelect;
+                    autoSelect.Checked = accountManager.GetAccount(activeAccount).Settings.autoSelect;
                 else
                     autoSelect.Checked = false;
 
@@ -43,7 +43,7 @@ namespace MapleStoryLauncher
             SyncEvents.LoggedOut += (username, auto) =>
             {
                 if (activeAccount != null)
-                    accountManager.GetSettings(activeAccount).autoSelect = autoSelect.Checked;
+                    accountManager.GetAccount(activeAccount).Settings.autoSelect = autoSelect.Checked;
 
                 autoSelect.TabStop = false;
             };

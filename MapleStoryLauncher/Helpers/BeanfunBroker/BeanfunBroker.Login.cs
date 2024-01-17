@@ -114,12 +114,12 @@ namespace MapleStoryLauncher
                 };
                 if (reCaptchaResponse != default)
                     form.Add("g-recaptcha-response", reCaptchaResponse);
-                res = client.HttpPost(url, form, null, new BeanfunClient.HandlerConfiguration
+                res = client.HttpPost(url, form, null, new Client.HandlerConfiguration
                 {
                     setReferrer = true,
                     saveResponseUrlAsReferrer = true
                 });
-                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                if (res.Status != Client.HttpResponseStatus.Successful)
                 {
                     account = default;
                     return new TransactionResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("bfWebToken, akey", res.Status) };
@@ -237,13 +237,13 @@ namespace MapleStoryLauncher
                 res = client.HttpPost(url, new Dictionary<string, string>
                 {
                     { "LT", account.lt }
-                }, null, new BeanfunClient.HandlerConfiguration
+                }, null, new Client.HandlerConfiguration
                 {
                     setReferrer = true
                 });
-                if (res.Status == BeanfunClient.HttpResponseStatus.Unsuccessful)
+                if (res.Status == Client.HttpResponseStatus.Unsuccessful)
                     account = default;
-                if (res.Status != BeanfunClient.HttpResponseStatus.Successful) //Unsuccessful or Disconnected
+                if (res.Status != Client.HttpResponseStatus.Successful) //Unsuccessful or Disconnected
                     return new TransactionResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("檢查 App 授權", res.Status) };
 
                 CheckAppAuthResponse authResult = JsonConvert.DeserializeObject<CheckAppAuthResponse>(res.Message.Content.ReadAsStringAsync().Result);
@@ -262,14 +262,14 @@ namespace MapleStoryLauncher
                     case 2:
                         #region Get bfWebToken and akey
                         url = $"https://tw.newlogin.beanfun.com/login/{authResult.StrReslut}";
-                        res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+                        res = client.HttpGet(url, null, new Client.HandlerConfiguration
                         {
                             setReferrer = true,
                             saveResponseUrlAsReferrer = true
                         });
-                        if (res.Status == BeanfunClient.HttpResponseStatus.Unsuccessful)
+                        if (res.Status == Client.HttpResponseStatus.Unsuccessful)
                             account = default;
-                        if (res.Status != BeanfunClient.HttpResponseStatus.Successful) //Unsuccessful or Disconnected
+                        if (res.Status != Client.HttpResponseStatus.Successful) //Unsuccessful or Disconnected
                             return new TransactionResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("bfWebToken, akey", res.Status) };
 
                         string bfWebToken = client.GetCookieContainer().GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"]?.Value;
@@ -372,12 +372,12 @@ namespace MapleStoryLauncher
                     { "__VIEWSTATE", account.VIEWSTATE },
                     { "__VIEWSTATEGENERATOR", account.VIEWSTATEGENERATOR },
                     { "ddlAuthType", "1" }
-                }, null, new BeanfunClient.HandlerConfiguration
+                }, null, new Client.HandlerConfiguration
                 {
                     setReferrer= true,
                     saveResponseUrlAsReferrer = true
                 });
-                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                if (res.Status != Client.HttpResponseStatus.Successful)
                 {
                     account = default;
                     return new QRCodeResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("登入頁面(QRCode)", res.Status) };
@@ -398,11 +398,11 @@ namespace MapleStoryLauncher
                 }
 
                 url = $"https://tw.newlogin.beanfun.com/loginform.aspx?skey={account.skey}&display_mode=2&region=qr&_={GetTimestamp(TimestampType.UNIX)}";
-                res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+                res = client.HttpGet(url, null, new Client.HandlerConfiguration
                 {
                     setReferrer = true
                 });
-                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                if (res.Status != Client.HttpResponseStatus.Successful)
                 {
                     account = default;
                     return new QRCodeResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("loginform(QRCode)", res.Status) };
@@ -411,12 +411,12 @@ namespace MapleStoryLauncher
 
                 #region QRCode
                 url = $"https://tw.newlogin.beanfun.com/login/qr_form.aspx?skey={account.skey}&clientID=undefined";
-                res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+                res = client.HttpGet(url, null, new Client.HandlerConfiguration
                 {
                     setReferrer = true,
                     saveResponseUrlAsReferrer = true
                 });
-                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                if (res.Status != Client.HttpResponseStatus.Successful)
                 {
                     account = default;
                     return new QRCodeResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("qr_form", res.Status) };
@@ -431,11 +431,11 @@ namespace MapleStoryLauncher
                 string baseUrl = $"https://tw.newlogin.beanfun.com/login/{match.Groups[1].Value}";
 
                 url = $"https://tw.newlogin.beanfun.com/generic_handlers/get_qrcodeData.ashx?skey={account.skey}&startGame=&clientID=";
-                res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+                res = client.HttpGet(url, null, new Client.HandlerConfiguration
                 {
                     setReferrer = true
                 });
-                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                if (res.Status != Client.HttpResponseStatus.Successful)
                 {
                     account = default;
                     return new QRCodeResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("encryptData", res.Status) };
@@ -450,11 +450,11 @@ namespace MapleStoryLauncher
                 account.encryptData = codeResult.strEncryptData;
 
                 url = $"{baseUrl}{account.encryptData}";
-                res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+                res = client.HttpGet(url, null, new Client.HandlerConfiguration
                 {
                     setReferrer= true
                 });
-                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                if (res.Status != Client.HttpResponseStatus.Successful)
                 {
                     account = default;
                     return new QRCodeResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("QRcode 圖片", res.Status) };
@@ -516,13 +516,13 @@ namespace MapleStoryLauncher
                 res = client.HttpPost(url, new Dictionary<string, string>
                 {
                     { "status", account.encryptData }
-                }, null, new BeanfunClient.HandlerConfiguration
+                }, null, new Client.HandlerConfiguration
                 {
                     setReferrer = true
                 });
-                if (res.Status == BeanfunClient.HttpResponseStatus.Unsuccessful)
+                if (res.Status == Client.HttpResponseStatus.Unsuccessful)
                     account = default;
-                if (res.Status != BeanfunClient.HttpResponseStatus.Successful) //Unsuccessful or Disconnected
+                if (res.Status != Client.HttpResponseStatus.Successful) //Unsuccessful or Disconnected
                     return new TransactionResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("檢查 QRCode", res.Status) };
                 
                 CheckQRCodeResponse codeResult = JsonConvert.DeserializeObject<CheckQRCodeResponse>(res.Message.Content.ReadAsStringAsync().Result);
@@ -545,14 +545,14 @@ namespace MapleStoryLauncher
                         return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "不是預期的資料。(檢查 QRCode)" };
                     case 1:
                         url = $"https://tw.newlogin.beanfun.com/login/qr_step2.aspx?skey={account.skey}";
-                        res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+                        res = client.HttpGet(url, null, new Client.HandlerConfiguration
                         {
                             setReferrer = true,
                             saveResponseUrlAsReferrer = true
                         });
-                        if (res.Status == BeanfunClient.HttpResponseStatus.Unsuccessful)
+                        if (res.Status == Client.HttpResponseStatus.Unsuccessful)
                             account = default;
-                        if (res.Status != BeanfunClient.HttpResponseStatus.Successful) //Unsuccessful or Disconnected
+                        if (res.Status != Client.HttpResponseStatus.Successful) //Unsuccessful or Disconnected
                             return new TransactionResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("final_step", res.Status) };
 
                         match = Regex.Match(res.Message.Content.ReadAsStringAsync().Result, @"RedirectPage\("""",""([^""]*)""");
@@ -565,14 +565,14 @@ namespace MapleStoryLauncher
 
                         #region Get bfWebToken and akey
                         url = $"https://tw.newlogin.beanfun.com/login/{final_step}";
-                        res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+                        res = client.HttpGet(url, null, new Client.HandlerConfiguration
                         {
                             setReferrer = true,
                             saveResponseUrlAsReferrer= true
                         });
-                        if (res.Status == BeanfunClient.HttpResponseStatus.Unsuccessful)
+                        if (res.Status == Client.HttpResponseStatus.Unsuccessful)
                             account = default;
-                        if (res.Status != BeanfunClient.HttpResponseStatus.Successful) //Unsuccessful or Disconnected
+                        if (res.Status != Client.HttpResponseStatus.Successful) //Unsuccessful or Disconnected
                             return new TransactionResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("bfWebToken, akey", res.Status) };
 
                         string bfWebToken = client.GetCookieContainer().GetCookies(new Uri("https://tw.beanfun.com/"))["bfWebToken"]?.Value;
@@ -639,36 +639,36 @@ namespace MapleStoryLauncher
 
                 url = "https://tw.beanfun.com/beanfun_block/bflogin/logout_confirm.aspx?service=999999_T0";
                 referrer = "https://tw.beanfun.com/game_zone/";
-                res = client.HttpGet(url, referrer, new BeanfunClient.HandlerConfiguration
+                res = client.HttpGet(url, referrer, new Client.HandlerConfiguration
                 {
                     saveResponseUrlAsReferrer = true
                 });
-                if(res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                if(res.Status != Client.HttpResponseStatus.Successful)
                     success = false;
 
                 url = $"https://tw.beanfun.com/generic_handlers/remove_bflogin_session.ashx?d={GetTimestamp(TimestampType.Float)}";
-                res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+                res = client.HttpGet(url, null, new Client.HandlerConfiguration
                 {
                     setReferrer = true
                 });
-                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                if (res.Status != Client.HttpResponseStatus.Successful)
                     success = false;
 
                 url = $"https://tw.beanfun.com/TW/data_provider/remove_bflogin_session.ashx?d={GetTimestamp(TimestampType.Float)}";
-                res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+                res = client.HttpGet(url, null, new Client.HandlerConfiguration
                 {
                     setReferrer = true
                 });
-                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                if (res.Status != Client.HttpResponseStatus.Successful)
                     success = false;
 
                 url = "https://tw.newlogin.beanfun.com/logout.aspx?service=999999_T0";
                 referrer = "https://tw.beanfun.com/";
-                res = client.HttpGet(url, referrer, new BeanfunClient.HandlerConfiguration
+                res = client.HttpGet(url, referrer, new Client.HandlerConfiguration
                 {
                     saveResponseUrlAsReferrer = true
                 });
-                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                if (res.Status != Client.HttpResponseStatus.Successful)
                     success = false;
 
                 Step_GetIframes("登出");
@@ -677,11 +677,11 @@ namespace MapleStoryLauncher
                 res = client.HttpPost(url, new Dictionary<string, string>
                 {
                     { "web_token", "1" }
-                }, referrer, new BeanfunClient.HandlerConfiguration
+                }, referrer, new Client.HandlerConfiguration
                 {
                     setReferrer = true
                 });
-                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                if (res.Status != Client.HttpResponseStatus.Successful)
                     success = false;
                 else
                 {
@@ -691,11 +691,11 @@ namespace MapleStoryLauncher
                 }
 
                 url = $"https://tw.newlogin.beanfun.com/logout.aspx?service=999999_T0&_={GetTimestamp(TimestampType.UNIX)}";
-                res = client.HttpGet(url, null, new BeanfunClient.HandlerConfiguration
+                res = client.HttpGet(url, null, new Client.HandlerConfiguration
                 {
                     setReferrer = true
                 });
-                if (res.Status != BeanfunClient.HttpResponseStatus.Successful)
+                if (res.Status != Client.HttpResponseStatus.Successful)
                     success = false;
 
                 if (success)

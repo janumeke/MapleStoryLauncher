@@ -10,20 +10,73 @@ namespace MapleStoryLauncher
 {
     internal class AccountManager
     {
-        private class Account
+        public class Settings
         {
-            public string username { get; set; }
-            public string entropy { get; set; }
-            public byte[] password { get; set; }
-            public Settings settings { get; set; }
+            public bool rememberPassword = false;
+            public bool autoLogin = false;
+            public bool autoSelect = false;
+            public string autoSelectAccount = default;
+            public bool autoLaunch = false;
         }
 
-        private string savePath;
+        [JsonObject(MemberSerialization.Fields)]
+        public class Account
+        {
+            private readonly string username;
+            private readonly string entropy;
+            private byte[] password;
+            private readonly Settings settings;
+
+            private static string CreateEntropy()
+            {
+                string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+                Random random = new();
+                StringBuilder entropy = new(8);
+                for (int i = 1; i <= 8; ++i)
+                    entropy.Append(chars[random.Next(chars.Length)]);
+                return entropy.ToString();
+            }
+
+            public Account(string username)
+            {
+                this.username = username;
+                entropy = CreateEntropy();
+                password = default;
+                settings = new Settings();
+            }
+
+            public string Username { get { return username; } }
+
+            public string Password
+            {
+                get
+                {
+                    if (password == default)
+                        return "";
+                    byte[] plaintext = ProtectedData.Unprotect(password, Encoding.UTF8.GetBytes(entropy), DataProtectionScope.CurrentUser);
+                    return Encoding.UTF8.GetString(plaintext);
+                }
+                set
+                {
+                    if (value == "" || value == default)
+                        password = default;
+                    else
+                    {
+                        byte[] cipher = ProtectedData.Protect(Encoding.UTF8.GetBytes(value), Encoding.UTF8.GetBytes(entropy), DataProtectionScope.CurrentUser);
+                        password = cipher;
+                    }
+                }
+            }
+
+            public Settings Settings { get { return settings; } }
+        }
+
+        private readonly string savePath;
         private List<Account> accounts;
 
         public AccountManager(string path)
         {
-            this.savePath = path;
+            savePath = path;
 
             try
             {
@@ -56,7 +109,7 @@ namespace MapleStoryLauncher
         {
             List<string> list = new(
                 from acc in accounts
-                select acc.username
+                select acc.Username
             );
             return list;
         }
@@ -64,77 +117,28 @@ namespace MapleStoryLauncher
         public bool Contains(string username)
         {
             foreach (Account account in accounts)
-                if (account.username == username)
+                if (account.Username == username)
                     return true;
             return false;
         }
 
         public void AddAccount(string username)
         {
-            Account account = new()
-            {
-                username = username,
-                entropy = CreateEntropy(),
-                password = default,
-                settings = new()
-                {
-                    rememberPassword = false,
-                    autoLogin = false,
-                    autoSelect = false,
-                    autoLaunch = false,
-                }
-            };
+            Account account = new(username);
             accounts.Add(account);
         }
 
         public void RemoveAccount(string username)
         {
-            accounts.Remove(accounts.Find(account => account.username == username));
+            accounts.Remove(accounts.Find(account => account.Username == username));
         }
 
-        public string GetPassword(string username)
+        public Account GetAccount(string username)
         {
-            Account account = accounts.Find((account) => account.username == username);
-            if (account.password == default)
-                return "";
-            byte[] plaintext = ProtectedData.Unprotect(account.password, Encoding.UTF8.GetBytes(account.entropy), DataProtectionScope.CurrentUser);
-            return Encoding.UTF8.GetString(plaintext);
-        }
-
-        public void SavePassword(string username, string password)
-        {
-            Account account = accounts.Find((account) => account.username == username);
-            if (password == "" || password == default)
-                account.password = default;
-            else
-            {
-                byte[] cipher = ProtectedData.Protect(Encoding.UTF8.GetBytes(password), Encoding.UTF8.GetBytes(account.entropy), DataProtectionScope.CurrentUser);
-                account.password = cipher;
-            }
-        }
-
-        public class Settings
-        {
-            public bool rememberPassword { get; set; }
-            public bool autoLogin { get; set; }
-            public bool autoSelect { get; set; }
-            public string autoSelectAccount { get; set; }
-            public bool autoLaunch { get; set; }
-        }
-
-        public Settings GetSettings(string username)
-        {
-            Account account = accounts.Find((account) => account.username == username);
-            return account != default ? account.settings : new();
-        }
-
-        public bool SaveSettings(string username, Settings settings)
-        {
-            Account account = accounts.Find((account) => account.username == username);
-            if(account == default)
-                return false;
-            account.settings = settings;
-            return true;
+            foreach (Account account in accounts)
+                if (account.Username == username)
+                    return account;
+            return null;
         }
 
         public bool SaveToFile()
@@ -151,32 +155,6 @@ namespace MapleStoryLauncher
                 return false;
             }
             return true;
-        }
-
-        public static bool CheckSaveFile(string path)
-        {
-            if(!File.Exists(path))
-                return false;
-
-            try
-            {
-                JsonConvert.DeserializeObject<List<Account>>(File.ReadAllText(path));
-            }
-            catch
-            {
-                return false;
-            }
-            return true;
-        }
-
-        private static string CreateEntropy()
-        {
-            string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            Random random = new();
-            StringBuilder entropy = new(8);
-            for (int i = 1; i <= 8; ++i)
-                entropy.Append(chars[random.Next(chars.Length)]);
-            return entropy.ToString();
         }
     }
 }

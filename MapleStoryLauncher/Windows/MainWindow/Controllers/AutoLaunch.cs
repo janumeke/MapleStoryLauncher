@@ -34,7 +34,7 @@ namespace MapleStoryLauncher
             SyncEvents.LoggedIn_Loading += username =>
             {
                 if (activeAccount != null)
-                    autoLaunch.Checked = accountManager.GetSettings(activeAccount).autoLaunch;
+                    autoLaunch.Checked = accountManager.GetAccount(activeAccount).Settings.autoLaunch;
                 else
                     autoLaunch.Checked = false;
 
@@ -44,7 +44,7 @@ namespace MapleStoryLauncher
             SyncEvents.LoggedOut += (username, auto) =>
             {
                 if (activeAccount != null)
-                    accountManager.GetSettings(activeAccount).autoLaunch = autoLaunch.Checked;
+                    accountManager.GetAccount(activeAccount).Settings.autoLaunch = autoLaunch.Checked;
 
                 autoLaunch.TabStop = false;
             };
