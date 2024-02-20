@@ -130,6 +130,8 @@ namespace MapleStoryLauncher
             });
             if (res.Status != Client.HttpResponseStatus.Successful)
                 return new TransactionResult { Status = ConvertStatus(res.Status), Message = MakeTransactionMessage("Login page", res.Status) };
+            if (res.Message.RequestMessage.RequestUri.ToString().EndsWith("BlockIPMessage.htm"))
+                return new TransactionResult { Status = TransactionResultStatus.Denied, Message = "因頻繁連線，IP已被自動鎖定。\n請稍後再試。" };
 
             match = Regex.Match(res.Message.RequestMessage.RequestUri.ToString(), "skey=([^&]*)");
             if (match == Match.Empty)

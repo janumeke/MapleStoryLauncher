@@ -71,7 +71,6 @@ namespace MapleStoryLauncher
         {
             Success,
             Failed,
-            Cancelled,
             ConnectionLost,
             Expired,
             Denied,

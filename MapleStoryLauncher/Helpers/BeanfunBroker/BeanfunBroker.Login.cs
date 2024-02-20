@@ -25,6 +25,9 @@ namespace MapleStoryLauncher
          *     <item><description>ConnectionLost (description):
          *         <para>Any connection failed or was cancelled.</para>
          *     </description></item>
+         *     <item><description>Denied (description):
+         *         <para>The IP is temporarily blocked.</para>
+         *     </description></item>
          *     <item><description>Success (the link):
          *         <para>The link to reCAPTCHA is acquired.</para>
          *     </description></item>
