@@ -15,6 +15,10 @@ namespace MapleStoryLauncher
         /**
          * <summary>Get the link to a page where you get response from reCAPTCHA for login.</summary>
          * <remarks>You also need the cookies to make the link work.</remarks>
+         * <param name="required">
+         *     <para>Asks to or not to check the requirement of reChaptcha when passed in</para>
+         *     <para>Whether reCaptcha is required when it's asked and the link to it is returned, undefined otherwise</para>
+         * </param>
          * <returns>
          * Possible statuses (message):<list type="bullet">
          *     <item><description>Failed (error description):<list type="number">
@@ -34,7 +38,7 @@ namespace MapleStoryLauncher
          * </list>
          * </returns>
          */
-        public TransactionResult GetReCaptcha()
+        public TransactionResult GetReCaptcha(ref bool required)
         {
             if (account?.webToken != null)
                 return new TransactionResult { Status = TransactionResultStatus.Failed, Message = "登入狀態不允許此操作。(reCAPTCHA)" };
@@ -54,6 +58,16 @@ namespace MapleStoryLauncher
                 {
                     account = default;
                     return result;
+                }
+
+                if (required)
+                {
+                    HtmlAgilityPack.HtmlDocument doc = new();
+                    doc.LoadHtml(res.Message.Content.ReadAsStringAsync().Result);
+                    if (doc.DocumentNode.SelectSingleNode("//*[@class='g-recaptcha']") == null)
+                        required = false;
+                    else
+                        required = true;
                 }
 
                 return new TransactionResult { Status = TransactionResultStatus.Success, Message = $"https://tw.newlogin.beanfun.com/login/id-pass_form.aspx?skey={account.skey}&clientID=undefined" };
@@ -142,7 +156,7 @@ namespace MapleStoryLauncher
                         return new TransactionResult { Status = TransactionResultStatus.RequireAppAuthentication };
                     }
                     //Denied
-                    match = Regex.Match(body, @"<div id=""pnlMsg"">.*<script type=""text\/javascript"">\$\(function\(\)\{MsgBox\.Show\('([^']*)'\);\}\);<\/script>.*<\/div>", RegexOptions.Singleline);
+                    match = Regex.Match(body, @"<div id=""pnlMsg"">.*<script type=""text\/javascript"">\$\(function\(\)\{MsgBox\.Show\('([^']*)'[^<]*<\/script>.*<\/div>", RegexOptions.Singleline);
                     if (match != Match.Empty)
                     {
                         account = default;
@@ -151,7 +165,7 @@ namespace MapleStoryLauncher
                 }
                 else if (requestUrl.Contains("https://tw.newlogin.beanfun.com/login/msg.aspx")) //Expired or error
                 {
-                    match = Regex.Match(body, @"<p id=""divMsg"">(.*)<\/p>");
+                    match = Regex.Match(body, @"<p id=""divMsg"">([^<]*)<\/p>");
                     if (match != Match.Empty)
                     {
                         account = default;

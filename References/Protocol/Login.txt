@@ -29,7 +29,7 @@ B
 #Wrong Password/Require QRCode
 B
         <div id="pnlMsg">
-	<script type="text/javascript">$(function(){MsgBox.Show('...');});</script>
+	<script type="text/javascript">$(function(){MsgBox.Show('...'...);});</script>
 </div>
 \ GET https://tw.newlogin.beanfun.com/WebResource.axd?d=...&t=637812243300000000
 \ GET https://tw.newlogin.beanfun.com/WebResource.axd?d=...&t=637812243300000000

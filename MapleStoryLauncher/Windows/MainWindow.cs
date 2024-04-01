@@ -66,26 +66,26 @@ namespace MapleStoryLauncher
             }
             else
             {
-                BeanfunBroker.TransactionResult result;
-                result = beanfun.GetReCaptcha();
+                bool reCaptchaRequired = true;
+                BeanfunBroker.TransactionResult result = beanfun.GetReCaptcha(ref reCaptchaRequired);
                 if (result.Status == BeanfunBroker.TransactionResultStatus.Success)
                 {
-                    reCaptchaWindow.SetAddress(result.Message);
-                    Invoke(() =>
+                    if(reCaptchaRequired)
                     {
-                        reCaptchaWindow.SetCookies(beanfun.GetAllCookies());
-                        reCaptchaWindow.ShowDialog();
-                    });
-                    string reCaptchaResponse = reCaptchaWindow.GetResponse();
-                    if (reCaptchaWindow.DialogResult == DialogResult.Cancel)
-                    {
-                        //beanfun.LocalLogout();
-                        e.Cancel = true;
+                        reCaptchaWindow.SetAddress(result.Message);
+                        Invoke(() =>
+                        {
+                            reCaptchaWindow.SetCookies(beanfun.GetAllCookies());
+                            reCaptchaWindow.ShowDialog();
+                        });
+                        string reCaptchaResponse = reCaptchaWindow.GetResponse();
+                        if (reCaptchaWindow.DialogResult == DialogResult.Cancel)
+                            e.Cancel = true;
+                        else
+                            result = beanfun.Login(args.username, args.password, reCaptchaResponse);
                     }
-                    else if (reCaptchaResponse == String.Empty)
-                        result = beanfun.Login(args.username, args.password);
                     else
-                        result = beanfun.Login(args.username, args.password, reCaptchaResponse);
+                        result = beanfun.Login(args.username, args.password);
                 }
                 switch (result.Status)
                 {
