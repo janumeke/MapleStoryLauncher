@@ -55,7 +55,7 @@ namespace MapleStoryLauncher
                 "else {" +
                 "  let sitekey = recaptcha.getAttribute('data-sitekey');" +
                 "  function recaptchaReady(token) { window.chrome.webview.postMessage(token); }" +
-                "  grecaptcha.reset(recaptcha, { 'sitekey': sitekey, 'callback': 'recaptchaReady'});" +
+                "  grecaptcha.enterprise.reset(recaptcha, { 'sitekey': sitekey, 'callback': 'recaptchaReady' });" +
                 "}"
             );
             webView.Visible = true;
